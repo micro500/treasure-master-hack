@@ -47,6 +47,9 @@ public:
 	void code_backup_algorithm_7(uint8 map_number);
 
 	void display_working_code();
+
+	bool operator==(const Code &other) const;
+	bool operator<(const Code &other) const;
 };
 
 #endif //CODE_H

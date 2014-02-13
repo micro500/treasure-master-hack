@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <chrono>
 #include <iostream>
+#include <algorithm>
+#include <vector>
 
 #include "data_sizes.h"
 #include "code.h"
@@ -228,36 +230,64 @@ int main(void)
 	value[6] = 0x26;
 	value[7] = 0x12;
 
-	Code start_node(value);
+	std::vector<Code> code_list(1,value);
 
-	start_node.process_map_exit(0x00);
-	start_node.process_map_exit(0x02);
-	start_node.process_map_exit(0x05);
-	start_node.process_map_exit(0x04);
-	start_node.process_map_exit(0x03);
-	start_node.process_map_exit(0x1D);
-	start_node.process_map_exit(0x1C);
-	start_node.process_map_exit(0x1E);
-	start_node.process_map_exit(0x1B);
-	start_node.process_map_exit(0x07);
-	start_node.process_map_exit(0x08);
-	start_node.process_map_exit(0x06);
-	start_node.process_map_exit(0x09);
-	start_node.process_map_exit(0x0C);
-	start_node.process_map_exit(0x20);
-	start_node.process_map_exit(0x21);
-	start_node.process_map_exit(0x22);
-	start_node.process_map_exit(0x23);
-	start_node.process_map_exit(0x24);
-	start_node.process_map_exit(0x25);
-	start_node.process_map_exit(0x26);
-	start_node.process_map_exit(0x0E);
-	start_node.process_map_exit(0x0F);
-	start_node.process_map_exit(0x10);
-	start_node.process_map_exit(0x12);
-	start_node.process_map_exit(0x11);
+	for (int i = 1; i < 0x1000000; i++)
+	{
+		value[5] = (i >> 16) & 0xFF;
+		value[6] = (i >> 8) & 0xFF;
+		value[7] = i & 0xFF;
+		code_list.push_back(value);
+	}
 
-	start_node.display_working_code();
+	int map_list[26] = { 0x00, 0x02, 0x05, 0x04, 0x03, 0x1D, 0x1C, 0x1E, 0x1B, 0x07, 0x08, 0x06, 0x09, 0x0C, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x0E, 0x0F, 0x10, 0x12, 0x11};
+
+	using std::chrono::duration_cast;
+	using std::chrono::microseconds;
+	typedef std::chrono::high_resolution_clock clock;
+	int blah = 0;
+	auto full_sum = 0;
+	for (int i = 0; i < 26; i++)
+	{
+		// Step through the vector and do the map exit on each entry
+		auto sum = 0;
+		for (std::vector<Code>::iterator it = code_list.begin(); it != code_list.end(); ++it)
+		{
+			auto start = clock::now();
+			it->process_map_exit(map_list[i]);
+			auto end = clock::now();
+			sum += duration_cast<microseconds>(end-start).count();
+		}
+
+		std::cout << code_list.size() << " run\n";
+		std::cout << sum << "us\n";
+		full_sum += sum;
+		
+		blah++;
+
+		size_t x = code_list.size();
+		auto start = clock::now();
+
+		std::sort(code_list.begin(), code_list.end());
+		code_list.erase(std::unique(code_list.begin(),code_list.end()),code_list.end());
+
+		auto end = clock::now();
+		x -= code_list.size();
+		sum = duration_cast<microseconds>(end-start).count();
+		full_sum += sum;
+		std::cout << x << " deleted\n";
+		std::cout << sum << " us\n";
+
+		printf("\n");
+	}
+
+	std::cout << full_sum << "\n";
+
+	int x = 0;
+	
+	std::cout << code_list.size() << "\n";
+
+	return 0;
 
 	/*
 	working_code[0] = 0x00;
