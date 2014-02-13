@@ -504,3 +504,27 @@ uint8 Code::rng_real()
 
 	return rng1 ^ rng2;
 }
+
+bool Code::operator==(const Code &other) const
+{
+	for (int i = 0; i < 16; i++)
+	{
+		if (working_code.as_uint64[i] != other.working_code.as_uint64[i])
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+bool Code::operator<(const Code &other) const
+{
+	for (int i = 0; i < 16; i++)
+	{
+		if (working_code.as_uint64[i] != other.working_code.as_uint64[i])
+		{
+			return (working_code.as_uint64[i] < other.working_code.as_uint64[i]);		
+		}
+	}
+	return true;
+}
