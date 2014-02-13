@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "data_sizes.h"
-#include "code.h"
+#include "Code.h"
 
 uint16 rng_table[0x100][0x100];
 
