@@ -526,5 +526,5 @@ bool Code::operator<(const Code &other) const
 			return (working_code.as_uint64[i] < other.working_code.as_uint64[i]);		
 		}
 	}
-	return true;
+	return false;
 }
