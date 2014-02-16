@@ -246,11 +246,11 @@ int main(void)
 	using std::chrono::microseconds;
 	typedef std::chrono::high_resolution_clock clock;
 	int blah = 0;
-	auto full_sum = 0;
+	uint64 full_sum = 0;
 	for (int i = 0; i < 26; i++)
 	{
 		// Step through the vector and do the map exit on each entry
-		auto sum = 0;
+		uint64 sum = 0;
 		for (std::vector<Code>::iterator it = code_list.begin(); it != code_list.end(); ++it)
 		{
 			auto start = clock::now();
