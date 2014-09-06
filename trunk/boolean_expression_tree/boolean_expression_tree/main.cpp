@@ -172,14 +172,14 @@ void add_byte(int pos,unsigned char val,node * bit_field[])
 	bool r6 = ((rng_val >> 6) & 1) == 1 ? true : false;
 	bool r7 = ((rng_val >> 7) & 1) == 1 ? true : false;
 
-	node * inbit0 = new node(bit_field[pos*8]);
-	node * inbit1 = new node(bit_field[pos*8+1]);
-	node * inbit2 = new node(bit_field[pos*8+2]);
-	node * inbit3 = new node(bit_field[pos*8+3]);
-	node * inbit4 = new node(bit_field[pos*8+4]);
-	node * inbit5 = new node(bit_field[pos*8+5]);
-	node * inbit6 = new node(bit_field[pos*8+6]);
-	node * inbit7 = new node(bit_field[pos*8+7]);
+	node * inbit0 = new_node(bit_field[pos*8]);
+	node * inbit1 = new_node(bit_field[pos*8+1]);
+	node * inbit2 = new_node(bit_field[pos*8+2]);
+	node * inbit3 = new_node(bit_field[pos*8+3]);
+	node * inbit4 = new_node(bit_field[pos*8+4]);
+	node * inbit5 = new_node(bit_field[pos*8+5]);
+	node * inbit6 = new_node(bit_field[pos*8+6]);
+	node * inbit7 = new_node(bit_field[pos*8+7]);
 
 	node * outbit0;
 	node * outbit1;
@@ -212,42 +212,42 @@ void add_byte(int pos,unsigned char val,node * bit_field[])
 	node * g6;
 
 
-	outbit0 = new node(XOR,new node(inbit0),r0);
-	g0 = new node(AND,new node(inbit0),r0);
-	p0 = new node(false);
-	carry0 = new node(AND,new node(inbit0),r0);
+	outbit0 = new_node(XOR,new_node(inbit0),r0);
+	g0 = new_node(AND,new_node(inbit0),r0);
+	p0 = new_node(false);
+	carry0 = new_node(AND,new_node(inbit0),r0);
 
-	outbit1 = new node(XOR,new node(XOR,new node(inbit1),r1),new node(carry0));
-	g1 = new node(AND,new node(inbit1),r1);
-	p1 = new node(OR,new node(inbit1),r1);
-	carry1 = new node(OR,new node(g1),new node(AND,new node(p1),new node(carry0)));
+	outbit1 = new_node(XOR,new_node(XOR,new_node(inbit1),r1),new_node(carry0));
+	g1 = new_node(AND,new_node(inbit1),r1);
+	p1 = new_node(OR,new_node(inbit1),r1);
+	carry1 = new_node(OR,new_node(g1),new_node(AND,new_node(p1),new_node(carry0)));
 
-	outbit2 = new node(XOR,new node(XOR,new node(inbit2),r2),new node(carry1));
-	g2 = new node(AND,new node(inbit2),r2);
-	p2 = new node(OR,new node(inbit2),r2);
-	carry2 = new node(OR,new node(g2),new node(AND,new node(p2),new node(carry1)));
+	outbit2 = new_node(XOR,new_node(XOR,new_node(inbit2),r2),new_node(carry1));
+	g2 = new_node(AND,new_node(inbit2),r2);
+	p2 = new_node(OR,new_node(inbit2),r2);
+	carry2 = new_node(OR,new_node(g2),new_node(AND,new_node(p2),new_node(carry1)));
 
-	outbit3 = new node(XOR,new node(XOR,new node(inbit3),r3),new node(carry2));
-	g3 = new node(AND,new node(inbit3),r3);
-	p3 = new node(OR,new node(inbit3),r3);
-	carry3 = new node(OR,new node(g3),new node(AND,new node(p3),new node(carry2)));
+	outbit3 = new_node(XOR,new_node(XOR,new_node(inbit3),r3),new_node(carry2));
+	g3 = new_node(AND,new_node(inbit3),r3);
+	p3 = new_node(OR,new_node(inbit3),r3);
+	carry3 = new_node(OR,new_node(g3),new_node(AND,new_node(p3),new_node(carry2)));
 
-	outbit4 = new node(XOR,new node(XOR,new node(inbit4),r4),new node(carry3));
-	g4 = new node(AND,new node(inbit4),r4);
-	p4 = new node(OR,new node(inbit4),r4);
-	carry4 = new node(OR,new node(g4),new node(AND,new node(p4),new node(carry3)));
+	outbit4 = new_node(XOR,new_node(XOR,new_node(inbit4),r4),new_node(carry3));
+	g4 = new_node(AND,new_node(inbit4),r4);
+	p4 = new_node(OR,new_node(inbit4),r4);
+	carry4 = new_node(OR,new_node(g4),new_node(AND,new_node(p4),new_node(carry3)));
 
-	outbit5 = new node(XOR,new node(XOR,new node(inbit5),r5),new node(carry4));
-	g5 = new node(AND,new node(inbit5),r5);
-	p5 = new node(OR,new node(inbit5),r5);
-	carry5 = new node(OR,new node(g5),new node(AND,new node(p5),new node(carry4)));
+	outbit5 = new_node(XOR,new_node(XOR,new_node(inbit5),r5),new_node(carry4));
+	g5 = new_node(AND,new_node(inbit5),r5);
+	p5 = new_node(OR,new_node(inbit5),r5);
+	carry5 = new_node(OR,new_node(g5),new_node(AND,new_node(p5),new_node(carry4)));
 
-	outbit6 = new node(XOR,new node(XOR,new node(inbit6),r6),new node(carry5));
-	g6 = new node(AND,new node(inbit6),r6);
-	p6 = new node(OR,new node(inbit6),r6);
-	carry6 = new node(OR,new node(g6),new node(AND,new node(p6),new node(carry5)));
+	outbit6 = new_node(XOR,new_node(XOR,new_node(inbit6),r6),new_node(carry5));
+	g6 = new_node(AND,new_node(inbit6),r6);
+	p6 = new_node(OR,new_node(inbit6),r6);
+	carry6 = new_node(OR,new_node(g6),new_node(AND,new_node(p6),new_node(carry5)));
 
-	outbit7 = new node(XOR,new node(XOR,new node(inbit7),r7),new node(carry6));
+	outbit7 = new_node(XOR,new_node(XOR,new_node(inbit7),r7),new_node(carry6));
 
 	//printf("%s\n",bit7->get_string().c_str());
 	/*
@@ -269,14 +269,14 @@ void add_byte(int pos,unsigned char val,node * bit_field[])
 	//bit0 = bit0->simplify();
 	//printf("%s\n",bit0->get_string().c_str());
 
-	delete bit_field[pos*8];
-	delete bit_field[pos*8+1];
-	delete bit_field[pos*8+2];
-	delete bit_field[pos*8+3];
-	delete bit_field[pos*8+4];
-	delete bit_field[pos*8+5];
-	delete bit_field[pos*8+6];
-	delete bit_field[pos*8+7];
+	free_tree(bit_field[pos*8]);
+	free_tree(bit_field[pos*8+1]);
+	free_tree(bit_field[pos*8+2]);
+	free_tree(bit_field[pos*8+3]);
+	free_tree(bit_field[pos*8+4]);
+	free_tree(bit_field[pos*8+5]);
+	free_tree(bit_field[pos*8+6]);
+	free_tree(bit_field[pos*8+7]);
 
 	outbit0 = outbit0->simplify();
 	outbit1 = outbit1->simplify();
@@ -288,58 +288,58 @@ void add_byte(int pos,unsigned char val,node * bit_field[])
 	outbit7 = outbit7->simplify();
 
 
-	bit_field[pos*8] = new node(outbit0);
+	bit_field[pos*8] = new_node(outbit0);
 	
-	bit_field[pos*8+1] = new node(outbit1);
+	bit_field[pos*8+1] = new_node(outbit1);
 	//printf("%s\n",outbit2->get_string().c_str());
-	bit_field[pos*8+2] = new node(outbit2);
-	bit_field[pos*8+3] = new node(outbit3);
-	bit_field[pos*8+4] = new node(outbit4);
-	bit_field[pos*8+5] = new node(outbit5);
-	bit_field[pos*8+6] = new node(outbit6);
-	bit_field[pos*8+7] = new node(outbit7);
+	bit_field[pos*8+2] = new_node(outbit2);
+	bit_field[pos*8+3] = new_node(outbit3);
+	bit_field[pos*8+4] = new_node(outbit4);
+	bit_field[pos*8+5] = new_node(outbit5);
+	bit_field[pos*8+6] = new_node(outbit6);
+	bit_field[pos*8+7] = new_node(outbit7);
 
-	delete inbit0;
-	delete inbit1;
-	delete inbit2;
-	delete inbit3;
-	delete inbit4;
-	delete inbit5;
-	delete inbit6;
-	delete inbit7;
+	free_tree(inbit0);
+	free_tree(inbit1);
+	free_tree(inbit2);
+	free_tree(inbit3);
+	free_tree(inbit4);
+	free_tree(inbit5);
+	free_tree(inbit6);
+	free_tree(inbit7);
 
-	delete outbit0;
-	delete outbit1;
-	delete outbit2;
-	delete outbit3;
-	delete outbit4;
-	delete outbit5;
-	delete outbit6;
-	delete outbit7;
+	free_tree(outbit0);
+	free_tree(outbit1);
+	free_tree(outbit2);
+	free_tree(outbit3);
+	free_tree(outbit4);
+	free_tree(outbit5);
+	free_tree(outbit6);
+	free_tree(outbit7);
 
-	delete p0;
-	delete p1;
-	delete p2;
-	delete p3;
-	delete p4;
-	delete p5;
-	delete p6;
+	free_tree(p0);
+	free_tree(p1);
+	free_tree(p2);
+	free_tree(p3);
+	free_tree(p4);
+	free_tree(p5);
+	free_tree(p6);
 
-	delete g0;
-	delete g1;
-	delete g2;
-	delete g3;
-	delete g4;
-	delete g5;
-	delete g6;
+	free_tree(g0);
+	free_tree(g1);
+	free_tree(g2);
+	free_tree(g3);
+	free_tree(g4);
+	free_tree(g5);
+	free_tree(g6);
 
-	delete carry0;
-	delete carry1;
-	delete carry2;
-	delete carry3;
-	delete carry4;
-	delete carry5;
-	delete carry6;
+	free_tree(carry0);
+	free_tree(carry1);
+	free_tree(carry2);
+	free_tree(carry3);
+	free_tree(carry4);
+	free_tree(carry5);
+	free_tree(carry6);
 
 }
 
@@ -355,68 +355,14 @@ void xor_byte(int pos,unsigned char val,node * bit_field[])
 	bool r6 = ((rng_val >> 6) & 1) == 1 ? true : false;
 	bool r7 = ((rng_val >> 7) & 1) == 1 ? true : false;
 
-	node * inbit0 = new node(bit_field[pos*8]);
-	node * inbit1 = new node(bit_field[pos*8+1]);
-	node * inbit2 = new node(bit_field[pos*8+2]);
-	node * inbit3 = new node(bit_field[pos*8+3]);
-	node * inbit4 = new node(bit_field[pos*8+4]);
-	node * inbit5 = new node(bit_field[pos*8+5]);
-	node * inbit6 = new node(bit_field[pos*8+6]);
-	node * inbit7 = new node(bit_field[pos*8+7]);
-
-	node * outbit0 = new node(XOR,new node(inbit0),r0);
-	node * outbit1 = new node(XOR,new node(inbit1),r1);
-	node * outbit2 = new node(XOR,new node(inbit2),r2);
-	node * outbit3 = new node(XOR,new node(inbit3),r3);
-	node * outbit4 = new node(XOR,new node(inbit4),r4);
-	node * outbit5 = new node(XOR,new node(inbit5),r5);
-	node * outbit6 = new node(XOR,new node(inbit6),r6);
-	node * outbit7 = new node(XOR,new node(inbit7),r7);
-
-	outbit0 = outbit0->simplify();
-	outbit1 = outbit1->simplify();
-	outbit2 = outbit2->simplify();
-	outbit3 = outbit3->simplify();
-	outbit4 = outbit4->simplify();
-	outbit5 = outbit5->simplify();
-	outbit6 = outbit6->simplify();
-	outbit7 = outbit7->simplify();
-
-	delete bit_field[pos*8];
-	delete bit_field[pos*8+1];
-	delete bit_field[pos*8+2];
-	delete bit_field[pos*8+3];
-	delete bit_field[pos*8+4];
-	delete bit_field[pos*8+5];
-	delete bit_field[pos*8+6];
-	delete bit_field[pos*8+7];
-	
-	bit_field[pos*8] = new node(outbit0);
-	bit_field[pos*8+1] = new node(outbit1);
-	bit_field[pos*8+2] = new node(outbit2);
-	bit_field[pos*8+3] = new node(outbit3);
-	bit_field[pos*8+4] = new node(outbit4);
-	bit_field[pos*8+5] = new node(outbit5);
-	bit_field[pos*8+6] = new node(outbit6);
-	bit_field[pos*8+7] = new node(outbit7);
-
-	delete inbit0;
-	delete inbit1;
-	delete inbit2;
-	delete inbit3;
-	delete inbit4;
-	delete inbit5;
-	delete inbit6;
-	delete inbit7;
-
-	delete outbit0;
-	delete outbit1;
-	delete outbit2;
-	delete outbit3;
-	delete outbit4;
-	delete outbit5;
-	delete outbit6;
-	delete outbit7;
+	bit_field[pos*8] = new_node(XOR,bit_field[pos*8],new_node(r0));
+	bit_field[pos*8+1] = new_node(XOR,bit_field[pos*8+1],new_node(r1));
+	bit_field[pos*8+2] = new_node(XOR,bit_field[pos*8+2],new_node(r2));
+	bit_field[pos*8+3] = new_node(XOR,bit_field[pos*8+3],new_node(r3));
+	bit_field[pos*8+4] = new_node(XOR,bit_field[pos*8+4],new_node(r4));
+	bit_field[pos*8+5] = new_node(XOR,bit_field[pos*8+5],new_node(r5));
+	bit_field[pos*8+6] = new_node(XOR,bit_field[pos*8+6],new_node(r6));
+	bit_field[pos*8+7] = new_node(XOR,bit_field[pos*8+7],new_node(r7));
 }
 
 
@@ -428,7 +374,7 @@ void alg0(node * bit_field[])
 		unsigned char rng_val = rng_simple();
 			
 		//shift the current byte up once
-		delete bit_field[i*8 + 7];
+		free_tree(bit_field[i*8 + 7]);
 		bit_field[i*8 + 7] = bit_field[i*8 + 6];
 		bit_field[i*8 + 6] = bit_field[i*8 + 5];
 		bit_field[i*8 + 5] = bit_field[i*8 + 4];
@@ -436,7 +382,7 @@ void alg0(node * bit_field[])
 		bit_field[i*8 + 3] = bit_field[i*8 + 2];
 		bit_field[i*8 + 2] = bit_field[i*8 + 1];
 		bit_field[i*8 + 1] = bit_field[i*8];
-		bit_field[i*8] = new node((rng_val & 0x80) == 0x80 ? true : false);
+		bit_field[i*8] = new_node((rng_val & 0x80) == 0x80 ? true : false);
 	}
 }
 
@@ -454,7 +400,7 @@ void alg1(node * bit_field[])
 
 void alg2(node * bit_field[])
 {
-	node * carry = new node(((rng_simple() >> 7) & 1) == 1 ? true : false);
+	node * carry = new_node(((rng_simple() >> 7) & 1) == 1 ? true : false);
 	node * next_carry;
 	for (int i = 0x7F; i >= 0; i-=2)
 	{
@@ -484,7 +430,7 @@ void alg2(node * bit_field[])
 		carry = next_carry;
 
 	}
-	delete next_carry;
+	free_tree(next_carry);
 }
 
 void alg3(node * bit_field[])
@@ -523,7 +469,7 @@ void alg4(node * bit_field[])
 
 void alg5(node * bit_field[])
 {
-	node * carry = new node(((rng_simple() >> 7) & 1) == 1 ? true : false);
+	node * carry = new_node(((rng_simple() >> 7) & 1) == 1 ? true : false);
 	node * next_carry;
 	for (int i = 0x7F; i >= 0; i-=2)
 	{
@@ -553,7 +499,7 @@ void alg5(node * bit_field[])
 		carry = next_carry;
 
 	}
-	delete next_carry;
+	free_tree(next_carry);
 }
 
 void alg6(node * bit_field[])
@@ -564,7 +510,7 @@ void alg6(node * bit_field[])
 		unsigned char rng_val = rng_simple();
 			
 		//shift the current byte up once
-		delete bit_field[i*8];
+		free_tree(bit_field[i*8]);
 		bit_field[i*8] = bit_field[i*8 + 1];
 		bit_field[i*8 + 1] = bit_field[i*8 + 2];
 		bit_field[i*8 + 2] = bit_field[i*8 + 3];
@@ -572,7 +518,7 @@ void alg6(node * bit_field[])
 		bit_field[i*8 + 4] = bit_field[i*8 + 5];
 		bit_field[i*8 + 5] = bit_field[i*8 + 6];
 		bit_field[i*8 + 6] = bit_field[i*8 + 7];
-		bit_field[i*8 + 7] = new node((rng_val & 0x80) == 0x80 ? true : false);
+		bit_field[i*8 + 7] = new_node((rng_val & 0x80) == 0x80 ? true : false);
 	}
 }
 
@@ -580,17 +526,7 @@ void alg7(node * bit_field[])
 {
 	for (int i = 0x00; i < 128 * 8; i++)
 	{
-		node * inbit = new node(bit_field[i]);
-		node * outbit = new node(XOR,new node(inbit),true);
-		outbit = outbit->simplify();
-
-		delete bit_field[i];
-		bit_field[i] = new node(outbit);
-		//bit_field[i] = bit_field[i]->simplify();
-
-		delete inbit;
-		delete outbit;
-
+		bit_field[i] = new_node(XOR,bit_field[i],true);
 	}
 }
 
@@ -833,14 +769,14 @@ int main()
 		{
 			for (int j = 0; j < 8; j++)
 			{
-				all_bits[i*8+j] = new node(((value[i%8] >> j) & 1) == 1 ? true : false);
+				all_bits[i*8+j] = new_node(((value[i%8] >> j) & 1) == 1 ? true : false);
 			}
 		}
 		else
 		{
 			for (int j = 0; j < 8; j++)
 			{
-				all_bits[i*8+j] = new node(bit_names[i%8*8+j]);
+				all_bits[i*8+j] = new_node(bit_names[i%8*8+j]);
 			}
 		}
 	}
@@ -899,7 +835,7 @@ int main()
 	for (int l = 0; l < 128 * 8; l++)
 	{
 		// where don't care is false, assign that bit to the value in implicant
-		delete all_bits[l];
+		free_tree(all_bits[l]);
 	}
 
 	auto end = clock::now();
@@ -929,15 +865,15 @@ int main()
 		node * bit0;
 		if (nibble == 1)
 		{
-			bit2 = all_bits[i*8+7];
-			bit1 = all_bits[i*8+6];
-			bit0 = all_bits[i*8+5];
+			bit2 = all_bits[i*8+7] = all_bits[i*8+7]->simplify();
+			bit1 = all_bits[i*8+6] = all_bits[i*8+6]->simplify();
+			bit0 = all_bits[i*8+5] = all_bits[i*8+5]->simplify();
 		}
 		else
 		{
-			bit2 = all_bits[i*8+3];
-			bit1 = all_bits[i*8+2];
-			bit0 = all_bits[i*8+1];
+			bit2 = all_bits[i*8+3] = all_bits[i*8+3]->simplify();
+			bit1 = all_bits[i*8+2] = all_bits[i*8+2]->simplify();
+			bit0 = all_bits[i*8+1] = all_bits[i*8+1]->simplify();
 		}
 
 		if (bit2->type != VAL || bit1->type != VAL || bit0->type != VAL)
@@ -990,9 +926,9 @@ int main()
 			unsigned int space = 1 << vars.size();
 			for (unsigned int j = 0; j < space; j++)
 			{
-				node* bit2_copy = new node(bit2);
-				node* bit1_copy = new node(bit1);
-				node* bit0_copy = new node(bit0);
+				node* bit2_copy = new_node(bit2);
+				node* bit1_copy = new_node(bit1);
+				node* bit0_copy = new_node(bit0);
 
 				for (size_t k = 0; k < vars.size(); k++)
 				{
@@ -1282,15 +1218,15 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 		node * bit0;
 		if (nibble == 1)
 		{
-			bit2 = all_bits[i*8+7];
-			bit1 = all_bits[i*8+6];
-			bit0 = all_bits[i*8+5];
+			bit2 = all_bits[i*8+7] = all_bits[i*8+7]->simplify();
+			bit1 = all_bits[i*8+6] = all_bits[i*8+6]->simplify();
+			bit0 = all_bits[i*8+5] = all_bits[i*8+5]->simplify();
 		}
 		else
 		{
-			bit2 = all_bits[i*8+3];
-			bit1 = all_bits[i*8+2];
-			bit0 = all_bits[i*8+1];
+			bit2 = all_bits[i*8+3] = all_bits[i*8+3]->simplify();
+			bit1 = all_bits[i*8+2] = all_bits[i*8+2]->simplify();
+			bit0 = all_bits[i*8+1] = all_bits[i*8+1]->simplify();
 		}
 
 		// If algorithm number is a constant, just run it and keep going
@@ -1305,6 +1241,14 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 			/*
 			printf("Need evaluation:\n");
 			printf("%s\n%s\n%s\n",bit2->get_string().c_str(),bit1->get_string().c_str(),bit0->get_string().c_str());
+			*/
+			
+			/*
+			bit2 = remove_xor(bit2);
+			printf("\n%s\n",bit2->get_string().c_str());
+			
+			bit2 = canon(remove_xor(bit2));
+			printf("\n%s\n",bit2->get_string().c_str());
 			*/
 
 			// Get the variables used in all three equations
@@ -1353,9 +1297,9 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 			unsigned int space = 1 << vars.size();
 			for (unsigned int j = 0; j < space; j++)
 			{
-				node* bit2_copy = new node(bit2);
-				node* bit1_copy = new node(bit1);
-				node* bit0_copy = new node(bit0);
+				node* bit2_copy = new_node(bit2);
+				node* bit1_copy = new_node(bit1);
+				node* bit0_copy = new_node(bit0);
 				
 				for (size_t k = 0; k < vars.size(); k++)
 				{
@@ -1380,9 +1324,9 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 				unsigned char result = ((bit2_copy->val ? 1 : 0) << 2) | ((bit1_copy->val ? 1 : 0) << 1) | (bit0_copy->val ? 1 : 0);
 				minterms[result].push_back(j);
 
-				delete bit2_copy;
-				delete bit1_copy;
-				delete bit0_copy;
+				free_tree(bit2_copy);
+				free_tree(bit1_copy);
+				free_tree(bit0_copy);
 			}
 
 			/*
@@ -1431,7 +1375,7 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 						for (int l = 0; l < 128 * 8; l++)
 						{
 							// where don't care is false, assign that bit to the value in implicant
-							bitfield_clone[l] = new node(bitfield[l]);
+							bitfield_clone[l] = new_node(bitfield[l]);
 							for (size_t m = 0; m < vars.size(); m++)
 							{
 								if (((implicants[k].dont_care_mask >> m) & 1) == 0)
@@ -1468,7 +1412,7 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 						for (int l = 0; l < 128 * 8; l++)
 						{
 							// where don't care is false, assign that bit to the value in implicant
-							delete bitfield_clone[l];
+							free_tree(bitfield_clone[l]);
 						}
 						//if (i == 4) return;
 					}
