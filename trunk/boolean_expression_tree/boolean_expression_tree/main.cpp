@@ -172,23 +172,15 @@ void add_byte(int pos,unsigned char val,node * bit_field[])
 	bool r6 = ((rng_val >> 6) & 1) == 1 ? true : false;
 	bool r7 = ((rng_val >> 7) & 1) == 1 ? true : false;
 
-	node * inbit0 = new_node(bit_field[pos*8]);
-	node * inbit1 = new_node(bit_field[pos*8+1]);
-	node * inbit2 = new_node(bit_field[pos*8+2]);
-	node * inbit3 = new_node(bit_field[pos*8+3]);
-	node * inbit4 = new_node(bit_field[pos*8+4]);
-	node * inbit5 = new_node(bit_field[pos*8+5]);
-	node * inbit6 = new_node(bit_field[pos*8+6]);
-	node * inbit7 = new_node(bit_field[pos*8+7]);
+	node * inbit0 = bit_field[pos*8];
+	node * inbit1 = bit_field[pos*8+1];
+	node * inbit2 = bit_field[pos*8+2];
+	node * inbit3 = bit_field[pos*8+3];
+	node * inbit4 = bit_field[pos*8+4];
+	node * inbit5 = bit_field[pos*8+5];
+	node * inbit6 = bit_field[pos*8+6];
+	node * inbit7 = bit_field[pos*8+7];
 
-	node * outbit0;
-	node * outbit1;
-	node * outbit2;
-	node * outbit3;
-	node * outbit4;
-	node * outbit5;
-	node * outbit6;
-	node * outbit7;
 	node * carry0;
 	node * carry1;
 	node * carry2;
@@ -211,116 +203,59 @@ void add_byte(int pos,unsigned char val,node * bit_field[])
 	node * g5;
 	node * g6;
 
+	// General formulas for byte addition:
+	// a,b = bits to sum
+	// c = carry
+	// out = a ^ b ^ c
 
-	outbit0 = new_node(XOR,new_node(inbit0),r0);
+	// Generate carry:
+	// g = a & b
+
+	// Propagate carry:
+	// p = a | b
+
+	// Carry:
+	// carry = g | (p & c)
+
+
 	g0 = new_node(AND,new_node(inbit0),r0);
-	p0 = new_node(false);
-	carry0 = new_node(AND,new_node(inbit0),r0);
-
-	outbit1 = new_node(XOR,new_node(XOR,new_node(inbit1),r1),new_node(carry0));
+	p0 = new_node(OR,new_node(inbit0),r0);
+	// Since there is no carry, the (p & c) term would drop out and you are left with g
+	carry0 = g0;
+	// No carry for the 0th bit
+	bit_field[pos*8] = new_node(XOR,inbit0,r0);
+	
 	g1 = new_node(AND,new_node(inbit1),r1);
 	p1 = new_node(OR,new_node(inbit1),r1);
-	carry1 = new_node(OR,new_node(g1),new_node(AND,new_node(p1),new_node(carry0)));
+	carry1 = new_node(OR,g1,new_node(AND,p1,new_node(carry0)));
+	bit_field[pos*8+1] = new_node(XOR,new_node(XOR,inbit1,r1),carry0);
 
-	outbit2 = new_node(XOR,new_node(XOR,new_node(inbit2),r2),new_node(carry1));
 	g2 = new_node(AND,new_node(inbit2),r2);
 	p2 = new_node(OR,new_node(inbit2),r2);
-	carry2 = new_node(OR,new_node(g2),new_node(AND,new_node(p2),new_node(carry1)));
+	carry2 = new_node(OR,g2,new_node(AND,p2,new_node(carry1)));
+	bit_field[pos*8+2] = new_node(XOR,new_node(XOR,inbit2,r2),carry1);
 
-	outbit3 = new_node(XOR,new_node(XOR,new_node(inbit3),r3),new_node(carry2));
 	g3 = new_node(AND,new_node(inbit3),r3);
 	p3 = new_node(OR,new_node(inbit3),r3);
-	carry3 = new_node(OR,new_node(g3),new_node(AND,new_node(p3),new_node(carry2)));
+	carry3 = new_node(OR,g3,new_node(AND,p3,new_node(carry2)));
+	bit_field[pos*8+3] = new_node(XOR,new_node(XOR,inbit3,r3),carry2);
 
-	outbit4 = new_node(XOR,new_node(XOR,new_node(inbit4),r4),new_node(carry3));
 	g4 = new_node(AND,new_node(inbit4),r4);
 	p4 = new_node(OR,new_node(inbit4),r4);
-	carry4 = new_node(OR,new_node(g4),new_node(AND,new_node(p4),new_node(carry3)));
+	carry4 = new_node(OR,g4,new_node(AND,p4,new_node(carry3)));
+	bit_field[pos*8+4] = new_node(XOR,new_node(XOR,inbit4,r4),carry3);
 
-	outbit5 = new_node(XOR,new_node(XOR,new_node(inbit5),r5),new_node(carry4));
 	g5 = new_node(AND,new_node(inbit5),r5);
 	p5 = new_node(OR,new_node(inbit5),r5);
-	carry5 = new_node(OR,new_node(g5),new_node(AND,new_node(p5),new_node(carry4)));
+	carry5 = new_node(OR,g5,new_node(AND,p5,new_node(carry4)));
+	bit_field[pos*8+5] = new_node(XOR,new_node(XOR,inbit5,r5),carry4);
 
-	outbit6 = new_node(XOR,new_node(XOR,new_node(inbit6),r6),new_node(carry5));
 	g6 = new_node(AND,new_node(inbit6),r6);
 	p6 = new_node(OR,new_node(inbit6),r6);
-	carry6 = new_node(OR,new_node(g6),new_node(AND,new_node(p6),new_node(carry5)));
+	carry6 = new_node(OR,g6,new_node(AND,p6,new_node(carry5)));
+	bit_field[pos*8+6] = new_node(XOR,new_node(XOR,inbit6,r6),carry5);
 
-	outbit7 = new_node(XOR,new_node(XOR,new_node(inbit7),r7),new_node(carry6));
-
-
-
-	free_tree(bit_field[pos*8]);
-	free_tree(bit_field[pos*8+1]);
-	free_tree(bit_field[pos*8+2]);
-	free_tree(bit_field[pos*8+3]);
-	free_tree(bit_field[pos*8+4]);
-	free_tree(bit_field[pos*8+5]);
-	free_tree(bit_field[pos*8+6]);
-	free_tree(bit_field[pos*8+7]);
-
-	outbit0 = outbit0->simplify();
-	outbit1 = outbit1->simplify();
-	outbit2 = outbit2->simplify();
-	outbit3 = outbit3->simplify();
-	outbit4 = outbit4->simplify();
-	outbit5 = outbit5->simplify();
-	outbit6 = outbit6->simplify();
-	outbit7 = outbit7->simplify();
-
-
-	bit_field[pos*8] = new_node(outbit0);
-	bit_field[pos*8+1] = new_node(outbit1);
-	bit_field[pos*8+2] = new_node(outbit2);
-	bit_field[pos*8+3] = new_node(outbit3);
-	bit_field[pos*8+4] = new_node(outbit4);
-	bit_field[pos*8+5] = new_node(outbit5);
-	bit_field[pos*8+6] = new_node(outbit6);
-	bit_field[pos*8+7] = new_node(outbit7);
-
-	free_tree(inbit0);
-	free_tree(inbit1);
-	free_tree(inbit2);
-	free_tree(inbit3);
-	free_tree(inbit4);
-	free_tree(inbit5);
-	free_tree(inbit6);
-	free_tree(inbit7);
-
-	free_tree(outbit0);
-	free_tree(outbit1);
-	free_tree(outbit2);
-	free_tree(outbit3);
-	free_tree(outbit4);
-	free_tree(outbit5);
-	free_tree(outbit6);
-	free_tree(outbit7);
-
-	free_tree(p0);
-	free_tree(p1);
-	free_tree(p2);
-	free_tree(p3);
-	free_tree(p4);
-	free_tree(p5);
-	free_tree(p6);
-
-	free_tree(g0);
-	free_tree(g1);
-	free_tree(g2);
-	free_tree(g3);
-	free_tree(g4);
-	free_tree(g5);
-	free_tree(g6);
-
-	free_tree(carry0);
-	free_tree(carry1);
-	free_tree(carry2);
-	free_tree(carry3);
-	free_tree(carry4);
-	free_tree(carry5);
-	free_tree(carry6);
-
+	bit_field[pos*8+7] = new_node(XOR,new_node(XOR,inbit7,r7),carry6);
 }
 
 void xor_byte(int pos,unsigned char val,node * bit_field[])

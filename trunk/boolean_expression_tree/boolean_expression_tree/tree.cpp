@@ -583,6 +583,18 @@ node* node::simplify()
 				return new_node(false);
 			}
 		}
+		else if (this->type == NOT)
+		{
+			if (this->left->type == VAL)
+			{
+				// Invert the value at left and return that node instead
+				node * temp = this->left;
+				temp->val = !temp->val;
+
+				free_node(this); // does this work??
+				return temp;
+			}
+		}
 
 		return this;
 	}
