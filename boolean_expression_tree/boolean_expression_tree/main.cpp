@@ -761,6 +761,8 @@ int main()
 	return 0;
 }
 
+int varcount = 0;
+
 void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 {
 	for (int i = current_byte; i < 16; i++)
@@ -789,17 +791,22 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 		node * bit2;
 		node * bit1;
 		node * bit0;
+
+		//cout << "Grabbing these bits: ";
+
 		if (nibble == 1)
 		{
-			bit2 = all_bits[i*8+7] = all_bits[i*8+7]->simplify();
-			bit1 = all_bits[i*8+6] = all_bits[i*8+6]->simplify();
-			bit0 = all_bits[i*8+5] = all_bits[i*8+5]->simplify();
+			//cout << i*8+7 << " " << i*8+6 << " " << i*8+5 << "\n";
+			bit2 = bitfield[i*8+7] = bitfield[i*8+7]->simplify();
+			bit1 = bitfield[i*8+6] = bitfield[i*8+6]->simplify();
+			bit0 = bitfield[i*8+5] = bitfield[i*8+5]->simplify();
 		}
 		else
 		{
-			bit2 = all_bits[i*8+3] = all_bits[i*8+3]->simplify();
-			bit1 = all_bits[i*8+2] = all_bits[i*8+2]->simplify();
-			bit0 = all_bits[i*8+1] = all_bits[i*8+1]->simplify();
+			//cout << i*8+3 << " " << i*8+2 << " " << i*8+1 << "\n";
+			bit2 = bitfield[i*8+3] = bitfield[i*8+3]->simplify();
+			bit1 = bitfield[i*8+2] = bitfield[i*8+2]->simplify();
+			bit0 = bitfield[i*8+1] = bitfield[i*8+1]->simplify();
 		}
 
 		// If algorithm number is a constant, just run it and keep going
@@ -811,18 +818,24 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 		}
 		else
 		{
-			/*
+			
 			printf("Need evaluation:\n");
 			printf("%s\n%s\n%s\n",bit2->get_string().c_str(),bit1->get_string().c_str(),bit0->get_string().c_str());
-			*/
 			
-			/*
+			
+			
 			bit2 = remove_xor(bit2);
 			printf("\n%s\n",bit2->get_string().c_str());
+
+			bit1 = remove_xor(bit1);
+			printf("\n%s\n",bit1->get_string().c_str());
+
+			bit0 = remove_xor(bit0);
+			printf("\n%s\n",bit0->get_string().c_str());
 			
 			bit2 = canon(remove_xor(bit2));
 			printf("\n%s\n",bit2->get_string().c_str());
-			*/
+			
 
 			// Get the variables used in all three equations
 			std::vector<char> vars_bit2 = bit2->get_vars();
@@ -939,11 +952,12 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 						printf("\n");
 					}
 					*/
-
+					
 					// loop through the implicants
 					node* bitfield_clone[128 * 8];
 					for (size_t k = 0; k < implicants.size(); k++)
 					{
+						int temp_varcount = 0;
 						// clone the bitfield
 						for (int l = 0; l < 128 * 8; l++)
 						{
@@ -963,11 +977,29 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 										bitfield_clone[l]->assign_var(vars[m],true);
 										//printf("%c = %d ",vars[m],1);
 									}
-									bitfield_clone[l] = bitfield_clone[l]->simplify();
+									
 								}
 							}
+							bitfield_clone[l] = bitfield_clone[l]->simplify();
 							//printf("\n");
 						}
+
+						/*
+						for (size_t m = 0; m < vars.size(); m++)
+						{
+							if (((implicants[k].dont_care_mask >> m) & 1) == 0)
+							{
+								cout << vars[m] << " = " << ((implicants[k].implicant >> m) & 1) << "\n";
+								temp_varcount++;
+							}
+						}
+						*/
+
+						varcount += temp_varcount;
+						//if (i == 15)
+						//cout << varcount << " vars assigned\n";
+						if (varcount == 32)
+							cout << "ALL ASSIGNED\n";
 
 						//printf("Running alg %d\n",j);
 						// run the selected algorithm on the bitfield copy
@@ -981,6 +1013,7 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 						printf("%d/7 %d/%d\n",j,k+1,implicants.size());
 						// RECURSE
 						alg_loop(bitfield_clone,i+1,nibble_selector);
+						varcount -= temp_varcount;
 						// delete the bitfield
 						for (int l = 0; l < 128 * 8; l++)
 						{
