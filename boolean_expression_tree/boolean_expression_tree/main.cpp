@@ -11,6 +11,8 @@ static char THIS_FILE[] = __FILE__;
 #include "tree.h"
 #include "data_sizes.h"
 #include "qmp.h"
+#include "espresso/espresso.h"
+#include "espresso/sparse.h"
 
 #include <chrono>
 #include <iostream>
@@ -761,6 +763,108 @@ int main()
 	return 0;
 }
 
+vector<Implicant> reduce_table_es(int var_count, vector<unsigned int> minterms)
+{
+	vector<Implicant> implicants2;
+
+	debug = 0;			/* default -d: no debugging info */
+	verbose_debug = FALSE;	/* default -v: not verbose */
+	print_solution = TRUE;	/* default -x: print the solution (!) */
+	summary = FALSE;		/* default -s: no summary */
+	trace = FALSE;		/* default -t: no trace information */
+	remove_essential = TRUE;	/* default -e: */
+	force_irredundant = TRUE;
+	unwrap_onset = TRUE;
+	single_expand = FALSE;
+	pos = FALSE;
+	recompute_onset = FALSE;
+	use_super_gasp = FALSE;
+	use_random_order = FALSE;
+	kiss = FALSE;
+	echo_comments = TRUE;
+	echo_unknown_commands = TRUE;
+
+	cube.num_binary_vars = var_count;
+	cube.num_vars = cube.num_binary_vars + 1;
+	cube.part_size = ALLOC(int, cube.num_vars);
+	cube.part_size[cube.num_vars-1] = 1;
+	cube_setup();
+
+	pPLA PLA = new_PLA();
+	PLA->pla_type = FD_type;
+
+	if (PLA->F == NULL) {
+		PLA->F = new_cover(10);
+		PLA->D = new_cover(10);
+		PLA->R = new_cover(10);
+	}
+
+	for (int minnum = 0; minnum < minterms.size(); minnum++)
+	{
+		pcube cf = cube.temp[0], cr = cube.temp[1], cd = cube.temp[2];
+		set_clear(cf, cube.size);
+
+
+		for (int varnum = 0; varnum < var_count; varnum++)
+		{
+			if (((minterms[minnum] >> varnum) & 1))
+			{
+				set_insert(cf, varnum*2+1);
+			}
+			else
+			{
+				set_insert(cf, varnum*2);
+			}
+		}
+		set_copy(cr, cf);
+		set_copy(cd, cf);
+		set_insert(cf, cube.first_part[var_count]);
+		PLA->F = sf_addset(PLA->F, cf);
+	}
+
+	PLA->R = complement(cube2list(PLA->F, PLA->D));
+
+	//PLA->F = espresso(PLA->F, PLA->D, PLA->R);
+
+//	fprint_pla(stdout, PLA, F_type);
+//	pcover Fold = sf_save(PLA->F);
+
+
+	PLA->F = minimize_exact(PLA->F, PLA->D, PLA->R, TRUE);
+	//PLA->F = espresso(PLA->F, PLA->D, PLA->R);
+
+
+//	fprint_pla(stdout, PLA, F_type);
+
+	pcube last, p;
+	foreach_set(PLA->F, last, p) {
+		int imp = 0;
+		int dc = 0;
+		for(int var = 0; var < cube.num_binary_vars; var++) {
+			int val = GETINPUT(p, var);
+			switch (val){
+			case 2:
+				imp |= 1 << var;
+				break;
+			case 3:
+				dc |= 1 << var;
+				break;
+			}
+		}
+		Implicant temp(var_count,imp,vector<unsigned int>(),dc);
+		implicants2.push_back(temp);
+	}
+
+	free_PLA(PLA);
+    FREE(cube.part_size);
+    setdown_cube();             /* free the cube/cdata structure data */
+    sf_cleanup();               /* free unused set structures */
+    sm_cleanup();               /* sparse matrix cleanup */
+
+	return implicants2;
+}
+
+
 int varcount = 0;
 
 void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
@@ -819,23 +923,23 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 		else
 		{
 			
-			printf("Need evaluation:\n");
-			printf("%s\n%s\n%s\n",bit2->get_string().c_str(),bit1->get_string().c_str(),bit0->get_string().c_str());
+			//printf("Need evaluation:\n");
+			//printf("%s\n%s\n%s\n",bit2->get_string().c_str(),bit1->get_string().c_str(),bit0->get_string().c_str());
 			
 			
-			
+			/*
 			bit2 = remove_xor(bit2);
-			printf("\n%s\n",bit2->get_string().c_str());
+			//printf("\n%s\n",bit2->get_string().c_str());
 
 			bit1 = remove_xor(bit1);
-			printf("\n%s\n",bit1->get_string().c_str());
+			//printf("\n%s\n",bit1->get_string().c_str());
 
 			bit0 = remove_xor(bit0);
-			printf("\n%s\n",bit0->get_string().c_str());
+			//printf("\n%s\n",bit0->get_string().c_str());
 			
 			bit2 = canon(remove_xor(bit2));
-			printf("\n%s\n",bit2->get_string().c_str());
-			
+			//printf("\n%s\n",bit2->get_string().c_str());
+			*/
 
 			// Get the variables used in all three equations
 			std::vector<char> vars_bit2 = bit2->get_vars();
@@ -930,7 +1034,8 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 				{
 					//printf("For alg %d\n",j);
 					// reduce the truth table using qmp
-					vector<Implicant> implicants = reduce_table(vars.size(),minterms[j]);
+					//vector<Implicant> implicants = reduce_table(vars.size(),minterms[j]);
+					vector<Implicant> implicants = reduce_table_es(vars.size(),minterms[j]);
 
 					/*
 					// display the results...

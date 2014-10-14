@@ -83,12 +83,70 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="espresso\black_white.c" />
+    <ClCompile Include="espresso\canonical.c" />
+    <ClCompile Include="espresso\cofactor.c" />
+    <ClCompile Include="espresso\cols.c" />
+    <ClCompile Include="espresso\compl.c" />
+    <ClCompile Include="espresso\contain.c" />
+    <ClCompile Include="espresso\cpu_time.c" />
+    <ClCompile Include="espresso\cubestr.c" />
+    <ClCompile Include="espresso\cvrin.c" />
+    <ClCompile Include="espresso\cvrm.c" />
+    <ClCompile Include="espresso\cvrmisc.c" />
+    <ClCompile Include="espresso\cvrout.c" />
+    <ClCompile Include="espresso\dominate.c" />
+    <ClCompile Include="espresso\equiv.c" />
+    <ClCompile Include="espresso\espresso.c" />
+    <ClCompile Include="espresso\essen.c" />
+    <ClCompile Include="espresso\essentiality.c" />
+    <ClCompile Include="espresso\exact.c" />
+    <ClCompile Include="espresso\expand.c" />
+    <ClCompile Include="espresso\gasp.c" />
+    <ClCompile Include="espresso\gimpel.c" />
+    <ClCompile Include="espresso\globals.c" />
+    <ClCompile Include="espresso\hack.c" />
+    <ClCompile Include="espresso\indep.c" />
+    <ClCompile Include="espresso\irred.c" />
+    <ClCompile Include="espresso\mainer.c" />
+    <ClCompile Include="espresso\map.c" />
+    <ClCompile Include="espresso\matrix.c" />
+    <ClCompile Include="espresso\mincov.c" />
+    <ClCompile Include="espresso\opo.c" />
+    <ClCompile Include="espresso\pair.c" />
+    <ClCompile Include="espresso\part.c" />
+    <ClCompile Include="espresso\primes.c" />
+    <ClCompile Include="espresso\prtime.c" />
+    <ClCompile Include="espresso\reduce.c" />
+    <ClCompile Include="espresso\rows.c" />
+    <ClCompile Include="espresso\set.c" />
+    <ClCompile Include="espresso\setc.c" />
+    <ClCompile Include="espresso\sharp.c" />
+    <ClCompile Include="espresso\sigma.c" />
+    <ClCompile Include="espresso\signature.c" />
+    <ClCompile Include="espresso\signature_exact.c" />
+    <ClCompile Include="espresso\sminterf.c" />
+    <ClCompile Include="espresso\solution.c" />
+    <ClCompile Include="espresso\sparse.c" />
+    <ClCompile Include="espresso\unate.c" />
+    <ClCompile Include="espresso\util_signature.c" />
+    <ClCompile Include="espresso\verify.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bit_field.h" />
     <ClInclude Include="data_sizes.h" />
+    <ClInclude Include="espresso\copyright.h" />
+    <ClInclude Include="espresso\espresso.h" />
+    <ClInclude Include="espresso\main.h" />
+    <ClInclude Include="espresso\mincov.h" />
+    <ClInclude Include="espresso\mincov_int.h" />
+    <ClInclude Include="espresso\port.h" />
+    <ClInclude Include="espresso\signature.h" />
+    <ClInclude Include="espresso\sparse.h" />
+    <ClInclude Include="espresso\sparse_int.h" />
+    <ClInclude Include="espresso\utility.h" />
     <ClInclude Include="qmp.h" />
     <ClInclude Include="tree.h" />
   </ItemGroup>

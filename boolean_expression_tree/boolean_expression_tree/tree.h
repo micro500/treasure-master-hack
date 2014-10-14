@@ -30,15 +30,15 @@ public:
 	/*
 	node(NODE_TYPE,node *, node *);
 	node(NODE_TYPE,char, node *);
-	node(NODE_TYPE,bool, node *);
+	node(NODE_TYPE,int, node *);
 	node(NODE_TYPE,node *, char);
-	node(NODE_TYPE,node *, bool);
+	node(NODE_TYPE,node *, int);
 	node(NODE_TYPE,char, char);
-	node(NODE_TYPE,char, bool);
-	node(NODE_TYPE,bool, char);
-	node(NODE_TYPE,bool, bool);
+	node(NODE_TYPE,char, int);
+	node(NODE_TYPE,int, char);
+	node(NODE_TYPE,int, int);
 	node(char);
-	node(bool);
+	node(int);
 	*/
 
 	/*
@@ -46,11 +46,11 @@ public:
 	node (node *);
 	*/
 
-	void assign_var(char var, bool val);
+	void assign_var(char var, int val);
 	std::vector<char> get_vars();
 
 	char var;
-	bool val;
+	int val;
 
 	node *left;
 	node *right;
@@ -58,15 +58,15 @@ public:
 
 node * new_node(NODE_TYPE type, node * left, node * right);
 node * new_node(NODE_TYPE type, char var, node * right);
-node * new_node(NODE_TYPE type, bool val, node * right);
+node * new_node(NODE_TYPE type, int val, node * right);
 node * new_node(NODE_TYPE type, node * left, char var);
-node * new_node(NODE_TYPE type, node * left, bool val);
+node * new_node(NODE_TYPE type, node * left, int val);
 node * new_node(NODE_TYPE type, char var1, char var2);
-node * new_node(NODE_TYPE type, char var, bool val);
-node * new_node(NODE_TYPE type, bool val, char var);
-node * new_node(NODE_TYPE type, bool val1, bool val2);
+node * new_node(NODE_TYPE type, char var, int val);
+node * new_node(NODE_TYPE type, int val, char var);
+node * new_node(NODE_TYPE type, int val1, int val2);
 node * new_node(char var);
-node * new_node(bool val);
+node * new_node(int val);
 
 node * new_node(node *);
 
