@@ -151,7 +151,7 @@ node * new_node(NODE_TYPE type, char var, node * right)
 	return result;
 }
 
-node * new_node(NODE_TYPE type, bool val, node * right)
+node * new_node(NODE_TYPE type, int val, node * right)
 {
 	node * result = get_new_node();
 	result->type = type;
@@ -171,7 +171,7 @@ node * new_node(NODE_TYPE type, node * left, char var)
 	return result;
 }
 
-node * new_node(NODE_TYPE type, node * left, bool val)
+node * new_node(NODE_TYPE type, node * left, int val)
 {
 	node * result = get_new_node();
 	result->type = type;
@@ -191,7 +191,7 @@ node * new_node(NODE_TYPE type, char var1, char var2)
 	return result;
 }
 
-node * new_node(NODE_TYPE type, char var, bool val)
+node * new_node(NODE_TYPE type, char var, int val)
 {
 	node * result = get_new_node();
 	result->type = type;
@@ -201,7 +201,7 @@ node * new_node(NODE_TYPE type, char var, bool val)
 	return result;
 }
 
-node * new_node(NODE_TYPE type, bool val, char var)
+node * new_node(NODE_TYPE type, int val, char var)
 {
 	node * result = get_new_node();
 	result->type = type;
@@ -211,7 +211,7 @@ node * new_node(NODE_TYPE type, bool val, char var)
 	return result;
 }
 
-node * new_node(NODE_TYPE type, bool val1, bool val2)
+node * new_node(NODE_TYPE type, int val1, int val2)
 {
 	node * result = get_new_node();
 	result->type = type;
@@ -233,7 +233,7 @@ node * new_node(char var)
 	return result;
 }
 
-node * new_node(bool val)
+node * new_node(int val)
 {
 	node * result = get_new_node();
 	result->type = VAL;
@@ -287,7 +287,7 @@ node::node(NODE_TYPE type, char var, node * right)
 	this->right = right;
 }
 
-node::node(NODE_TYPE type, bool val, node * right)
+node::node(NODE_TYPE type, int val, node * right)
 {
 	this->type = type;
 	this->left = new node(val);
@@ -301,7 +301,7 @@ node::node(NODE_TYPE type, node * left, char var)
 	this->right = new node(var);
 }
 
-node::node(NODE_TYPE type, node * left, bool val)
+node::node(NODE_TYPE type, node * left, int val)
 {
 	this->type = type;
 	this->left = left;
@@ -315,21 +315,21 @@ node::node(NODE_TYPE type, char var1, char var2)
 	this->right = new node(var2);
 }
 
-node::node(NODE_TYPE type, char var, bool val)
+node::node(NODE_TYPE type, char var, int val)
 {
 	this->type = type;
 	this->left = new node(var);
 	this->right = new node(val);
 }
 
-node::node(NODE_TYPE type, bool val, char var)
+node::node(NODE_TYPE type, int val, char var)
 {
 	this->type = type;
 	this->left = new node(val);
 	this->right = new node(var);
 }
 
-node::node(NODE_TYPE type, bool val1, bool val2)
+node::node(NODE_TYPE type, int val1, int val2)
 {
 	this->type = type;
 	this->left = new node(val1);
@@ -345,7 +345,7 @@ node::node(char var)
 	this->right = 0;
 }
 
-node::node(bool val)
+node::node(int val)
 {
 	this->type = VAL;
 	this->val = val;
@@ -426,7 +426,7 @@ std::string node::get_string()
 	}
 }
 
-void node::assign_var(char var, bool val)
+void node::assign_var(char var, int val)
 {
 	if (this->type == VAL)
 	{
