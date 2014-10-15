@@ -8,9 +8,9 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#include "implicants.h"
 #include "tree.h"
 #include "data_sizes.h"
-#include "qmp.h"
 #include "espresso/espresso.h"
 #include "espresso/sparse.h"
 
@@ -34,7 +34,7 @@ const char bit_names[65] = "23456789@#$%abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN
 0xC9, 0xBE, 0xE2, 0x10, 0x77, 0x2B, 0x58, 0x2B,
 0x55, 0xA4, 0x99, 0x8A, 0xF6, 0x45, 0x39, 0x5E,
 0x11, 0x53, 0xA2, 0xAF, 0xFB, 0x00, 0x4C, 0x1F};*/
-void alg_loop(node * bitfield[], int current_byte, short nibble_selector);
+void alg_loop(node * bitfield[], int current_byte, short nibble_selector, uint8 seed_a, uint8 seed_b);
 uint16 rng_table[0x100][0x100];
 node* all_bits[8 * 128];
 union
@@ -747,7 +747,7 @@ int main()
 	printf("%04x\n",nibble_selector);
 
 	auto start = clock::now();
-	alg_loop(all_bits,0,nibble_selector);
+	alg_loop(all_bits,0,nibble_selector,code_backup.as_uint8[0],code_backup.as_uint8[1]);
 
 	for (int l = 0; l < 128 * 8; l++)
 	{
@@ -867,7 +867,7 @@ vector<Implicant> reduce_table_es(int var_count, vector<unsigned int> minterms)
 
 int varcount = 0;
 
-void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
+void alg_loop(node * bitfield[], int current_byte, short nibble_selector, uint8 seed_a, uint8 seed_b)
 {
 	for (int i = current_byte; i < 16; i++)
     {
@@ -919,6 +919,8 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 			result = ((bit2->val ? 1 : 0) << 2) | ((bit1->val ? 1 : 0) << 1) | (bit0->val ? 1 : 0);
 			unsigned char algorithm_number = result & 0x07;
 			alg(algorithm_number,bitfield);
+			seed_a = rnga;
+			seed_b = rngb;
 		}
 		else
 		{
@@ -1108,6 +1110,7 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 
 						//printf("Running alg %d\n",j);
 						// run the selected algorithm on the bitfield copy
+						seed_rng(seed_a,seed_b);
 						alg(j,bitfield_clone);
 						//printf("Recursing. Our current level is: %d\n",i);
 						printf("%d",i);
@@ -1117,7 +1120,7 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 						}
 						printf("%d/7 %d/%d\n",j,k+1,implicants.size());
 						// RECURSE
-						alg_loop(bitfield_clone,i+1,nibble_selector);
+						alg_loop(bitfield_clone,i+1,nibble_selector,rnga,rngb);
 						varcount -= temp_varcount;
 						// delete the bitfield
 						for (int l = 0; l < 128 * 8; l++)
@@ -1131,6 +1134,7 @@ void alg_loop(node * bitfield[], int current_byte, short nibble_selector)
 					//return;
 				}
 			}
+			return;
 		}
 
 					
