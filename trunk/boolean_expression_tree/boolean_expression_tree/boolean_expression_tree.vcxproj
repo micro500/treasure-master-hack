@@ -147,7 +147,7 @@
     <ClInclude Include="espresso\sparse.h" />
     <ClInclude Include="espresso\sparse_int.h" />
     <ClInclude Include="espresso\utility.h" />
-    <ClInclude Include="qmp.h" />
+    <ClInclude Include="implicants.h" />
     <ClInclude Include="tree.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
