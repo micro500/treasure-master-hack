@@ -6,7 +6,7 @@
 
 #include "data_sizes.h"
 #include "rng.h"
-#include "Code.h"
+#include "working_code.h"
 #include "key_schedule.h"
 
 unsigned char carnival_code[0x72] = { 0xF4, 0xD7, 0xD1, 0x9E, 0x46, 0x4F, 0x90, 0xF0, 0xA1, 0x3C, 
@@ -147,7 +147,7 @@ int main(void)
 		}
 	}
 
-	std::vector<Code> code_list(1,value);
+	std::vector<working_code> code_list(1,value);
 
 	/*
 	for (int i = 1; i < 0x1000000; i++)
@@ -168,33 +168,30 @@ int main(void)
 	uint64 full_sum = 0;
 	for (int i = 0; i < 26; i++)
 	{
-		/*
-		printf("map: %02x\n",map_list[i]);
-		printf("rng1: %02x, rng2: %02X, nibble: %04X\t<--NEW\n",schedule_entries[schedule_counter].rng1,schedule_entries[schedule_counter].rng2,schedule_entries[schedule_counter].nibble_selector);
-		
-		// process working code
-		
-		schedule_counter++;
-		
-		if (map_list[i] == 0x22)
-		{
-			printf("rng1: %02x, rng2: %02X, nibble: %04X\t<--NEW\n",schedule_entries[schedule_counter].rng1,schedule_entries[schedule_counter].rng2,schedule_entries[schedule_counter].nibble_selector);
-			
-			// process working code
-			
-			schedule_counter++;
-			
-		}
-		*/
-
 		// Step through the vector and do the map exit on each entry
 		uint64 sum = 0;
-		for (std::vector<Code>::iterator it = code_list.begin(); it != code_list.end(); ++it)
+		for (std::vector<working_code>::iterator it = code_list.begin(); it != code_list.end(); ++it)
 		{
 			auto start = clock::now();
-			it->process_map_exit(map_list[i]);
+			printf("map: %02X\n",map_list[i]);
+			printf("rng1: %02X, rng2: %02X, nibble: %04X\t<--NEW\n",schedule_entries[schedule_counter].rng1,schedule_entries[schedule_counter].rng2,schedule_entries[schedule_counter].nibble_selector);
+		
+			it->process_map_exit(map_list[i],schedule_entries[schedule_counter]);
+		
+			if (map_list[i] == 0x22)
+			{
+				printf("rng1: %02X, rng2: %02X, nibble: %04X\t<--NEW\n",schedule_entries[schedule_counter+1].rng1,schedule_entries[schedule_counter+1].rng2,schedule_entries[schedule_counter+1].nibble_selector);
+			
+				it->process_map_exit(map_list[i],schedule_entries[schedule_counter+1]);
+			}
 			auto end = clock::now();
 			sum += duration_cast<microseconds>(end-start).count();
+		}
+
+		schedule_counter++;
+		if (map_list[i] == 0x22)
+		{
+			schedule_counter++;
 		}
 
 		std::cout << code_list.size() << " run\n";
@@ -219,7 +216,10 @@ int main(void)
 		printf("\n");
 	}
 
-	check_carnival_code(code_list.begin()->working_code.as_uint8);
+	code_list.begin()->display_working_code();
+	check_carnival_code(code_list.begin()->working_code_data.as_uint8);
+	printf("\n");
+
 
 	std::cout << full_sum << "\n";
 
