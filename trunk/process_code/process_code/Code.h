@@ -1,6 +1,7 @@
 #ifndef CODE_H
 #define CODE_H
 #include "data_sizes.h"
+#include "rng.h"
 
 class Code
 {
@@ -23,12 +24,7 @@ public:
 		uint32 as_uint32;
 	} code_backup;
 
-	// RNG values
-	uint8 rng1;
-	uint8 rng2;
-
-	uint8 rng();
-	uint8 rng_real();
+	RNG rng;
 
 	void process_map_exit(uint8 map_number);
 

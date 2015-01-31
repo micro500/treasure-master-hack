@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include "data_sizes.h"
 #include "Code.h"
-
-extern uint16 rng_table[0x100][0x100];
+#include "rng.h"
 
 Code::Code(uint8 value[8])
 {
@@ -13,13 +12,12 @@ Code::Code(uint8 value[8])
 	}
 
 	// Seed the RNG
-	rng1 = working_code.as_uint8[0];
-	rng2 = working_code.as_uint8[1];
+	rng.seed(working_code.as_uint8[0], working_code.as_uint8[1]);
 
 	// Expand the code to 128 bytes
 	for (int i = 8; i < 0x80; i++)
 	{
-		working_code.as_uint8[i] = working_code.as_uint8[i-8] + rng();
+		working_code.as_uint8[i] = working_code.as_uint8[i-8] + rng.run();
 	}
 
 	code_backup.as_uint8[0] = working_code.as_uint8[0];
@@ -88,8 +86,8 @@ void Code::process_working_code(uint8 map_number)
 
 	// The RNG is backed up
 	// The RNG is seeded with the first two bytes of the code backup
-	rng1 = code_backup.as_uint8[0];
-	rng2 = code_backup.as_uint8[1];
+	rng.seed(code_backup.as_uint8[0], code_backup.as_uint8[1]);
+	
 	// Set up the nibble selection variables
 	short nibble_selector = (code_backup.as_uint8[3] << 8) + code_backup.as_uint8[2];
 	//printf("rng1: %02x, rng2: %02X, nibble: %04X\n",rng1,rng2,nibble_selector);
@@ -135,7 +133,7 @@ void Code::working_code_algorithm(uint8 algorithm_number, uint8 map_number)
 			// JSR $F1DA
 			// ASL A
 			// ROL $0200,X
-			working_code.as_uint8[i] = (working_code.as_uint8[i] << 1) | ((rng() >> 7) & 0x01);
+			working_code.as_uint8[i] = (working_code.as_uint8[i] << 1) | ((rng.run() >> 7) & 0x01);
 
 			// DEX
 			// BPL $17728
@@ -150,7 +148,7 @@ void Code::working_code_algorithm(uint8 algorithm_number, uint8 map_number)
 			// CLC
 			// ADC $0200,X *
 			// STA $0200,X
-			working_code.as_uint8[i] = working_code.as_uint8[i] + rng();
+			working_code.as_uint8[i] = working_code.as_uint8[i] + rng.run();
 
 			// DEX
 			// BPL $17735
@@ -160,7 +158,7 @@ void Code::working_code_algorithm(uint8 algorithm_number, uint8 map_number)
 	{
 		// JSR $F1DA
 		// ASL A
-		unsigned char carry = (rng() >> 7) & 0x01;
+		unsigned char carry = (rng.run() >> 7) & 0x01;
 		// LDX #$7F
 		for (int i = 0x7F; i >= 0; i-=2)
 		{
@@ -186,7 +184,7 @@ void Code::working_code_algorithm(uint8 algorithm_number, uint8 map_number)
 			// JSR $F1DA
 			// EOR $0200,X *
 			// STA $0200,X
-			working_code.as_uint8[i] = working_code.as_uint8[i] ^ rng();
+			working_code.as_uint8[i] = working_code.as_uint8[i] ^ rng.run();
 			
 			// DEX
 			// BPL $17756
@@ -202,7 +200,7 @@ void Code::working_code_algorithm(uint8 algorithm_number, uint8 map_number)
 			// SEC
 			// ADC $0200,X *
 			// STA $0200,X
-			working_code.as_uint8[i] = working_code.as_uint8[i] + (rng()^0xFF) + 1;
+			working_code.as_uint8[i] = working_code.as_uint8[i] + (rng.run()^0xFF) + 1;
 
 			// DEX
 			// BPL $17765
@@ -212,7 +210,7 @@ void Code::working_code_algorithm(uint8 algorithm_number, uint8 map_number)
 	{
 		// JSR $F1DA
 		// ASL A
-		unsigned char carry = rng() & 0x80;
+		unsigned char carry = rng.run() & 0x80;
 		// LDX #$7F
 		for (int i = 0x7F; i >= 0; i-=2)
 		{
@@ -239,7 +237,7 @@ void Code::working_code_algorithm(uint8 algorithm_number, uint8 map_number)
 			// JSR $F1DA
 			// ASL A
 			// ROR $0200,X
-			working_code.as_uint8[i] = (working_code.as_uint8[i] >> 1) | (rng() & 0x80);
+			working_code.as_uint8[i] = (working_code.as_uint8[i] >> 1) | (rng.run() & 0x80);
 
 			// INX
 			// BPL $17788	
@@ -418,92 +416,6 @@ void Code::code_backup_algorithm_7(uint8 map_number)
 
 	// Then alg 1
 	code_backup_algorithm_0(map_number);
-}
-
-uint8 Code::rng()
-{
-	uint16 result = rng_table[rng1][rng2];
-	rng1 = (result >> 8) & 0xFF;
-	rng2 = result & 0xFF;
-
-	return rng1 ^ rng2;
-}
-
-uint8 Code::rng_real()
-{
-	//int rngA = *rng1;
-	//int rngB = *rng2;	
-
-
-	// LDA $0436
-    // CLC
-	unsigned char carry = 0;
-    // ADC $0437
-    // STA $0437
-	// Basically, add rng1 and rng2 together w/o carry and store it to rng2
-	rng2 = (unsigned char)(rng2 + rng1);
-
-	// LDA #$89
-    // CLC
-    // ADC $0436
-	// STA $0436
-	// Basically, add #$89 to rng1, and remember the carry for the next addition
-	rng1 = rng1 + 0x89;
-	if (rng1 > 0xFF)
-	{
-		carry = 1;
-	}
-	else
-	{
-		carry = 0;
-	}
-	rng1 = (unsigned char)rng1;
-
-    // LDA #$2A
-    // ADC $0437 = #$AE
-    // STA $0437 = #$AE
-	rng2 = rng2 + 0x2A + carry;
-	if (rng2 > 0xFF)
-	{
-		carry = 1;
-	}
-	else
-	{
-		carry = 0;
-	}
-	rng2 = (unsigned char)rng2;
-
-    // LDA $0436 = #$71
-    // ADC #$21
-    // STA $0436 = #$71
-	rng1 = rng1 + 0x21 + carry;
-	if (rng1 > 0xFF)
-	{
-		carry = 1;
-	}
-	else
-	{
-		carry = 0;
-	}
-	rng1 = (unsigned char)rng1;
-
-    // LDA $0437 = #$AE
-    // ADC #$43
-    // STA $0437 = #$AE
-	rng2 = rng2 + 0x43 + carry;
-	if (rng2 > 0xFF)
-	{
-		carry = 1;
-	}
-	else
-	{
-		carry = 0;
-	}
-	rng2 = (unsigned char)rng2;
-
-    // EOR $0436 = #$71
-
-	return rng1 ^ rng2;
 }
 
 bool Code::operator==(const Code &other) const

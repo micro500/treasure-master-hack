@@ -22,11 +22,13 @@
     <ClCompile Include="Code.cpp" />
     <ClCompile Include="key_schedule.cpp" />
     <ClCompile Include="process_code.cpp" />
+    <ClCompile Include="rng.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Code.h" />
     <ClInclude Include="data_sizes.h" />
     <ClInclude Include="key_schedule.h" />
+    <ClInclude Include="rng.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{457DD0BB-764E-45F0-AE9C-F215020CFD0C}</ProjectGuid>
