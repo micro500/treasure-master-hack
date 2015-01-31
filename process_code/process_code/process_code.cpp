@@ -5,10 +5,9 @@
 #include <vector>
 
 #include "data_sizes.h"
+#include "rng.h"
 #include "Code.h"
 #include "key_schedule.h"
-
-uint16 rng_table[0x100][0x100];
 
 unsigned char carnival_code[0x72] = { 0xF4, 0xD7, 0xD1, 0x9E, 0x46, 0x4F, 0x90, 0xF0, 0xA1, 0x3C, 
 									  0x59, 0xA3, 0xFA, 0x09, 0x3C, 0x2A, 0x0B, 0x5A, 0x44, 0x1B, 
@@ -56,103 +55,6 @@ void display_code_backup(unsigned char * code_backup)
 
 	printf("\n\n");
 }
-unsigned char rng_real(unsigned char *rng1, unsigned char *rng2);
-unsigned char rng(unsigned char *rng1, unsigned char *rng2)
-{
-	//return rng_real(rng1,rng2);
-	unsigned char rngA = *rng1;
-	unsigned char rngB = *rng2;
-	unsigned short result = rng_table[rngA][rngB];
-	rngA = (result >> 8) & 0xFF;
-	rngB = result & 0xFF;
-
-	*rng1 = rngA;
-	*rng2 = rngB;
-	return rngA ^ rngB;
-
-	
-	
-	
-	return *rng1 ^ *rng2;
-}
-
-unsigned char rng_real(unsigned char *rng1, unsigned char *rng2)
-{
-	int rngA = *rng1;
-	int rngB = *rng2;	
-	// LDA $0436
-    // CLC
-	unsigned char carry = 0;
-    // ADC $0437
-    // STA $0437
-	// Basically, add rng1 and rng2 together w/o carry and store it to rng2
-	rngB = (unsigned char)(rngB + rngA);
-
-	// LDA #$89
-    // CLC
-    // ADC $0436
-	// STA $0436
-	// Basically, add #$89 to rng1, and remember the carry for the next addition
-	rngA = rngA + 0x89;
-	if (rngA > 0xFF)
-	{
-		carry = 1;
-	}
-	else
-	{
-		carry = 0;
-	}
-	rngA = (unsigned char)rngA;
-
-    // LDA #$2A
-    // ADC $0437 = #$AE
-    // STA $0437 = #$AE
-	rngB = rngB + 0x2A + carry;
-	if (rngB > 0xFF)
-	{
-		carry = 1;
-	}
-	else
-	{
-		carry = 0;
-	}
-	rngB = (unsigned char)rngB;
-
-    // LDA $0436 = #$71
-    // ADC #$21
-    // STA $0436 = #$71
-	rngA = rngA + 0x21 + carry;
-	if (rngA > 0xFF)
-	{
-		carry = 1;
-	}
-	else
-	{
-		carry = 0;
-	}
-	rngA = (unsigned char)rngA;
-
-    // LDA $0437 = #$AE
-    // ADC #$43
-    // STA $0437 = #$AE
-	rngB = rngB + 0x43 + carry;
-	if (rngB > 0xFF)
-	{
-		carry = 1;
-	}
-	else
-	{
-		carry = 0;
-	}
-	rngB = (unsigned char)rngB;
-
-    // EOR $0436 = #$71
-	*rng1 = (unsigned char)rngA;
-	*rng2 = (unsigned char)rngB;
-
-	return *rng1 ^ *rng2;
-}
-
 
 void check_carnival_code(unsigned char * working_code)
 {
@@ -166,6 +68,8 @@ void check_carnival_code(unsigned char * working_code)
 			sum += decrypted_code[i];
 		}
 	}
+
+	printf("wanted: %02X %02X got: %02X %02X\n", decrypted_code[0x71], decrypted_code[0x70], sum >> 8, sum & 0xFF);
 
 	if ((sum >> 8) == decrypted_code[0x71] && (sum & 0xFF) == decrypted_code[0x70])
 	{
@@ -194,17 +98,7 @@ void check_other_code(unsigned char * working_code)
 
 int main(void)
 {
-	// generate RNG table
-	for (int i = 0; i < 0x100; i++)
-	{
-		for (int j = 0; j < 0x100; j++)
-		{
-			unsigned char rng1 = i;
-			unsigned char rng2 = j;
-			rng_real(&rng1,&rng2);
-			rng_table[i][j] = rng1 << 8 | rng2;
-		}
-	}
+	generate_rng_table();
 
 	/*
 	unsigned char working_code[128];
@@ -255,6 +149,7 @@ int main(void)
 
 	std::vector<Code> code_list(1,value);
 
+	/*
 	for (int i = 1; i < 0x1000000; i++)
 	{
 		value[5] = (i >> 16) & 0xFF;
@@ -262,6 +157,7 @@ int main(void)
 		value[7] = i & 0xFF;
 		code_list.push_back(value);
 	}
+	*/
 
 	schedule_counter = 0;
 
@@ -322,6 +218,8 @@ int main(void)
 
 		printf("\n");
 	}
+
+	check_carnival_code(code_list.begin()->working_code.as_uint8);
 
 	std::cout << full_sum << "\n";
 
