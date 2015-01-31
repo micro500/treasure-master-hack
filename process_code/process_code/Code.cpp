@@ -92,6 +92,7 @@ void Code::process_working_code(uint8 map_number)
 	rng2 = code_backup.as_uint8[1];
 	// Set up the nibble selection variables
 	short nibble_selector = (code_backup.as_uint8[3] << 8) + code_backup.as_uint8[2];
+	//printf("rng1: %02x, rng2: %02X, nibble: %04X\n",rng1,rng2,nibble_selector);
 	// The code is pulled out of the PPU
 
 	// Next, the working code is processed with the same steps 16 times:
