@@ -6,6 +6,7 @@
 
 #include "data_sizes.h"
 #include "Code.h"
+#include "key_schedule.h"
 
 uint16 rng_table[0x100][0x100];
 
@@ -193,7 +194,7 @@ void check_other_code(unsigned char * working_code)
 
 int main(void)
 {
-	
+	// generate RNG table
 	for (int i = 0; i < 0x100; i++)
 	{
 		for (int j = 0; j < 0x100; j++)
@@ -204,7 +205,8 @@ int main(void)
 			rng_table[i][j] = rng1 << 8 | rng2;
 		}
 	}
-/*
+
+	/*
 	unsigned char working_code[128];
 
 	// For the known working code, the payload is the following:
@@ -218,6 +220,8 @@ int main(void)
 	working_code[7] = 0x12;
 	*/
 
+	int map_list[26] = { 0x00, 0x02, 0x05, 0x04, 0x03, 0x1D, 0x1C, 0x1E, 0x1B, 0x07, 0x08, 0x06, 0x09, 0x0C, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x0E, 0x0F, 0x10, 0x12, 0x11};
+
 	uint8 value[8];
 
 	// For the known working code, the payload is the following:
@@ -230,6 +234,25 @@ int main(void)
 	value[6] = 0x26;
 	value[7] = 0x12;
 
+	key_schedule_data schedule_data;
+	schedule_data.as_uint8[0] = value[0];
+	schedule_data.as_uint8[1] = value[1];
+	schedule_data.as_uint8[2] = value[2];
+	schedule_data.as_uint8[3] = value[3];
+
+	key_schedule_entry schedule_entries[27];
+
+	int schedule_counter = 0;
+	for (int i = 0; i < 26; i++)
+	{
+		schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data);
+
+		if (map_list[i] == 0x22)
+		{
+			schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data,4);
+		}
+	}
+
 	std::vector<Code> code_list(1,value);
 
 	for (int i = 1; i < 0x1000000; i++)
@@ -240,7 +263,7 @@ int main(void)
 		code_list.push_back(value);
 	}
 
-	int map_list[26] = { 0x00, 0x02, 0x05, 0x04, 0x03, 0x1D, 0x1C, 0x1E, 0x1B, 0x07, 0x08, 0x06, 0x09, 0x0C, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x0E, 0x0F, 0x10, 0x12, 0x11};
+	schedule_counter = 0;
 
 	using std::chrono::duration_cast;
 	using std::chrono::microseconds;
@@ -249,6 +272,25 @@ int main(void)
 	uint64 full_sum = 0;
 	for (int i = 0; i < 26; i++)
 	{
+		/*
+		printf("map: %02x\n",map_list[i]);
+		printf("rng1: %02x, rng2: %02X, nibble: %04X\t<--NEW\n",schedule_entries[schedule_counter].rng1,schedule_entries[schedule_counter].rng2,schedule_entries[schedule_counter].nibble_selector);
+		
+		// process working code
+		
+		schedule_counter++;
+		
+		if (map_list[i] == 0x22)
+		{
+			printf("rng1: %02x, rng2: %02X, nibble: %04X\t<--NEW\n",schedule_entries[schedule_counter].rng1,schedule_entries[schedule_counter].rng2,schedule_entries[schedule_counter].nibble_selector);
+			
+			// process working code
+			
+			schedule_counter++;
+			
+		}
+		*/
+
 		// Step through the vector and do the map exit on each entry
 		uint64 sum = 0;
 		for (std::vector<Code>::iterator it = code_list.begin(); it != code_list.end(); ++it)
