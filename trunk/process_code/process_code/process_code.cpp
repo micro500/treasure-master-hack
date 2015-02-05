@@ -3,6 +3,10 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <sstream>
+#include <iostream>
+
+#include "boinc.h"
 
 #include "data_sizes.h"
 #include "rng.h"
@@ -10,8 +14,42 @@
 #include "key_schedule.h"
 #include "verify.h"
 
-int main(void)
+int main(int argc, char **argv)
 {
+	initialize_boinc();
+
+	// Process command line
+	uint8 value[8];
+
+	if (argc < 9) exit(-1);
+
+	for (int i = 1; i <= 8; i++)
+	{
+		unsigned int x;
+		std::stringstream ss;
+		ss << std::hex << argv[i];
+		ss >> x;
+
+		value[i-1] = x & 0xFF;
+
+		//fprintf(stderr, "%i\n", x);
+		//out.printf("%i\n",x);
+		//printf("%i\n",x);
+	}
+
+	printf("Starting IV: %02X %02X %02X %02X %02X %02X %02X %02X\n",value[0],value[1],value[2],value[3],value[4],value[5],value[6],value[7]);
+
+	uint64 count = 1;
+	if (argc >= 10)
+	{
+		std::stringstream ss;
+		ss << std::hex << argv[9];
+		ss >> count;
+	}
+
+	printf("Will run %i IVs\n",count);
+
+
 	generate_rng_table();
 
 	/*
@@ -30,6 +68,7 @@ int main(void)
 
 	int map_list[26] = { 0x00, 0x02, 0x05, 0x04, 0x03, 0x1D, 0x1C, 0x1E, 0x1B, 0x07, 0x08, 0x06, 0x09, 0x0C, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x0E, 0x0F, 0x10, 0x12, 0x11};
 
+	/*
 	uint8 value[8];
 
 	// For the known working code, the payload is the following:
@@ -41,6 +80,7 @@ int main(void)
 	value[5] = 0x3a;
 	value[6] = 0x26;
 	value[7] = 0x12;
+	*/
 
 	key_schedule_data schedule_data;
 	schedule_data.as_uint8[0] = value[0];
@@ -61,7 +101,7 @@ int main(void)
 		}
 	}
 
-	std::vector<working_code> code_list(1,value);
+	//std::vector<working_code> code_list(1,value);
 
 	/*
 	for (int i = 1; i < 0x1000000; i++)
@@ -73,63 +113,130 @@ int main(void)
 	}
 	*/
 
-	schedule_counter = 0;
+	
 
+	/*
 	using std::chrono::duration_cast;
 	using std::chrono::microseconds;
 	typedef std::chrono::high_resolution_clock clock;
 	int blah = 0;
 	uint64 full_sum = 0;
-	for (int i = 0; i < 26; i++)
+	*/
+
+	for (int IV = 0; IV < count; IV++)
 	{
-		// Step through the vector and do the map exit on each entry
-		uint64 sum = 0;
-		for (std::vector<working_code>::iterator it = code_list.begin(); it != code_list.end(); ++it)
+		working_code in_progress(value);
+
+		schedule_counter = 0;
+
+		for (int map_index = 0; map_index < 26; map_index++)
 		{
-			auto start = clock::now();
+			/*
+			// Step through the vector and do the map exit on each entry
+			uint64 sum = 0;
+			for (std::vector<working_code>::iterator it = code_list.begin(); it != code_list.end(); ++it)
+			{
+				auto start = clock::now();
+			*/
+
+			/*
 			printf("map: %02X\n",map_list[i]);
 			printf("rng1: %02X, rng2: %02X, nibble: %04X\t<--NEW\n",schedule_entries[schedule_counter].rng1,schedule_entries[schedule_counter].rng2,schedule_entries[schedule_counter].nibble_selector);
+			*/
 		
+			in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter]);
+
+			/*
 			it->process_map_exit(map_list[i],schedule_entries[schedule_counter]);
-		
-			if (map_list[i] == 0x22)
+			*/
+
+			if (map_list[map_index] == 0x22)
 			{
+				/*
 				printf("rng1: %02X, rng2: %02X, nibble: %04X\t<--NEW\n",schedule_entries[schedule_counter+1].rng1,schedule_entries[schedule_counter+1].rng2,schedule_entries[schedule_counter+1].nibble_selector);
+				*/
 			
+				in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter+1]);
+
+				/*
 				it->process_map_exit(map_list[i],schedule_entries[schedule_counter+1]);
+				*/
 			}
-			auto end = clock::now();
-			sum += duration_cast<microseconds>(end-start).count();
-		}
 
-		schedule_counter++;
-		if (map_list[i] == 0x22)
-		{
+			/*
+				auto end = clock::now();
+				sum += duration_cast<microseconds>(end-start).count();
+			}
+			*/
+
 			schedule_counter++;
+			if (map_list[map_index] == 0x22)
+			{
+				schedule_counter++;
+			}
+
+			/*
+			std::cout << code_list.size() << " run\n";
+			std::cout << sum << "us\n";
+			full_sum += sum;
+		
+			blah++;
+
+			size_t x = code_list.size();
+			auto start = clock::now();
+
+			std::sort(code_list.begin(), code_list.end());
+			code_list.erase(std::unique(code_list.begin(),code_list.end()),code_list.end());
+
+			auto end = clock::now();
+			x -= code_list.size();
+			sum = duration_cast<microseconds>(end-start).count();
+			full_sum += sum;
+			std::cout << x << " deleted\n";
+			std::cout << sum << " us\n";
+
+			printf("\n");
+			*/
 		}
 
-		std::cout << code_list.size() << " run\n";
-		std::cout << sum << "us\n";
-		full_sum += sum;
-		
-		blah++;
+		/*
+		for (int i = 0; i < 128; i++)
+		{
+			out.printf("%02X ",in_progress.working_code_data.as_uint8[i]);
+		}
+		out.printf("\n");
+		*/
 
-		size_t x = code_list.size();
-		auto start = clock::now();
+		uint8 * decrypted_memory = decrypt_memory(in_progress.working_code_data.as_uint8,carnival_code,carnival_code_length);
+		if (verify_checksum(decrypted_memory,carnival_code_length))
+		{
+			boinc_log("%02X %02X %02X %02X %02X %02X %02X %02X\n",value[0],value[1],value[2],value[3],value[4],value[5],value[6],value[7]);
+			boinc_log("GOOD!\n");
+		}
 
-		std::sort(code_list.begin(), code_list.end());
-		code_list.erase(std::unique(code_list.begin(),code_list.end()),code_list.end());
+		delete[] decrypted_memory;
 
-		auto end = clock::now();
-		x -= code_list.size();
-		sum = duration_cast<microseconds>(end-start).count();
-		full_sum += sum;
-		std::cout << x << " deleted\n";
-		std::cout << sum << " us\n";
+		fraction_done(((double)IV)/((double)count));
 
-		printf("\n");
+		// Increment to the next IV
+		value[7]++;
+		if (value[7] == 0x00)
+		{
+			for (int i = 6; i >= 0; i--)
+			{
+				value[i]++;
+				if (value[i] != 0x00)
+				{
+					break;
+				}
+			}
+		}
 	}
 
+	finish_boinc();
+
+
+	/*
 	code_list.begin()->display_working_code();
 
 	uint8 * decrypted_memory = decrypt_memory(code_list.begin()->working_code_data.as_uint8,carnival_code,carnival_code_length);
@@ -140,14 +247,15 @@ int main(void)
 
 	//check_carnival_code(code_list.begin()->working_code_data.as_uint8);
 	printf("\n");
+	*/
 
-
+	/*
 	std::cout << full_sum << "\n";
 
 	int x = 0;
 	
 	std::cout << code_list.size() << "\n";
-
+	*/
 	return 0;
 
 	/*
