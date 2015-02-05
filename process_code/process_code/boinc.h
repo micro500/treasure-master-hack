@@ -33,7 +33,11 @@ void initialize_boinc();
 
 void finish_boinc();
 
-void boinc_log(char * fmt, ...);
+#ifdef BOINCAPP
+#define boinc_log(...) output_file.printf(__VA_ARGS__)
+#else
+#define boinc_log(...) printf(__VA_ARGS__)
+#endif
 
 void fraction_done(double percentage);
 
