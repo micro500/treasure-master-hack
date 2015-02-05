@@ -51,20 +51,6 @@ void finish_boinc()
 #endif
 }
 
-void boinc_log(char * fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-
-#ifdef BOINCAPP
-	output_file.printf(fmt, args);
-#else
-	printf(fmt, args);
-#endif
-
-	va_end(args);
-}
-
 void fraction_done(double percentage)
 {
 #ifdef BOINCAPP
