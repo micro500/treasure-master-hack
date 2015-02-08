@@ -35,7 +35,9 @@ F5 E5 96 A6 A6 96 39 A6 A6 A7 B5 15 0C 0F 15 03 06 52 D0 D8 E3 CE A6 A6 B2
 
 These arrays contain jump tables used in all levels. 08B2 is the separate teleporter area used to end the bonus world.
 
-FC52 is jumped to after beating world 5 to run the decryption code
+FC52 is jumped to after beating world 5 to run the decryption code.
+
+86CE seems to be the bonus level collecting the teddy bears within carnival world.
 
 The interesting part is of course the ones like 06XX
 
