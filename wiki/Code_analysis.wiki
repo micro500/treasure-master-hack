@@ -25,6 +25,43 @@ when $46 is 0, the indirect jump goes to the code that increments $46, then it i
 
 when $46 is 1, it just ends 
 
+== Jump Table ==
+
+A6 A6 A6 55 4D 3B FE 1C ED DB 14 22 30 A6 D8 C7 DB BB D8 A6 AF AA AF AF CD 
+F5 E5 96 A6 A6 96 39 A6 A6 A7 B5 15 0C 0F 15 03 06 52 D0 D8 E3 CE A6 A6 B2
+
+86 86 86 86 86 86 86 86 85 86 86 86 86 86 87 87 87 87 87 86 06 06 06 06 06
+06 06 88 86 86 88 87 86 86 86 86 88 88 88 88 88 88 FC 06 06 06 86 86 86 80
+
+These arrays contain jump tables used in all levels. 08B2 is the separate teleporter area used to end the bonus world.
+
+FC52 is jumped to after beating world 5 to run the decryption code
+
+The interesting part is of course the ones like 06XX
+
+06D0 is the first (highest) floor of carnival wrold
+06D8 is the middle part
+06E3 is the lowest.
+
+So from this the second bonus world must have jump addresses:
+
+06AF
+06AA
+06CD
+06F5
+06E5
+
+At the very least, these blocks must have an executable op code when decrypted. Of course, 06A5 is called first for both bonus worlds, even though it is only used in loading the level.
+
+== Code Execution ==
+
+The carnival world code is executed from B535 to B5FD
+
+The block of code directly before this seems to be involved in screen transitions within carnival world.
+
+
+
+
 
 = General code =
 
