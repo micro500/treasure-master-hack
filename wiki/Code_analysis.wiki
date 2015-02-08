@@ -7,6 +7,25 @@ The prize code decryption will first check the entered code against the check su
 The point here is that part of the decrypted code must contain some steps to set the world to 7, since at this point the game still thinks its going to the carnival world
 
 
+(checksum failure)
+
+1FC93 A6 LDX $46
+
+1FC95 BD LDA $FCAD,X *
+
+1FC98 85 STA $42
+
+1FC9A BD LDA $FCAF,X *
+
+1FC9D 85 STA $43
+
+1FC9F 6C JMP ($0042)
+
+when $46 is 0, the indirect jump goes to the code that increments $46, then it immediately jumps to the code check again
+
+when $46 is 1, it just ends 
+
+
 = General code =
 
 Basically, every frame in a level has a loop that looks like this:
