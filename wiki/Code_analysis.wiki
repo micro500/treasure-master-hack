@@ -26,27 +26,41 @@ For the prize code, it works like this
 (first pass)
 
 $06A5  LDX #$05 
+
 $06A7  CPX $0451 = #$FF //0451 will always be FF at this point
+
 $06AA  BEQ $06AF
+
 $06AC  JSR $ED88   // ED88 is level initialization
 
 after this, 0451 is set to 5, so all subsequent frames will look like this:
 
   $80AF:6C 6A 00  JMP ($006A) = $06A5  
+
   $06A5:A2 05     LDX #$05              
-  $06A7:EC 51 04  CPX $0451 = #$05        
-  $06AA:F0 03     BEQ $06AF           
-  $06AF:A9 00     LDA #$00             
-  $06B1:85 3F     STA $003F = #$00          
+
+  $06A7:EC 51 04  CPX $0451 = #$05     
+   
+  $06AA:F0 03     BEQ $06AF          
+ 
+  $06AF:A9 00     LDA #$00          
+   
+  $06B1:85 3F     STA $003F = #$00   
+       
   $06B3:A5 FC     LDA $00FC = #$00
+
   $06B5:C9 02     CMP #$02       
+
   $06B7:D0 14     BNE $06CD       
-  $06CD:4C 35 B5  JMP $B535                      
-  $B535:AD A8 05  LDA $05A8 = #$00                 
-     . // B535 seems to be the code block for level 6.
-     . // meaning we need to find a code block for level 7
-     . // If we can do that, we can find the JMP instruction for the second code!
+
+  $06CD:4C 35 B5  JMP $B535         
+             
+  $B535:AD A8 05  LDA $05A8 = #$00   
+              
+// B535 seems to be the code block for level 6, meaning we need to find a code block for level 7, If we can do that, we can find the JMP instruction for the second code!
+
   $B549:60        RTS (from $80AF)
+
 $8064:20 62 96  JSR $9662    
 
 Now, the other sections of the code are loaded in different parts of the stages. For example the section after 'gates open' uses $06D8 to $0712
