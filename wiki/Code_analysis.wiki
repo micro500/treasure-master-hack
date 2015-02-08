@@ -57,7 +57,7 @@ after this, 0451 is set to 5, so all subsequent frames will look like this:
              
   $B535:AD A8 05  LDA $05A8 = #$00   
               
-// B535 seems to be the code block for level 6, meaning we need to find a code block for level 7, If we can do that, we can find the JMP instruction for the second code!
+// B535 seems to be the code block for level 6, meaning we need to find a code block for level 7, If we can do that, we will know the JMP instruction for the second code!
 
   $B549:60        RTS (from $80AF)
 
