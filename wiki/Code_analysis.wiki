@@ -41,9 +41,10 @@ FC52 is jumped to after beating world 5 to run the decryption code.
 
 The interesting part is of course the ones like 06XX
 
-06D0 is the first (highest) floor of carnival wrold
+06A5 is the first (highest) floor of carnival wrold
 06D8 is the middle part
 06E3 is the lowest.
+Not sure where D0 is just yet
 
 So from this the second bonus world must have jump addresses:
 
@@ -57,9 +58,13 @@ At the very least, these blocks must have an executable op code when decrypted. 
 
 == Code Execution ==
 
-The carnival world code is executed from B535 to B5FD
+The carnival world code is executed from B535 to B5FD. It also calls a subroutine with range B6CD to B77B.
 
-The block of code directly before this seems to be involved in screen transitions within carnival world.
+The block of code directly before this seems to be involved in screen transitions within the levels (any level.)
+
+So My best guess at where level 7 code execution is is B7C7, the next reasonable looking block of code after B77B. 
+
+
 
 
 
