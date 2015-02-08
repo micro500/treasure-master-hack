@@ -1,11 +1,13 @@
 An analysis of the basics of game code and how it might apply to the second bonus world
 
-= Introduction =
+= Prize code =
 
-Add your content here.
+The prize code decryption will first check the entered code against the check sum for carnival world. If this fails, it will automatically check if it passes for world 7. This is interesting because if it passes, it will jump to $06A5 with no other information set about it being in world 7.
+
+The point here is that part of the decrypted code must contain some steps to set the world to 7, since at this point the game still thinks its going to the carnival world
 
 
-= Details =
+= General code =
 
 Basically, every frame in a level has a loop that looks like this:
 
