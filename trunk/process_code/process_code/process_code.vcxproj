@@ -28,6 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="boinc.cpp" />
+    <ClCompile Include="cmd_args.cpp" />
     <ClCompile Include="key_schedule.cpp" />
     <ClCompile Include="process_code.cpp" />
     <ClCompile Include="rng.cpp" />
@@ -36,6 +37,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boinc.h" />
+    <ClInclude Include="cmd_args.h" />
     <ClInclude Include="data_sizes.h" />
     <ClInclude Include="key_schedule.h" />
     <ClInclude Include="rng.h" />
