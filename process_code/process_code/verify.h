@@ -22,6 +22,7 @@ extern uint8 opcode_bytes_used[];
 extern uint8 opcode_type[];
 
 uint8 * decrypt_memory(uint8 * working_code, uint8 * memory, int length);
+uint8 * encrypt_memory(uint8 * block, uint8 * xor_block, int length);
 bool verify_checksum(uint8 * memory, int length);
 
 bool compare_working_code(uint8 * block1, uint8 * block2);
