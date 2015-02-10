@@ -1,5 +1,9 @@
+#include <stdio.h>
+
 #include "data_sizes.h"
 #include "verify.h"
+#include "boinc.h"
+#include "working_code.h"
 
 uint8 carnival_world_working_code[0x80] = { 0xFD, 0x22, 0x3C, 0x40, 0x77, 0xEB, 0xD4, 0xEF, 0x9C, 0x44,
 											0x93, 0x1C, 0xD7, 0xF8, 0x10, 0x97, 0x14, 0x93, 0x84, 0x22,
@@ -54,6 +58,25 @@ uint8 other_world_code[0x53] = {    0x50, 0xF1, 0xFB, 0x44, 0xBD, 0xC1, 0xB1, 0x
 									0xF4, 0xC7, 0x86, 0x81, 0x90, 0x0B, 0x04, 0xD2, 0x44, 0x66, 
 									0xC1, 0x68, 0xCA };
 
+uint8 opcode_bytes_used[0x100] = {  1,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
+									2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,
+									3,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
+									2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,
+									1,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
+									2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,
+									1,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
+									2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,
+									2,2,2,0,2,2,2,0,1,2,1,0,3,3,3,0,
+									2,2,0,0,2,2,2,0,1,3,1,0,0,3,0,0,
+									2,2,2,0,2,2,2,0,1,2,1,0,3,3,3,0,
+									2,2,0,0,2,2,2,0,1,3,1,0,3,3,3,0,
+									2,2,2,0,2,2,2,0,1,2,1,0,3,3,3,0,
+									2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,
+									2,2,2,0,2,2,2,0,1,2,1,0,3,3,3,0,
+									2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0 };
+
+uint8 opcode_type[0x100] = { 0, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_NOP2, 0, OP_NOP2, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, OP_NOP2, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_ILLEGAL, 0, OP_ILLEGAL, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL };
+
 uint8 * decrypt_memory(uint8 * working_code, uint8 * encrypted_memory, int length)
 {
 	uint8 * decrypted_memory = new uint8[128];
@@ -72,6 +95,8 @@ uint8 * decrypt_memory(uint8 * working_code, uint8 * encrypted_memory, int lengt
 
 bool verify_checksum(uint8 * memory, int length)
 {
+	// TODO: idea: if memory[length-1] > (((length-2) * 0xFF) >> 8) then immediate failure. Checkum value is too big
+
 	uint16 sum = 0;
 	for (int i = 0; i < length - 2; i++)
 	{
@@ -92,8 +117,154 @@ bool compare_working_code(uint8 * block1, uint8 * block2)
 	return true;
 }
 
-// TODO
-int check_for_machine_code(uint8 * memory, int length)
+machine_code_properties check_machine_code(uint8 * memory, int length)
 {
-	return 0;
+	// check for JAM (immediate failure)
+	// check for illegal opcodes (immediate failure)
+	// check for NOP
+	// Is the first section, up to the first jump of any kind, valid machine code?
+	// is the whole chunk (except for checksum value) valid machine code?
+	// (later) do alyosha's jump-in points line up?
+
+	machine_code_properties result;
+
+	bool first_jump_found = false;
+
+	for (int i = 0; i < length-2; i++)
+	{
+		if (opcode_type[memory[i]] & OP_JAM)
+		{
+			result.uses_jam = true;
+			break;
+		}
+		else if (opcode_type[memory[i]] & OP_ILLEGAL)
+		{
+			result.uses_illegal_opcodes = true;
+			break;
+		}
+		else if (opcode_type[memory[i]] & OP_NOP2)
+		{
+			result.uses_unofficial_nops = true;
+		}
+		else if (opcode_type[memory[i]] & OP_NOP)
+		{
+			result.uses_nop = true;
+		}
+		else if (opcode_type[memory[i]] & OP_JUMP && !first_jump_found)
+		{
+			result.first_bytes_to_jump_valid = true;
+			first_jump_found = true;
+		}
+
+		if (i == 0)
+		{
+			result.first_byte_is_valid = true;
+		}
+
+		i += opcode_bytes_used[memory[i]] - 1;
+	}
+
+	if (!result.uses_illegal_opcodes && !result.uses_jam)
+	{
+		result.all_bytes_valid = true;
+	}
+
+	return result;
+}
+
+void output_stats(working_code * in_progress)
+{
+	uint8 * decrypted_memory = decrypt_memory(in_progress->working_code_data.as_uint8, carnival_code, carnival_code_length);
+	bool carnival_world_passed = false;
+	bool other_world_passed = false;
+
+	if (verify_checksum(decrypted_memory,carnival_code_length))
+	{
+		carnival_world_passed = true;
+		boinc_log("%02X%02X%02X%02X%02X%02X%02X%02X\t",in_progress->starting_value[0],in_progress->starting_value[1],in_progress->starting_value[2],in_progress->starting_value[3],in_progress->starting_value[4],in_progress->starting_value[5],in_progress->starting_value[6],in_progress->starting_value[7]);
+
+		boinc_log("car\t");
+
+		if (compare_working_code(in_progress->working_code_data.as_uint8, carnival_world_working_code))
+		{
+			boinc_log("wcm");
+		}
+		boinc_log("\t"); 
+
+		if (compare_working_code(decrypted_memory, carnival_code_decrypted_machine_code))
+		{
+			boinc_log("mcm");
+		}
+		boinc_log("\t");
+
+		output_machine_code_stats(decrypted_memory, carnival_code_length);
+	}
+	delete[] decrypted_memory;
+
+	decrypted_memory = decrypt_memory(in_progress->working_code_data.as_uint8, other_world_code, other_world_code_length);
+	if (verify_checksum(decrypted_memory,other_world_code_length))
+	{
+		other_world_passed = true;
+
+		if (!carnival_world_passed)
+		{
+			boinc_log("%02X%02X%02X%02X%02X%02X%02X%02X\t\t\t\t\t\t\t\t\t\t\t",in_progress->starting_value[0],in_progress->starting_value[1],in_progress->starting_value[2],in_progress->starting_value[3],in_progress->starting_value[4],in_progress->starting_value[5],in_progress->starting_value[6],in_progress->starting_value[7]);
+		}
+		boinc_log("oth");
+
+		output_machine_code_stats(decrypted_memory, other_world_code_length);
+	}
+	delete[] decrypted_memory;
+
+	if (carnival_world_passed || other_world_passed)
+	{
+		boinc_log("\n");
+	}
+}
+
+void output_machine_code_stats(uint8 * decrypted_memory, int length)
+{
+	machine_code_properties machine_code_stats = check_machine_code(decrypted_memory,length);
+	if (machine_code_stats.all_bytes_valid)
+	{
+		boinc_log("ABV!");
+	}
+	boinc_log("\t");
+
+	if (machine_code_stats.first_bytes_to_jump_valid)
+	{
+		boinc_log("TJ");
+	}
+	boinc_log("\t");
+
+	if (machine_code_stats.first_byte_is_valid)
+	{
+		boinc_log("FB");
+	}
+	boinc_log("\t");
+
+	if (machine_code_stats.uses_illegal_opcodes)
+	{
+		boinc_log("ILL");
+	}
+	boinc_log("\t");
+
+	if (machine_code_stats.uses_jam)
+	{
+		boinc_log("JAM");
+	}
+	boinc_log("\t");
+
+	if (machine_code_stats.uses_nop)
+	{
+		boinc_log("NOP");
+	}
+	boinc_log("\t");
+
+	if (machine_code_stats.uses_unofficial_nops)
+	{
+		boinc_log("NP2");
+	}
+	boinc_log("\t");
+
 }

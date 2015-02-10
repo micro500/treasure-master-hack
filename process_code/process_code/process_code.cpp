@@ -116,49 +116,7 @@ int main(int argc, char **argv)
 					}
 				}
 
-
-				boinc_log("%02X%02X%02X%02X%02X%02X%02X%02X\n",value[0],value[1],value[2],value[3],value[4],value[5],value[6],value[7]);
-
-				if (compare_working_code(in_progress.working_code_data.as_uint8, carnival_world_working_code))
-				{
-					boinc_log("wcm");
-				}
-
-				boinc_log("\t");
-
-				uint8 * decrypted_memory = decrypt_memory(in_progress.working_code_data.as_uint8,carnival_code,carnival_code_length);
-
-				/*
-				for (int i = 0; i < 128; i++)
-				{
-					printf("%02X ",decrypted_memory[i]);
-				}
-				*/
-				
-				if (verify_checksum(decrypted_memory,carnival_code_length))
-				{
-					boinc_log("car");
-
-				}
-
-				boinc_log("\t");
-				
-				if (compare_working_code(decrypted_memory, carnival_code_decrypted_machine_code))
-				{
-					boinc_log("mcm");
-				}
-				boinc_log("\t");
-
-				delete[] decrypted_memory;
-
-				decrypted_memory = decrypt_memory(in_progress.working_code_data.as_uint8,other_world_code,other_world_code_length);
-				if (verify_checksum(decrypted_memory,other_world_code_length))
-				{
-					boinc_log("oth");
-				}
-				delete[] decrypted_memory;
-
-				boinc_log("\n");
+				output_stats(&in_progress);
 
 				//fraction_done(((double)count)/((double)ivs_from_file.size()));
 			}
@@ -343,14 +301,7 @@ int main(int argc, char **argv)
 			out.printf("\n");
 			*/
 
-			uint8 * decrypted_memory = decrypt_memory(in_progress.working_code_data.as_uint8,carnival_code,carnival_code_length);
-			if (verify_checksum(decrypted_memory,carnival_code_length))
-			{
-				boinc_log("%02X %02X %02X %02X %02X %02X %02X %02X\n",value[0],value[1],value[2],value[3],value[4],value[5],value[6],value[7]);
-				boinc_log("GOOD!\n");
-			}
-
-			delete[] decrypted_memory;
+			output_stats(&in_progress);
 
 			fraction_done(((double)IV)/((double)count));
 
