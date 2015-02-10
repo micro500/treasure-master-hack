@@ -43,15 +43,35 @@ int main(int argc, char **argv)
 
 	uint8 value[8];
 
+	uint64 IVs_to_run = command_line_options.iv_count;
+
+	uint64 IVs_finished = 0;
+
+	std::ifstream myfile;
 	if (command_line_options.from_file)
 	{
-		std::ifstream myfile;
 		myfile.open(command_line_options.filename, std::ios::in);
-		if (myfile.is_open())
+		if (!myfile.is_open())
 		{
-			std::string line;
-			while (getline(myfile, line))
+			boinc_log("File open error\n");
+
+			return 1;
+		}
+	}
+
+	if (command_line_options.attack == INDIVIDUAL)
+	{
+		while (true)
+		{
+			// Get a key
+			if (command_line_options.from_file)
 			{
+				std::string line;
+				if (!getline(myfile, line))
+				{
+					break;
+				}
+
 				std::stringstream ss;
 				ss << std::hex << line.substr(0,8);
 
@@ -75,14 +95,180 @@ int main(int argc, char **argv)
 				value[5] = (data >> 16) & 0xFF;
 				value[6] = (data >> 8) & 0xFF;
 				value[7] = data & 0xFF;
+			}
+			else
+			{
+				if (IVs_to_run == IVs_finished)
+				{
+					break;
+				}
 
+				if (IVs_finished == 0)
+				{
+					value[0] = (command_line_options.start_key >> 24) & 0xFF;
+					value[1] = (command_line_options.start_key >> 16) & 0xFF;
+					value[2] = (command_line_options.start_key >> 8) & 0xFF;
+					value[3] = command_line_options.start_key & 0xFF;
+
+					value[4] = (command_line_options.start_data >> 24) & 0xFF;
+					value[5] = (command_line_options.start_data >> 16) & 0xFF;
+					value[6] = (command_line_options.start_data >> 8) & 0xFF;
+					value[7] = command_line_options.start_data & 0xFF;
+				}
+				else
+				{
+					// Increment to the next IV
+					for (int i = 7; i >= 0; i--)
+					{
+						value[i]++;
+						if (value[i] != 0x00)
+						{
+							break;
+						}
+					}
+				}
+			}
+
+			// Pre-process the key schedule
+			key_schedule_data schedule_data;
+			schedule_data.as_uint8[0] = value[0];
+			schedule_data.as_uint8[1] = value[1];
+			schedule_data.as_uint8[2] = value[2];
+			schedule_data.as_uint8[3] = value[3];
+
+			key_schedule_entry schedule_entries[27];
+
+			int schedule_counter = 0;
+			for (int i = 0; i < 26; i++)
+			{
+				schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data);
+
+				if (map_list[i] == 0x22)
+				{
+					schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data,4);
+				}
+			}
+
+			working_code in_progress(value);
+
+			schedule_counter = 0;
+
+			for (int map_index = 0; map_index < 26; map_index++)
+			{
+				in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter]);
+
+				if (map_list[map_index] == 0x22)
+				{
+					in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter+1]);
+				}
+
+				schedule_counter++;
+				if (map_list[map_index] == 0x22)
+				{
+					schedule_counter++;
+				}
+			}
+
+			output_stats(&in_progress);
+
+			IVs_finished++;
+
+			if (command_line_options.from_file)
+			{
+				// TODO
+			}
+			else
+			{
+				fraction_done(((double)IVs_finished)/((double)IVs_to_run));
+			}
+		}
+	}
+	else if (command_line_options.attack == VECTOR)
+	{
+		boinc_log("vector attack\n");
+		// will force a pre-processed key schedule for now
+
+		std::vector<working_code> IVs_in_progress;
+
+		key_schedule_entry schedule_entries[27];
+
+		while (true)
+		{
+			// Get a key
+			if (command_line_options.from_file)
+			{
+				std::string line;
+				if (!getline(myfile, line))
+				{
+					break;
+				}
+
+				std::stringstream ss;
+				ss << std::hex << line.substr(0,8);
+
+				uint32 key;
+				ss >> key;
+
+				std::stringstream ss2;
+				ss2 << std::hex << line.substr(8,16);
+
+				uint32 data;
+				ss2 >> data;
+
+				// something about skipping bad lines?
+
+				value[0] = (key >> 24) & 0xFF;
+				value[1] = (key >> 16) & 0xFF;
+				value[2] = (key >> 8) & 0xFF;
+				value[3] = key & 0xFF;
+
+				value[4] = (data >> 24) & 0xFF;
+				value[5] = (data >> 16) & 0xFF;
+				value[6] = (data >> 8) & 0xFF;
+				value[7] = data & 0xFF;
+			}
+			else
+			{
+				if (IVs_to_run == IVs_finished)
+				{
+					break;
+				}
+
+				if (IVs_finished == 0)
+				{
+					value[0] = (command_line_options.start_key >> 24) & 0xFF;
+					value[1] = (command_line_options.start_key >> 16) & 0xFF;
+					value[2] = (command_line_options.start_key >> 8) & 0xFF;
+					value[3] = command_line_options.start_key & 0xFF;
+
+					value[4] = (command_line_options.start_data >> 24) & 0xFF;
+					value[5] = (command_line_options.start_data >> 16) & 0xFF;
+					value[6] = (command_line_options.start_data >> 8) & 0xFF;
+					value[7] = command_line_options.start_data & 0xFF;
+				}
+				else
+				{
+					// Increment to the next IV
+					for (int i = 7; i >= 0; i--)
+					{
+						value[i]++;
+						if (value[i] != 0x00)
+						{
+							break;
+						}
+					}
+				}
+			}
+
+			// Get the key from the first IV
+			if (IVs_finished == 0)
+			{
 				key_schedule_data schedule_data;
+				// Pre-process the key schedule
 				schedule_data.as_uint8[0] = value[0];
 				schedule_data.as_uint8[1] = value[1];
 				schedule_data.as_uint8[2] = value[2];
 				schedule_data.as_uint8[3] = value[3];
-
-				key_schedule_entry schedule_entries[27];
 
 				int schedule_counter = 0;
 				for (int i = 0; i < 26; i++)
@@ -94,295 +280,67 @@ int main(int argc, char **argv)
 						schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data,4);
 					}
 				}
-
-
-				working_code in_progress(value);
-
-				schedule_counter = 0;
-
-				for (int map_index = 0; map_index < 26; map_index++)
-				{
-					in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter]);
-
-					if (map_list[map_index] == 0x22)
-					{
-						in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter+1]);
-					}
-
-					schedule_counter++;
-					if (map_list[map_index] == 0x22)
-					{
-						schedule_counter++;
-					}
-				}
-
-				output_stats(&in_progress);
-
-				//fraction_done(((double)count)/((double)ivs_from_file.size()));
 			}
+
+			IVs_in_progress.push_back(value);
+
+			IVs_finished++;
 		}
-		else
-		{
-			// ERROR
-			boinc_log("File open error\n");
-		}
-	}
-	else
-	{
-
-		value[0] = (command_line_options.start_key >> 24) & 0xFF;
-		value[1] = (command_line_options.start_key >> 16) & 0xFF;
-		value[2] = (command_line_options.start_key >> 8) & 0xFF;
-		value[3] = command_line_options.start_key & 0xFF;
-
-		value[4] = (command_line_options.start_data >> 24) & 0xFF;
-		value[5] = (command_line_options.start_data >> 16) & 0xFF;
-		value[6] = (command_line_options.start_data >> 8) & 0xFF;
-		value[7] = command_line_options.start_data & 0xFF;
-
-		printf("Starting IV: %02X %02X %02X %02X %02X %02X %02X %02X\n",value[0],value[1],value[2],value[3],value[4],value[5],value[6],value[7]);
-
-		uint64 count = 1;
-
-		count = command_line_options.iv_count;
-
-		printf("Will run %i IVs\n",count);		
-
-		/*
-		unsigned char working_code[128];
-
-		// For the known working code, the payload is the following:
-		working_code[0] = 0x2c;
-		working_code[1] = 0xa5;
-		working_code[2] = 0xb4;
-		working_code[3] = 0x2d;
-		working_code[4] = 0xf7;
-		working_code[5] = 0x3a;
-		working_code[6] = 0x26;
-		working_code[7] = 0x12;
-		*/
-
-		/*
-		uint8 value[8];
-
-		// For the known working code, the payload is the following:
-		value[0] = 0x2c;
-		value[1] = 0xa5;
-		value[2] = 0xb4;
-		value[3] = 0x2d;
-		value[4] = 0xf7;
-		value[5] = 0x3a;
-		value[6] = 0x26;
-		value[7] = 0x12;
-		*/
-
-		key_schedule_data schedule_data;
-		schedule_data.as_uint8[0] = value[0];
-		schedule_data.as_uint8[1] = value[1];
-		schedule_data.as_uint8[2] = value[2];
-		schedule_data.as_uint8[3] = value[3];
-
-		key_schedule_entry schedule_entries[27];
 
 		int schedule_counter = 0;
-		for (int i = 0; i < 26; i++)
-		{
-			schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data);
 
-			if (map_list[i] == 0x22)
+		for (int map_index = 0; map_index < 26; map_index++)
+		{
+			uint64 count = 0;
+			for (std::vector<working_code>::iterator it = IVs_in_progress.begin(); it != IVs_in_progress.end(); ++it)
 			{
-				schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data,4);
-			}
-		}
-
-		//std::vector<working_code> code_list(1,value);
-
-		/*
-		for (int i = 1; i < 0x1000000; i++)
-		{
-			value[5] = (i >> 16) & 0xFF;
-			value[6] = (i >> 8) & 0xFF;
-			value[7] = i & 0xFF;
-			code_list.push_back(value);
-		}
-		*/
-
-	
-
-		/*
-		using std::chrono::duration_cast;
-		using std::chrono::microseconds;
-		typedef std::chrono::high_resolution_clock clock;
-		int blah = 0;
-		uint64 full_sum = 0;
-		*/
-
-		for (int IV = 0; IV < count; IV++)
-		{
-			working_code in_progress(value);
-
-			schedule_counter = 0;
-
-			for (int map_index = 0; map_index < 26; map_index++)
-			{
-				/*
-				// Step through the vector and do the map exit on each entry
-				uint64 sum = 0;
-				for (std::vector<working_code>::iterator it = code_list.begin(); it != code_list.end(); ++it)
-				{
-					auto start = clock::now();
-				*/
-
-				/*
-				printf("map: %02X\n",map_list[i]);
-				printf("rng1: %02X, rng2: %02X, nibble: %04X\t<--NEW\n",schedule_entries[schedule_counter].rng1,schedule_entries[schedule_counter].rng2,schedule_entries[schedule_counter].nibble_selector);
-				*/
-		
-				in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter]);
-
-				/*
-				it->process_map_exit(map_list[i],schedule_entries[schedule_counter]);
-				*/
+				it->process_map_exit(map_list[map_index],schedule_entries[schedule_counter]);
 
 				if (map_list[map_index] == 0x22)
 				{
-					/*
-					printf("rng1: %02X, rng2: %02X, nibble: %04X\t<--NEW\n",schedule_entries[schedule_counter+1].rng1,schedule_entries[schedule_counter+1].rng2,schedule_entries[schedule_counter+1].nibble_selector);
-					*/
-			
-					in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter+1]);
-
-					/*
-					it->process_map_exit(map_list[i],schedule_entries[schedule_counter+1]);
-					*/
+					it->process_map_exit(map_list[map_index],schedule_entries[schedule_counter+1]);
 				}
 
-				/*
-					auto end = clock::now();
-					sum += duration_cast<microseconds>(end-start).count();
-				}
-				*/
+				count++;
 
+				if (command_line_options.from_file)
+				{
+					// TODO
+				}
+				else
+				{
+					// TODO
+					fraction_done((((double)count)+((double)(map_index*command_line_options.iv_count)))/(((double)26)*((double)command_line_options.iv_count)));
+				} 
+			}
+
+			// Advance the schedule
+			schedule_counter++;
+			if (map_list[map_index] == 0x22)
+			{
 				schedule_counter++;
-				if (map_list[map_index] == 0x22)
-				{
-					schedule_counter++;
-				}
-
-				/*
-				std::cout << code_list.size() << " run\n";
-				std::cout << sum << "us\n";
-				full_sum += sum;
-		
-				blah++;
-
-				size_t x = code_list.size();
-				auto start = clock::now();
-
-				std::sort(code_list.begin(), code_list.end());
-				code_list.erase(std::unique(code_list.begin(),code_list.end()),code_list.end());
-
-				auto end = clock::now();
-				x -= code_list.size();
-				sum = duration_cast<microseconds>(end-start).count();
-				full_sum += sum;
-				std::cout << x << " deleted\n";
-				std::cout << sum << " us\n";
-
-				printf("\n");
-				*/
 			}
 
-			/*
-			for (int i = 0; i < 128; i++)
-			{
-				out.printf("%02X ",in_progress.working_code_data.as_uint8[i]);
-			}
-			out.printf("\n");
-			*/
+			boinc_log("%lu run\n",IVs_in_progress.size());
 
-			output_stats(&in_progress);
+			size_t x = IVs_in_progress.size();
+			std::sort(IVs_in_progress.begin(), IVs_in_progress.end());
+			IVs_in_progress.erase(std::unique(IVs_in_progress.begin(),IVs_in_progress.end()),IVs_in_progress.end());
+			x -= IVs_in_progress.size();
+			boinc_log("%lu deleted\n",x);
 
-			fraction_done(((double)IV)/((double)count));
+			boinc_log("\n");
+		}
 
-			// Increment to the next IV
-			value[7]++;
-			if (value[7] == 0x00)
-			{
-				for (int i = 6; i >= 0; i--)
-				{
-					value[i]++;
-					if (value[i] != 0x00)
-					{
-						break;
-					}
-				}
-			}
+		boinc_log("%lu checking\n\n",IVs_in_progress.size());
+
+		for (std::vector<working_code>::iterator it = IVs_in_progress.begin(); it != IVs_in_progress.end(); ++it)
+		{
+			output_stats(&(*it));
 		}
 	}
 
 	finish_boinc();
 
-
-	/*
-	code_list.begin()->display_working_code();
-
-	uint8 * decrypted_memory = decrypt_memory(code_list.begin()->working_code_data.as_uint8,carnival_code,carnival_code_length);
-	if (verify_checksum(decrypted_memory,carnival_code_length))
-	{
-		printf("GOOD\n");
-	}
-
-	//check_carnival_code(code_list.begin()->working_code_data.as_uint8);
-	printf("\n");
-	*/
-
-	/*
-	std::cout << full_sum << "\n";
-
-	int x = 0;
-	
-	std::cout << code_list.size() << "\n";
-	*/
 	return 0;
-
-	/*
-	working_code[0] = 0x00;
-	working_code[1] = 0x00;
-	working_code[2] = 0x00;
-	working_code[3] = 0x00;
-	working_code[4] = 0x00;
-	working_code[5] = 0x00;
-	working_code[6] = 0x00;
-	working_code[7] = 0x00;
-	*/
-	/*
-	using std::chrono::duration_cast;
-	using std::chrono::microseconds;
-	typedef std::chrono::high_resolution_clock clock;
-
-	auto sum = 0;
-	auto full_sum = 0;
-
-	for (int i = 0; i < 0xFFFF; i++)
-	{
-		working_code[6] = (i & 0xFF00) >> 8;
-		working_code[7] = i & 0xFF;
-		auto start = clock::now();
-		process_code(working_code);
-		check_carnival_code(working_code);
-		auto end = clock::now();
-		
-		sum += duration_cast<microseconds>(end-start).count();
-		if (i % 0x100 == 0)
-		{
-			std::cout << i << " " << sum << "ms\n";
-			full_sum += sum;
-			sum = 0;
-		}
-	}
-
-	std::cout << full_sum / 256 << "\n";
-	*/
-	//display_working_code(working_code);
 }
