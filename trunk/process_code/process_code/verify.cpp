@@ -93,6 +93,70 @@ uint8 * decrypt_memory(uint8 * working_code, uint8 * encrypted_memory, int lengt
 	return decrypted_memory;
 }
 
+
+/* example:
+
+	uint8 fake_block[0x80];
+	for (int i = 0; i < 128; i++)
+	{
+		fake_block[i] = 0x60;
+	}
+
+	fake_block[0] = 0xA9;
+	fake_block[1] = 0x96;
+	fake_block[2] = 0x85;
+	fake_block[3] = 0xAF;
+
+	uint8 * encrypted_memory = encrypt_memory(fake_block, other_world_code, other_world_code_length);
+	for (int i = 0; i < 128; i++)
+	{
+		printf("%02X ",encrypted_memory[i]);
+	}
+	printf("\n\n");
+
+	uint8 swapped[0x80];
+	for (int i = 0; i < 128; i++)
+	{
+		swapped[i] = encrypted_memory[127-i];
+	}
+
+	uint8 * decrypted_memory2 = decrypt_memory(swapped, other_world_code, other_world_code_length);
+	for (int i = 0; i < 128; i++)
+	{
+		printf("%02X ",decrypted_memory2[i]);
+	}
+	printf("\n");
+
+	if (verify_checksum(decrypted_memory2,other_world_code_length))
+	{
+		printf("PASS\n");
+	}
+*/
+
+uint8 * encrypt_memory(uint8 * block, uint8 * xor_block, int length)
+{
+	// Swap the block around
+	uint8 swapped[0x80];
+	for (int i = 0; i < 128; i++)
+	{
+		swapped[i] = block[127-i];
+	}
+
+	// Get the checkum value needed
+	uint16 sum = 0;
+	for (int i = 0; i < length - 2; i++)
+	{
+		sum += block[i];
+	}
+
+	swapped[128-length] = (sum >> 8) & 0xFF;
+	swapped[128-length+1] = sum & 0xFF;
+
+	uint8 * encrypted_memory = decrypt_memory(swapped, other_world_code, other_world_code_length);
+
+	return encrypted_memory;
+}
+
 bool verify_checksum(uint8 * memory, int length)
 {
 	// TODO: idea: if memory[length-1] > (((length-2) * 0xFF) >> 8) then immediate failure. Checkum value is too big
