@@ -1,0 +1,103 @@
+#summary Detailed analysis of the Carnival world Code
+
+= Overview =
+
+The carnival world code is separated into 4 parts, one for each area of carnival world. In general, the code at B535 really only takes care of the roller coaster, everything else is handled by $9662, just like in other levels.
+
+Level initialization and ending is handled mostly within the code itself.
+
+
+= Details =
+
+== Part 1 ==
+
+This part controls map 2A, as well as initialization
+
+*006A5  A2 LDX #$05*
+
+05 is the index associated with an array containing level data. All levels are initialized this way.
+
+*006A7  EC CPX $0451*
+
+$0451 will be FF at this point, because the subroutine ED88 has been called once at the end of world 5. This subroutine clears out the previous levels data when run with 0451=FF, and loads the current level otherwise.
+
+*006AA  F0 BEQ $006AF*
+
+If they are equal, skip initializing
+ 
+*006AC  20 JSR $ED88*
+
+Level initialization. Same for all levels.
+ 
+*006AF  A9 LDA #$00*
+
+*006B1  85 STA $3F*
+ 
+*006B3  A5 LDA $FC*
+
+*006B5  C9 CMP #$02*
+
+*006B7  D0 BNE $006CD*
+
+look into this
+ 
+*006B9  A0 LDY #$0F*
+
+*006BB  20 JSR $AF7F*
+ 
+*006BE  B0 BCS $006CD*
+ 
+006C0  A5 LDA $D4
+
+006C2  D0 BNE $006CD
+ 
+006C4  AD LDA $0568
+
+006C7  18 CLC
+
+006C8  69 ADC #$10
+
+006CA  8D STA $0568
+ 
+*006CD  4C JMP $B535*
+
+B535 is the exit point for all areas, in other words, this code block handles all 4 areas of the level.
+ 
+// I need to check if the rest of this code is every actually used
+// It seems as though $B535 is the exit point for all this code, so I am going to break up the code based on that
+006D0  A0 LDY #$00
+006D2  20 JSR $88B6
+006D5  4C JMP $B535
+ 
+006D8  A0 LDY #$01
+006DA  20 JSR $88B6
+006DD  8A TXA
+006DE  F0 BEQ $00700
+006E0  A0 LDY #$02
+006E2  DD CMP $03A0,X *
+006E5  20 JSR $88B6
+006E8  AD LDA $0558
+006EB  C9 CMP #$F0
+006ED  90 BCC $00700
+006EF  A2 LDX #$12
+006F1  BD LDA $B98B,X *
+006F4  9D STA $0157,X
+006F7  CA DEX
+006F8  10 BPL $006F1
+006FA  20 JSR $8952
+006FD  4C JMP $81EE
+00700  A5 LDA $48
+00702  29 AND #$07
+00704  D0 BNE $00712
+// This section swaps the values in $010A and $010B. Why? I have no idea. But it does.
+00706  AD LDA $010B
+00709  AE LDX $010A
+0070C  8E STX $010B
+0070F  8D STA $010A
+00712  4C JMP $B535
+
+*00715  C9 CMP #$2D*
+
+check sum values
+
+
