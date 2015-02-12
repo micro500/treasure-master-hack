@@ -146,3 +146,30 @@ This section of code ends the level. It does so by comparing the X position of t
 00715  C9 CMP #$2D
 }}}
 check sum values
+
+= Subroutines =
+
+==88B6==
+{{{
+LDX #$FF
+
+LDA $045A
+
+CMP $88C9,Y
+
+BCC $88C6
+
+CMP $88D2,Y
+
+BCS (01)
+
+INX
+
+STX $00C1
+}}
+
+This subrouting compares the characters X position against the edges the level. It controls the code that is run for that particular region. If they are within the region, X stays at FF, otherwise it is set to 1.
+
+Setting X apparently controls how B535 runs.
+RTS
+}}}
