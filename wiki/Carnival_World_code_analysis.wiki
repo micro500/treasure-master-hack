@@ -40,7 +40,7 @@ Level initialization. Same for all levels.
 006B7  D0 BNE $006CD
 }}}
 look into this
-
+{{{
 006B9  A0 LDY #$0F
 
 006BB  20 JSR $AF7F
@@ -50,6 +50,9 @@ look into this
 006C0  A5 LDA $D4
 
 006C2  D0 BNE $006CD
+}}}
+Runs the level specific code with 2 different settings for whatever reason.
+
 {{{
 006C4  AD LDA $0568
 
