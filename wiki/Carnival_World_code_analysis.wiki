@@ -170,6 +170,6 @@ STX $00C1
 RTS
 }}}
 
-This subroutine compares the characters X position against the edges the level. It controls the code that is run for that particular region. If they are within the region, X stays at FF, otherwise it is set to 1.
+This subroutine compares the characters X position against the edges the level. It controls the code that is run for that particular region. If they are within the region, X stays at FF, otherwise it is set to 1. Then it is stored in 00C1.
 
-Setting X apparently controls how B535 runs.
+I am not yet sure what the effect of setting 00C1 is. 
