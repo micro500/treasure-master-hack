@@ -23,12 +23,13 @@ $0451 will be FF at this point, because the subroutine ED88 has been called once
 
 *006AA  F0 BEQ $006AF*
 
+
 If they are equal, skip initializing
- 
+
 *006AC  20 JSR $ED88*
 
 Level initialization. Same for all levels.
- 
+
 *006AF  A9 LDA #$00*
 
 *006B1  85 STA $3F*
@@ -40,7 +41,7 @@ Level initialization. Same for all levels.
 *006B7  D0 BNE $006CD*
 
 look into this
- 
+
 *006B9  A0 LDY #$0F*
 
 *006BB  20 JSR $AF7F*
@@ -70,25 +71,47 @@ B535 is the exit point for all areas, in other words, this code block handles al
 006D5  4C JMP $B535
  
 006D8  A0 LDY #$01
+
 006DA  20 JSR $88B6
+
 006DD  8A TXA
+
 006DE  F0 BEQ $00700
+
+
+
 006E0  A0 LDY #$02
-006E2  DD CMP $03A0,X *
+
+006E2  DD CMP $03A0,X
+
 006E5  20 JSR $88B6
+
 006E8  AD LDA $0558
+
 006EB  C9 CMP #$F0
+
 006ED  90 BCC $00700
+
 006EF  A2 LDX #$12
-006F1  BD LDA $B98B,X *
+
+006F1  BD LDA $B98B,X
+
 006F4  9D STA $0157,X
+
 006F7  CA DEX
+
 006F8  10 BPL $006F1
+
 006FA  20 JSR $8952
+
 006FD  4C JMP $81EE
+
 00700  A5 LDA $48
+
 00702  29 AND #$07
+
 00704  D0 BNE $00712
+
 // This section swaps the values in $010A and $010B. Why? I have no idea. But it does.
 00706  AD LDA $010B
 00709  AE LDX $010A
@@ -99,5 +122,3 @@ B535 is the exit point for all areas, in other words, this code block handles al
 *00715  C9 CMP #$2D*
 
 check sum values
-
-
