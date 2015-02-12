@@ -79,6 +79,8 @@ B535 is the exit point for all areas, in other words, this code block handles al
 }}}
 The code for section 2 is the shortest. Need to investigate subroutine 88B6.
 
+== Part 3 ==
+
 {{{
 006D8  A0 LDY #$01
 
@@ -89,7 +91,7 @@ The code for section 2 is the shortest. Need to investigate subroutine 88B6.
 006DE  F0 BEQ $00700
 
 006E0  A0 LDY #$02
-
+}}}
 == Part 3.1 and Part 4 ==
 {{{
 006E2  DD CMP $03A0,X
