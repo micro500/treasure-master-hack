@@ -68,12 +68,18 @@ For whatever reason, this code is adding 16 pixels (1 height block) to the chara
 }}}
 B535 is the exit point for all areas, in other words, this code block handles all 4 areas of the level.
 
+
+== Part 2 ==
+{{{
 006D0  A0 LDY #$00
 
 006D2  20 JSR $88B6
 
 006D5  4C JMP $B535
+}}}
+The code for section 2 is the shortest. Need to investigate subroutine 88B6.
 
+{{{
 006D8  A0 LDY #$01
 
 006DA  20 JSR $88B6
@@ -84,7 +90,7 @@ B535 is the exit point for all areas, in other words, this code block handles al
 
 006E0  A0 LDY #$02
 
-== Part 2.1 and Part 3 ==
+== Part 3.1 and Part 4 ==
 {{{
 006E2  DD CMP $03A0,X
 }}}
