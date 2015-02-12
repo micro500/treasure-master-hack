@@ -131,13 +131,18 @@ This section of code ends the level. It does so by comparing the X position of t
 
 00704  D0 BNE $00712
 
-// This section swaps the values in $010A and $010B. Why? I have no idea. But it does.
+
 00706  AD LDA $010B
+
 00709  AE LDX $010A
+
 0070C  8E STX $010B
+
 0070F  8D STA $010A
+
 00712  4C JMP $B535
 
-*00715  C9 CMP #$2D*
-
+{{{
+00715  C9 CMP #$2D
+}}}
 check sum values
