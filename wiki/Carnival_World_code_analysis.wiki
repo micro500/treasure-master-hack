@@ -24,28 +24,28 @@ $0451 will be FF at this point, because the subroutine ED88 has been called once
 006AA  F0 BEQ $006AF
 }}}
 If they are equal, skip initializing
-
-*006AC  20 JSR $ED88*
-
+{{{
+006AC  20 JSR $ED88
+}}}
 Level initialization. Same for all levels.
+{{{
+006AF  A9 LDA #$00
 
-*006AF  A9 LDA #$00*
+006B1  85 STA $3F
 
-*006B1  85 STA $3F*
+006B3  A5 LDA $FC
 
-*006B3  A5 LDA $FC*
+006B5  C9 CMP #$02
 
-*006B5  C9 CMP #$02*
-
-*006B7  D0 BNE $006CD*
-
+006B7  D0 BNE $006CD
+}}}
 look into this
 
-*006B9  A0 LDY #$0F*
+006B9  A0 LDY #$0F
 
-*006BB  20 JSR $AF7F*
+006BB  20 JSR $AF7F
 
-*006BE  B0 BCS $006CD*
+006BE  B0 BCS $006CD
 
 006C0  A5 LDA $D4
 
@@ -59,12 +59,9 @@ look into this
 
 006CA  8D STA $0568
  
-*006CD  4C JMP $B535*
+006CD  4C JMP $B535
 
 B535 is the exit point for all areas, in other words, this code block handles all 4 areas of the level.
- 
-// I need to check if the rest of this code is every actually used
-// It seems as though $B535 is the exit point for all this code, so I am going to break up the code based on that
 
 006D0  A0 LDY #$00
 
@@ -82,15 +79,17 @@ B535 is the exit point for all areas, in other words, this code block handles al
 
 006E0  A0 LDY #$02
 
-*006E2  DD CMP $03A0,X*
-
-This line actually contains a subtle trick. When it is run through from the previous section, it does nothing, but when it is run from section 3 of the level, it loads at the next byte, and becomes A0 03, loading 3 into X
-
-*006E5  20 JSR $88B6*
-
+== Part 2.1 and Part 3 ==
+{{{
+006E2  DD CMP $03A0,X
+}}}
+This line actually contains a subtle trick. When it is run through from the previous section, it does nothing, but when it is run from section 3 of the level, it loads at the next byte, and becomes A0 03, loading 3 into Y. Note that without this step, 2 is still in Y, since it is from part 2
+{{{
+006E5  20 JSR $88B6
+}}}
 Need to see what 88B6 does
-
-*006E8  AD LDA $0558
+{{{
+006E8  AD LDA $0558
 
 006EB  C9 CMP #$F0
 
@@ -108,9 +107,9 @@ Need to see what 88B6 does
 
 006FA  20 JSR $8952
 
-006FD  4C JMP $81EE*
-
-This section of code ends the level. It does so by comparing the X position of the character against F0, the right edge of the level.
+006FD  4C JMP $81EE
+}}}
+This section of code ends the level. It does so by comparing the X position of the character against F0, the right edge of the level. After the jump to 81EE, the game never returns to the carnival code.
 
 
 00700  A5 LDA $48
