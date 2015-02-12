@@ -12,18 +12,17 @@ Level initialization and ending is handled mostly within the code itself.
 == Part 1 ==
 
 This part controls map 2A, as well as initialization
-
-*006A5  A2 LDX #$05*
-
+{{{
+006A5  A2 LDX #$05
+}}}
 05 is the index associated with an array containing level data. All levels are initialized this way.
-
-*006A7  EC CPX $0451*
-
+{{{
+006A7  EC CPX $0451
+}}}
 $0451 will be FF at this point, because the subroutine ED88 has been called once at the end of world 5. This subroutine clears out the previous levels data when run with 0451=FF, and loads the current level otherwise.
-
-*006AA  F0 BEQ $006AF*
-
-
+{{{
+006AA  F0 BEQ $006AF
+}}}
 If they are equal, skip initializing
 
 *006AC  20 JSR $ED88*
@@ -33,7 +32,7 @@ Level initialization. Same for all levels.
 *006AF  A9 LDA #$00*
 
 *006B1  85 STA $3F*
- 
+
 *006B3  A5 LDA $FC*
 
 *006B5  C9 CMP #$02*
@@ -45,13 +44,13 @@ look into this
 *006B9  A0 LDY #$0F*
 
 *006BB  20 JSR $AF7F*
- 
+
 *006BE  B0 BCS $006CD*
- 
+
 006C0  A5 LDA $D4
 
 006C2  D0 BNE $006CD
- 
+
 006C4  AD LDA $0568
 
 006C7  18 CLC
@@ -66,10 +65,13 @@ B535 is the exit point for all areas, in other words, this code block handles al
  
 // I need to check if the rest of this code is every actually used
 // It seems as though $B535 is the exit point for all this code, so I am going to break up the code based on that
+
 006D0  A0 LDY #$00
+
 006D2  20 JSR $88B6
+
 006D5  4C JMP $B535
- 
+
 006D8  A0 LDY #$01
 
 006DA  20 JSR $88B6
@@ -77,8 +79,6 @@ B535 is the exit point for all areas, in other words, this code block handles al
 006DD  8A TXA
 
 006DE  F0 BEQ $00700
-
-
 
 006E0  A0 LDY #$02
 
