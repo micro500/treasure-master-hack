@@ -58,6 +58,7 @@ So from this the second bonus world must have jump addresses:
 
 06CD is for 18 
 
+
 At the very least, these blocks must have an executable op code when decrypted. Of course, 06A5 is called first for both bonus worlds, even though it is only used in loading the level.
 
 == Code Execution ==
@@ -67,17 +68,29 @@ The carnival world code is executed from B535 to B5FD. It also calls a subroutin
 The first block of carnival world calls ED88, the level initializaing code. Since this was called the first time at the end of level 5, it needs to be called only once here to not be put in an infinite loop.
 
 006E2 DD CMP $03A0,X *
+
 006E5 20 JSR $88B6
+
 006E8 AD LDA $0558
+
 006EB C9 CMP #$F0
+
 006ED 90 BCC $00700
+
 006EF A2 LDX #$12
+
 006F1 BD LDA $B98B,X *
+
 006F4 9D STA $0157,X
+
 006F7 CA DEX
+
 006F8 10 BPL $006F1
+
 006FA 20 JSR $8952
+
 006FD 4C JMP $81EE 
+
 
 This block of code ends the level after walking far enough right.
 
