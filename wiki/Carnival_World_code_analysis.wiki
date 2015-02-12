@@ -82,11 +82,15 @@ B535 is the exit point for all areas, in other words, this code block handles al
 
 006E0  A0 LDY #$02
 
-006E2  DD CMP $03A0,X
+*006E2  DD CMP $03A0,X*
 
-006E5  20 JSR $88B6
+This line actually contains a subtle trick. When it is run through from the previous section, it does nothing, but when it is run from section 3 of the level, it loads at the next byte, and becomes A0 03, loading 3 into X
 
-006E8  AD LDA $0558
+*006E5  20 JSR $88B6*
+
+Need to see what 88B6 does
+
+*006E8  AD LDA $0558
 
 006EB  C9 CMP #$F0
 
@@ -104,7 +108,10 @@ B535 is the exit point for all areas, in other words, this code block handles al
 
 006FA  20 JSR $8952
 
-006FD  4C JMP $81EE
+006FD  4C JMP $81EE*
+
+This section of code ends the level. It does so by comparing the X position of the character against F0, the right edge of the level.
+
 
 00700  A5 LDA $48
 
