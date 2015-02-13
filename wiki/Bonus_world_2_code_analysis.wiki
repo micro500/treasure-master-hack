@@ -1,0 +1,10 @@
+#summary in depth analysis of bonus world 2 code
+
+= Overview =
+
+Bonus world 2 code is much simpler then bonus world 1. Much of the code to run platforms and warps already exists in subroutines used elsewhere, so we just need to find and reference them.
+
+
+= Details =
+
+
