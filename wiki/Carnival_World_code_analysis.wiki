@@ -51,7 +51,7 @@ look into this
 
 006C2  D0 BNE $006CD
 }}}
-Runs the level specific code with 2 different settings for whatever reason.
+What this does is control when you can enter the bonus rooms. It sets the carry flag if you have spondalacks and are in front of a tent and you press B.
 
 {{{
 006C4  AD LDA $0568
@@ -173,3 +173,7 @@ RTS
 This subroutine compares the characters X position against the edges the level. It controls the code that is run for that particular region. If they are within the region, X stays at FF, otherwise it is set to 1. Then it is stored in 00C1.
 
 I am not yet sure what the effect of setting 00C1 is. 
+
+== AF7F ==
+
+This subroutine controls using spondolacks at the tents.
