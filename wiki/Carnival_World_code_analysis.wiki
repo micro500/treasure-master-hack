@@ -124,13 +124,12 @@ Need to see what 88B6 does
 }}}
 This section of code ends the level. It does so by comparing the X position of the character against F0, the right edge of the level. After the jump to 81EE, the game never returns to the carnival code.
 
-
+{{{
 00700  A5 LDA $48
 
 00702  29 AND #$07
 
 00704  D0 BNE $00712
-
 
 00706  AD LDA $010B
 
@@ -141,7 +140,8 @@ This section of code ends the level. It does so by comparing the X position of t
 0070F  8D STA $010A
 
 00712  4C JMP $B535
-
+}}}
+Not sure what's going on here.
 {{{
 00715  C9 CMP #$2D
 }}}
