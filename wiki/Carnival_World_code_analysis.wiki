@@ -51,7 +51,7 @@ look into this
 
 006C2  D0 BNE $006CD
 }}}
-What this does is control when you can enter the bonus rooms. It sets the carry flag if you have spondalacks and are in front of a tent and you press B.
+What this does is control your Y position when you are exiting the bonus world tents.without it the game becomes quite confused because one tent is higher then the other.
 
 {{{
 006C4  AD LDA $0568
@@ -170,10 +170,8 @@ STX $00C1
 RTS
 }}}
 
-This subroutine compares the characters X position against the edges the level. It controls the code that is run for that particular region. If they are within the region, X stays at FF, otherwise it is set to 1. Then it is stored in 00C1.
-
-I am not yet sure what the effect of setting 00C1 is. 
+This subroutine compares the characters X position against certain places in the level. It controls the code that is run for that particular region. If they are within the region, X stays at FF, otherwise INX is run. Then it is stored in 00C1. I don't think the value in 00C1 matters, but the flags might. Needs more research.
 
 == AF7F ==
 
-This subroutine controls using spondolacks at the tents.
+Specialized subroutine for controlling y position when leaving a tent.
