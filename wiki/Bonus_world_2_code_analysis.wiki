@@ -4,7 +4,42 @@
 
 Bonus world 2 code is much simpler then bonus world 1. Much of the code to run platforms and warps already exists in subroutines used elsewhere, so we just need to find and reference them.
 
+*This is not the definitely final code*
 
 = Details =
 
+== Part 1 ==
+Unlike the code for bonus world 1, this code needs to load the level from scratch. This means that once the level initialization begins, the code will never return to 06A5
 
+{{{
+006A5  A2 LDA #$05
+006A7  4C JMP $8595
+}}}
+8595 is the code that technically ends a level. So what we do here is undo the first run of ED88 that ran for the carnival world. 05 happens to be the array index for the second bonus world. 
+{{{
+006AA  A2 LDX #$04
+006AC  4C JMP $80B4
+}}}
+The Subroutine 80B4 controls teleporters. The 4 index tells it what teleporter it is checking.
+{{{
+006AF 
+.
+.
+.
+006E4
+}}}
+This block of code controls most other things in the level. The ending code should be in here too.
+{{{
+006E5  A2 LDX #$04
+006E7  4C JMP $80B4
+}}}
+This code is need to check the second teleporter. It might not be exactly there, but it must be before reading reaches 06F5
+{{{
+006F5  60 RTS? 
+006F6
+006F7
+}}}
+This part of the level can run with an RTS alone since nothing special is happening there. It is possible the last 2 bytes are for the checksum just as in code 1. 
+
+
+= Subroutines =
