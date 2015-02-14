@@ -326,6 +326,8 @@ int main(int argc, char **argv)
 			size_t x = IVs_in_progress.size();
 			std::sort(IVs_in_progress.begin(), IVs_in_progress.end());
 			IVs_in_progress.erase(std::unique(IVs_in_progress.begin(),IVs_in_progress.end()),IVs_in_progress.end());
+			// shrink to fit
+			std::vector<working_code>(IVs_in_progress).swap(IVs_in_progress);
 			x -= IVs_in_progress.size();
 			boinc_log("%lu deleted\n",x);
 
@@ -338,6 +340,227 @@ int main(int argc, char **argv)
 		{
 			output_stats(&(*it));
 		}
+	}
+	else if (command_line_options.attack == VECTOR_CONSTANT_SIZE)
+	{
+		boinc_log("vector attack, constant size of %d\n", command_line_options.vector_size);
+		// will force a pre-processed key schedule for now
+
+		std::vector<working_code> IVs_in_progress;
+
+		key_schedule_entry schedule_entries[27];
+
+		int schedule_counter = 0;
+
+		bool no_more = false;
+
+		// Go one map at a time
+		for (int map_index = 0; map_index < 26; map_index++)
+		{
+			printf("vector size before add: %lu\n",IVs_in_progress.size());
+
+			// Add more to the vector if there are not enough
+			while (IVs_in_progress.size() < command_line_options.vector_size && !no_more)
+			{
+				std::vector<working_code> new_IVs;
+				printf("want: %lu\n", command_line_options.vector_size - IVs_in_progress.size());
+				while ((IVs_in_progress.size() + new_IVs.size()) < command_line_options.vector_size)
+				{
+					// Get a key
+					if (command_line_options.from_file)
+					{
+						std::string line;
+						if (!getline(myfile, line))
+						{
+							no_more = true;
+							break;
+						}
+
+						std::stringstream ss;
+						ss << std::hex << line.substr(0,8);
+
+						uint32 key;
+						ss >> key;
+
+						std::stringstream ss2;
+						ss2 << std::hex << line.substr(8,16);
+
+						uint32 data;
+						ss2 >> data;
+
+						// something about skipping bad lines?
+
+						value[0] = (key >> 24) & 0xFF;
+						value[1] = (key >> 16) & 0xFF;
+						value[2] = (key >> 8) & 0xFF;
+						value[3] = key & 0xFF;
+
+						value[4] = (data >> 24) & 0xFF;
+						value[5] = (data >> 16) & 0xFF;
+						value[6] = (data >> 8) & 0xFF;
+						value[7] = data & 0xFF;
+					}
+					else
+					{
+						if (IVs_to_run == IVs_finished)
+						{
+							no_more = true;
+							break;
+						}
+
+						if (IVs_finished == 0)
+						{
+							value[0] = (command_line_options.start_key >> 24) & 0xFF;
+							value[1] = (command_line_options.start_key >> 16) & 0xFF;
+							value[2] = (command_line_options.start_key >> 8) & 0xFF;
+							value[3] = command_line_options.start_key & 0xFF;
+
+							value[4] = (command_line_options.start_data >> 24) & 0xFF;
+							value[5] = (command_line_options.start_data >> 16) & 0xFF;
+							value[6] = (command_line_options.start_data >> 8) & 0xFF;
+							value[7] = command_line_options.start_data & 0xFF;
+						}
+						else
+						{
+							// Increment to the next IV
+							for (int i = 7; i >= 0; i--)
+							{
+								value[i]++;
+								if (value[i] != 0x00)
+								{
+									break;
+								}
+							}
+						}
+					}
+
+					// Get the key from the first IV
+					if (IVs_finished == 0)
+					{
+						key_schedule_data schedule_data;
+						// Pre-process the key schedule
+						schedule_data.as_uint8[0] = value[0];
+						schedule_data.as_uint8[1] = value[1];
+						schedule_data.as_uint8[2] = value[2];
+						schedule_data.as_uint8[3] = value[3];
+
+						int schedule_counter = 0;
+						for (int i = 0; i < 26; i++)
+						{
+							schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data);
+
+							if (map_list[i] == 0x22)
+							{
+								schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data,4);
+							}
+						}
+					}
+
+					new_IVs.push_back(value);
+
+					IVs_finished++;
+				}
+				printf("new IVs: %lu\n",new_IVs.size());
+
+				// catch the new IVs up
+				if (new_IVs.size() > 0)
+				{
+					int sub_schedule_counter = 0;
+					for (int sub_map_index = 0; sub_map_index < map_index; sub_map_index++)
+					{
+
+						for (std::vector<working_code>::iterator it = new_IVs.begin(); it != new_IVs.end(); ++it)
+						{
+							it->process_map_exit(map_list[sub_map_index],schedule_entries[sub_schedule_counter]);
+
+							if (map_list[sub_map_index] == 0x22)
+							{
+								it->process_map_exit(map_list[sub_map_index],schedule_entries[sub_schedule_counter+1]);
+							}
+						} 
+
+						// Advance the schedule
+						sub_schedule_counter++;
+						if (map_list[sub_map_index] == 0x22)
+						{
+							sub_schedule_counter++;
+						}
+
+						boinc_log("%lu subrun\n",new_IVs.size());
+
+						size_t x = new_IVs.size();
+						std::sort(new_IVs.begin(), new_IVs.end());
+						new_IVs.erase(std::unique(new_IVs.begin(),new_IVs.end()),new_IVs.end());
+						// shrink to fit
+						std::vector<working_code>(new_IVs).swap(new_IVs);
+						x -= new_IVs.size();
+						boinc_log("%lu subdeleted\n",x);
+					}
+				}
+				printf("new IVs after: %lu\n",new_IVs.size());
+				IVs_in_progress.insert(IVs_in_progress.end(), new_IVs.begin(), new_IVs.end());
+				new_IVs.empty();
+
+				printf("vector size after add: %lu\n",IVs_in_progress.size());
+
+				std::vector<working_code>(IVs_in_progress).swap(IVs_in_progress);
+			}
+			
+			//std::vector<working_code>(new_IVs).swap(new_IVs);
+
+			printf("finished so far: %lu\n", IVs_finished);
+			printf("process main vector, index: %i\n", map_index);
+			uint64 count = 0;
+			for (std::vector<working_code>::iterator it = IVs_in_progress.begin(); it != IVs_in_progress.end(); ++it)
+			{
+				it->process_map_exit(map_list[map_index],schedule_entries[schedule_counter]);
+
+				if (map_list[map_index] == 0x22)
+				{
+					it->process_map_exit(map_list[map_index],schedule_entries[schedule_counter+1]);
+				}
+
+				count++;
+
+				if (command_line_options.from_file)
+				{
+					// TODO
+				}
+				else
+				{
+					// TODO
+					fraction_done((((double)count)+((double)(map_index*command_line_options.iv_count)))/(((double)26)*((double)command_line_options.iv_count)));
+				} 
+			}
+
+			// Advance the schedule
+			schedule_counter++;
+			if (map_list[map_index] == 0x22)
+			{
+				schedule_counter++;
+			}
+
+			boinc_log("%lu run\n",IVs_in_progress.size());
+
+			size_t x = IVs_in_progress.size();
+			std::sort(IVs_in_progress.begin(), IVs_in_progress.end());
+			IVs_in_progress.erase(std::unique(IVs_in_progress.begin(),IVs_in_progress.end()),IVs_in_progress.end());
+			// shrink to fit
+			std::vector<working_code>(IVs_in_progress).swap(IVs_in_progress);
+			x -= IVs_in_progress.size();
+			boinc_log("%lu deleted\n",x);
+
+			boinc_log("\n");
+		}
+
+		boinc_log("%lu checking\n\n",IVs_in_progress.size());
+
+		for (std::vector<working_code>::iterator it = IVs_in_progress.begin(); it != IVs_in_progress.end(); ++it)
+		{
+			output_stats(&(*it));
+		}
+
+		printf("finished: %lu\n", IVs_finished);
 	}
 
 	finish_boinc();
