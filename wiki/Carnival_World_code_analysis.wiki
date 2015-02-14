@@ -170,7 +170,9 @@ STX $00C1
 RTS
 }}}
 
-This subroutine compares the characters X position against certain places in the level. It controls the code that is run for that particular region. If they are within the region, X stays at FF, otherwise INX is run. Then it is stored in 00C1. I don't think the value in 00C1 matters, but the flags might. Needs more research.
+This subroutine compares the characters X position against certain places in the level. It controls the code that is run for that particular region. If they are within the region, X stays at FF, otherwise INX is run. Then it is stored in 00C1. I don't think the value in 00C1 matters, but the flags might. What this flag does is tell the game where jumping up above the screen will or won't lead to a screen transition when there is no roof there.
+
+Interestingly, it seem like this code is missing in level 2 where you can climb through the ceiling on the rope : )
 
 == AF7F ==
 
