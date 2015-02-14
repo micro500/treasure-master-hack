@@ -9,6 +9,7 @@ enum attack_type
 {
 	INDIVIDUAL,
 	VECTOR,
+	VECTOR_CONSTANT_SIZE,
 	HASH
 };
 
@@ -22,6 +23,9 @@ struct cli_options
 
 	//  -c, --count 
 	uint64 iv_count;
+
+	//  -e, --vector_size
+	uint64 vector_size;
 
 	//  -a, --attack attack_type:
 	//               "individual": each IV is processed and checked individually
@@ -42,6 +46,7 @@ struct cli_options
 	cli_options() : start_key(0),
 		start_data(0),
 		iv_count(1),
+		vector_size(0x1000),
 		attack(INDIVIDUAL),
 		big_registers(false),
 		key_schedule(true),

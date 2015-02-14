@@ -34,6 +34,14 @@ void process_command_line(int argc, char **argv)
 			ss << std::hex << argv[i];
 			ss >> command_line_options.iv_count;
 		}
+		else if (std::string(argv[i]) == "-e")
+		{
+			i++;
+
+			std::stringstream ss;
+			ss << std::hex << argv[i];
+			ss >> command_line_options.vector_size;
+		}
 		else if (std::string(argv[i]) == "-a")
 		{
 			i++;
@@ -44,6 +52,10 @@ void process_command_line(int argc, char **argv)
 			else if (std::string(argv[i]) == "vector")
 			{
 				command_line_options.attack = VECTOR;
+			}
+			else if (std::string(argv[i]) == "vector2")
+			{
+				command_line_options.attack = VECTOR_CONSTANT_SIZE;
 			}
 			else if (std::string(argv[i]) == "hash")
 			{
