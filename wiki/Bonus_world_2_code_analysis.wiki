@@ -30,7 +30,7 @@ The Subroutine 80B4 controls teleporters. The 4 index tells it what teleporter i
 }}}
 This block of code controls most other things in the level. The ending code should be in here too. Somewhere in here there also has to be a call to 8464 to control the platforms. I believe this is also where a sprite loading routine is called, since sprites are messed up in the current load scheme.
 {{{
-006E5  A2 LDX #$04
+006E5  A2 LDX #$05
 006E7  4C JMP $80B4
 }}}
 This code is need to check the second teleporter. It might not be exactly there, but it must be before reading reaches 06F5
