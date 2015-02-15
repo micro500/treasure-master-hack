@@ -47,7 +47,7 @@ This block of code controls most other things in the level. There also has to be
 .
 .
 06E4
-
+}}}
 {{{
 006E5  A2 LDX #$05
 006E7  4C JMP $80B4
