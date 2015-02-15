@@ -77,7 +77,7 @@ B535 is the exit point for all areas, in other words, this code block handles al
 
 006D5  4C JMP $B535
 }}}
-The code for section 2 is the shortest. Need to investigate subroutine 88B6.
+The code for section 2 is the shortest. Not much to do.
 
 == Part 3 ==
 
@@ -141,7 +141,7 @@ This section of code ends the level. It does so by comparing the X position of t
 
 00712  4C JMP $B535
 }}}
-Not sure what's going on here.
+This code is swapping masks for the pallet. This creates the ferris wheel 'animation.'
 {{{
 00715  C9 CMP #$2D
 }}}
