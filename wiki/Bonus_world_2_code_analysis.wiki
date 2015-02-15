@@ -22,13 +22,32 @@ Unlike the code for bonus world 1, this code needs to load the level from scratc
 }}}
 The Subroutine 80B4 controls teleporters. The 4 index tells it what teleporter it is checking.
 {{{
-006AF 
-.
-006??  20 JSR $8464
-.
-006E4
+06AF 20 JSR $8464
+
+06B2 A0 LDY #$0F
+06B4 A5 LDA $00F3
+06B6 C9 CMP #$16
+06B8 D0 BNE (02)
+06BA A0 LDY #$0B
+06BC AD LDA $045A
+06BF C9 CMP #$49
+06C1 90 BCC (02)
+06C3 A0 LDY #$01
+06C5 4C JMP $06EA
+06C8 60
+06C9 60
+06CA 60
+06CB 60
+06CC 60
 }}}
-This block of code controls most other things in the level. The ending code should be in here too. Somewhere in here there also has to be a call to 8464 to control the platforms. I believe this is also where a sprite loading routine is called, since sprites are messed up in the current load scheme.
+This block of code controls most other things in the level. There also has to be a call to 8464 to control the platforms, it might not be exactly there though. 
+{{{
+06CD
+.
+.
+.
+06E4
+
 {{{
 006E5  A2 LDX #$05
 006E7  4C JMP $80B4
