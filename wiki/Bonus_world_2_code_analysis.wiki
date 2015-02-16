@@ -52,7 +52,7 @@ This part of the code should end the level, the same as in Carnival world but st
 006F0  A2 LDX #$05
 006F2  4C JMP $80B4
 }}}
-This code is need to check the second teleporter, as well as clear the flag that marks the spring as being already hit. (A left over from level 4.)
+This code is need to check the second teleporter, as well as clear the flag that marks the spring as being already hit. (A left over from level 4.) The CMP #$04 could possibly be a 3 or 2 or 1, but nothing else.
 {{{
 006F5  60 RTS? 
 006F6
