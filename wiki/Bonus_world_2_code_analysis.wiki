@@ -39,7 +39,7 @@ This block of code mainly controls sprite pallet swaps. 006AF and 006B1 can be s
 {{{
 006CD  AD LDA $0558
 
-006D0  C9 CMP #$F0
+006D0  C9 CMP #$E7
 
 006D2  90 BCC $006F5
 
