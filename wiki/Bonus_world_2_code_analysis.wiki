@@ -41,7 +41,7 @@ This block of code mainly controls sprite pallet swaps. 006AF and 006B1 can be s
 
 006D0  C9 CMP #$F0
 
-006D2  90 BCC $00700
+006D2  90 BCC $006F5
 
 006D4  A2 LDX #$12
 
@@ -51,7 +51,7 @@ This block of code mainly controls sprite pallet swaps. 006AF and 006B1 can be s
 
 006DC  CA DEX
 
-006DD  10 BPL $006F1
+006DD  10 BPL $006D6
 
 006DF  20 JSR $8952
 
