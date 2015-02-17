@@ -36,11 +36,27 @@ The Subroutine 80B4 controls teleporters. The 4 index tells it what teleporter i
 }}}
 This block of code mainly controls sprite pallet swaps. 006AF and 006B1 can be swapped obviously without effecting the code, as can 006C4 and 006C7.
 {{{
-06CD
-.
-.
-.
-06E4
+{{{
+006CD  AD LDA $0558
+
+006D0  C9 CMP #$F0
+
+006D2  90 BCC $00700
+
+006D4  A2 LDX #$12
+
+006D6  BD LDA $B98B,X
+
+006D9  9D STA $0157,X
+
+006DC  CA DEX
+
+006DD  10 BPL $006F1
+
+006DF  20 JSR $8952
+
+006E2  4C JMP $81EE
+}}}
 }}}
 This part of the code should end the level, the same as in Carnival world but still needs testing.
 {{{
