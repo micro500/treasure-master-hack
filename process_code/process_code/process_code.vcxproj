@@ -30,6 +30,7 @@
     <ClCompile Include="boinc.cpp" />
     <ClCompile Include="cmd_args.cpp" />
     <ClCompile Include="key_schedule.cpp" />
+    <ClCompile Include="MurmurHash3.cpp" />
     <ClCompile Include="process_code.cpp" />
     <ClCompile Include="rng.cpp" />
     <ClCompile Include="verify.cpp" />
@@ -40,6 +41,8 @@
     <ClInclude Include="cmd_args.h" />
     <ClInclude Include="data_sizes.h" />
     <ClInclude Include="key_schedule.h" />
+    <ClInclude Include="MurmurHash3.h" />
+    <ClInclude Include="MurmurHash3_wrapper.h" />
     <ClInclude Include="rng.h" />
     <ClInclude Include="verify.h" />
     <ClInclude Include="working_code.h" />
