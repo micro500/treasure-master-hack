@@ -7,6 +7,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <functional>
+#include <unordered_set>
 
 #include "boinc.h"
 
@@ -16,6 +18,7 @@
 #include "working_code.h"
 #include "key_schedule.h"
 #include "verify.h"
+#include "MurmurHash3_wrapper.h"
 
 int main(int argc, char **argv)
 {
@@ -561,6 +564,265 @@ int main(int argc, char **argv)
 		}
 
 		printf("finished: %lu\n", IVs_finished);
+	}
+	else if (command_line_options.attack == HASH)
+	{
+		boinc_log("hash attack\n");
+		// will force a pre-processed key schedule for now
+
+		int skip_count = 0;
+
+		key_schedule_entry schedule_entries[27];
+
+		std::unordered_set<MurmurHashKey> global_hash_table;
+		uint32 global_hash_count = 0;
+
+		int schedule_counter = 0;
+		while (IVs_finished < command_line_options.iv_count)
+		{
+			printf("\nstarting some attack\n");
+			// Start a blank vector
+			std::vector<working_code> IVs_in_progress;
+
+			// go map by map	
+			for (int map_index = 0; map_index < 26; map_index++)
+			{
+				if (map_index == 0)
+				{
+					std::unordered_set<MurmurHashKey> local_hash_table;
+					local_hash_table.reserve(0x10000);
+
+					printf("First round\n");
+					// On first round, do a vector add
+					while (IVs_in_progress.size() < command_line_options.vector_size)
+					{
+						// Get a key
+						if (command_line_options.from_file)
+						{
+							std::string line;
+							if (!getline(myfile, line))
+							{
+								break;
+							}
+
+							std::stringstream ss;
+							ss << std::hex << line.substr(0,8);
+
+							uint32 key;
+							ss >> key;
+
+							std::stringstream ss2;
+							ss2 << std::hex << line.substr(8,16);
+
+							uint32 data;
+							ss2 >> data;
+
+							// something about skipping bad lines?
+
+							value[0] = (key >> 24) & 0xFF;
+							value[1] = (key >> 16) & 0xFF;
+							value[2] = (key >> 8) & 0xFF;
+							value[3] = key & 0xFF;
+
+							value[4] = (data >> 24) & 0xFF;
+							value[5] = (data >> 16) & 0xFF;
+							value[6] = (data >> 8) & 0xFF;
+							value[7] = data & 0xFF;
+						}
+						else
+						{
+							if (IVs_to_run == IVs_finished)
+							{
+								break;
+							}
+
+							if (IVs_finished == 0)
+							{
+								value[0] = (command_line_options.start_key >> 24) & 0xFF;
+								value[1] = (command_line_options.start_key >> 16) & 0xFF;
+								value[2] = (command_line_options.start_key >> 8) & 0xFF;
+								value[3] = command_line_options.start_key & 0xFF;
+
+								value[4] = (command_line_options.start_data >> 24) & 0xFF;
+								value[5] = (command_line_options.start_data >> 16) & 0xFF;
+								value[6] = (command_line_options.start_data >> 8) & 0xFF;
+								value[7] = command_line_options.start_data & 0xFF;
+							}
+							else
+							{
+								// Increment to the next IV
+								for (int i = 7; i >= 0; i--)
+								{
+									value[i]++;
+									if (value[i] != 0x00)
+									{
+										break;
+									}
+								}
+							}
+						}
+
+						// Get the key from the first IV
+						if (IVs_finished == 0)
+						{
+							key_schedule_data schedule_data;
+							// Pre-process the key schedule
+							schedule_data.as_uint8[0] = value[0];
+							schedule_data.as_uint8[1] = value[1];
+							schedule_data.as_uint8[2] = value[2];
+							schedule_data.as_uint8[3] = value[3];
+
+							int schedule_counter_gen = 0;
+							for (int i = 0; i < 26; i++)
+							{
+								schedule_entries[schedule_counter_gen++] = generate_schedule_entry(map_list[i],&schedule_data);
+
+								if (map_list[i] == 0x22)
+								{
+									schedule_entries[schedule_counter_gen++] = generate_schedule_entry(map_list[i],&schedule_data,4);
+								}
+							}
+						}
+
+						working_code in_progress(value);
+
+						// run a round, check hash, add if new
+						in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter]);
+
+						if (map_list[map_index] == 0x22)
+						{
+							in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter+1]);
+						}
+
+						//boinc_log("%02X%02X%02X%02X%02X%02X%02X%02X\t",in_progress.starting_value[0],in_progress.starting_value[1],in_progress.starting_value[2],in_progress.starting_value[3],in_progress.starting_value[4],in_progress.starting_value[5],in_progress.starting_value[6],in_progress.starting_value[7]);
+
+						// check hash
+						MurmurHashKey hashKey = generateHashKey(in_progress);
+
+						// check the hash?
+						if (local_hash_table.count(hashKey) > 0)
+						{
+							// in hash
+							//printf("Already in hash\n");
+							//printf("%i\n",skip_count);
+							skip_count++;
+							//printf("%i\n",skip_count);
+						}
+						else
+						{
+							local_hash_table.insert(hashKey);
+							IVs_in_progress.push_back(in_progress);
+							//printf("New\n");
+						}
+
+						IVs_finished++;
+					}
+					printf("processed: %i\n",IVs_finished);
+					printf("skipped: %i\n\n",skip_count);
+
+					// Advance the schedule
+					schedule_counter++;
+					if (map_list[map_index] == 0x22)
+					{
+						schedule_counter++;
+					}
+				}
+				else
+				{
+					uint64 count = 0;
+					for (std::vector<working_code>::iterator it = IVs_in_progress.begin(); it != IVs_in_progress.end(); ++it)
+					{
+						it->process_map_exit(map_list[map_index],schedule_entries[schedule_counter]);
+
+						if (map_list[map_index] == 0x22)
+						{
+							it->process_map_exit(map_list[map_index],schedule_entries[schedule_counter+1]);
+						}
+
+						count++;
+
+						if (command_line_options.from_file)
+						{
+							// TODO
+						}
+						else
+						{
+							// TODO
+							fraction_done((((double)count)+((double)(map_index*command_line_options.iv_count)))/(((double)26)*((double)command_line_options.iv_count)));
+						} 
+					}
+
+					// Advance the schedule
+					schedule_counter++;
+					if (map_list[map_index] == 0x22)
+					{
+						schedule_counter++;
+					}
+
+					boinc_log("%lu run\n",IVs_in_progress.size());
+
+					// for now do a vector redcuction
+					size_t x = IVs_in_progress.size();
+					std::sort(IVs_in_progress.begin(), IVs_in_progress.end());
+					IVs_in_progress.erase(std::unique(IVs_in_progress.begin(),IVs_in_progress.end()),IVs_in_progress.end());
+					// shrink to fit
+					std::vector<working_code>(IVs_in_progress).swap(IVs_in_progress);
+					x -= IVs_in_progress.size();
+					boinc_log("%lu deleted\n",x);
+
+					if (map_index == 4)
+					{
+						size_t x2 = IVs_in_progress.size();
+						boinc_log("global reduction\n");
+						// loop through IVs
+						
+						std::vector<working_code>::iterator it2 = IVs_in_progress.begin();
+						while (it2 != IVs_in_progress.end())
+						{
+							//it2->display_working_code();
+
+							// check hash
+							MurmurHashKey hashKey = generateHashKey((*it2));
+
+							// if found, remove from current working set
+							if (global_hash_table.count(hashKey) > 0)
+							{
+								// in hash
+								//printf("Already in hash\n");
+								//printf("%i\n",skip_count);
+								skip_count++;
+								it2 = IVs_in_progress.erase(it2);
+
+								//printf("%i\n",skip_count);
+							}
+							else
+							{
+								global_hash_table.insert(hashKey);
+								global_hash_count++;
+							}
+
+							// next
+							++it2;
+						}
+						
+						printf("end?\n");
+						x2 -= IVs_in_progress.size();
+						boinc_log("%lu hdeleted\n",x2);
+						
+					}
+
+					boinc_log("\n");
+				}
+			}
+
+			boinc_log("%lu checking\n\n",IVs_in_progress.size());
+
+			for (std::vector<working_code>::iterator it = IVs_in_progress.begin(); it != IVs_in_progress.end(); ++it)
+			{
+				output_stats(&(*it));
+			}
+		}
+		printf("global hash size: %i\n",global_hash_count);
 	}
 
 	finish_boinc();
