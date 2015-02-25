@@ -3,6 +3,7 @@
 #include "data_sizes.h"
 
 extern uint16 rng_table[0x100][0x100];
+extern uint8 rng_table_extended[0x10000][2048];
 
 unsigned char rng_real(unsigned char *rng1, unsigned char *rng2);
 
@@ -20,5 +21,7 @@ public:
 	uint8 run();
 	void seed(uint8 rng1, uint8 rng2);
 };
+
+bool get_bit_value(uint16 seed, int byte_num, uint8 bit_number);
 
 #endif //RNG_H

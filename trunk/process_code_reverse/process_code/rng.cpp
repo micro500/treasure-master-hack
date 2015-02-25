@@ -1,7 +1,11 @@
+#include <stdio.h>
+
 #include "data_sizes.h"
 #include "rng.h"
 
+
 uint16 rng_table[0x100][0x100];
+uint8 rng_table_extended[0x10000][2048];
 
 unsigned char rng_real(unsigned char *rng1, unsigned char *rng2)
 {
@@ -92,6 +96,15 @@ void generate_rng_table()
 			rng_table[i][j] = rng1 << 8 | rng2;
 		}
 	}
+
+	for (int i = 0; i < 0x10000; i++)
+	{
+		RNG temp((i>>8) & 0xff, i& 0xff);
+		for (int j = 0; j < 2048; j++)
+		{
+			rng_table_extended[i][j] = temp.run();
+		}
+	}
 }
 	
 uint8 RNG::run()
@@ -107,4 +120,13 @@ void RNG::seed(uint8 a, uint8 b)
 {
 	rng1 = a;
 	rng2 = b;
+}
+
+bool get_bit_value(uint16 seed, int byte_num, uint8 bit_number)
+{
+	if (byte_num < 0)
+	{
+		printf("BAD\n");
+	}
+	return (((rng_table_extended[seed][byte_num] >> bit_number) & 0x01) == 0x01 ? true : false);
 }
