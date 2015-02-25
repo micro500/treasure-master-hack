@@ -33,6 +33,7 @@
     <ClCompile Include="MurmurHash3.cpp" />
     <ClCompile Include="process_code.cpp" />
     <ClCompile Include="rng.cpp" />
+    <ClCompile Include="tree.cpp" />
     <ClCompile Include="verify.cpp" />
     <ClCompile Include="working_code.cpp" />
   </ItemGroup>
@@ -44,6 +45,7 @@
     <ClInclude Include="MurmurHash3.h" />
     <ClInclude Include="MurmurHash3_wrapper.h" />
     <ClInclude Include="rng.h" />
+    <ClInclude Include="tree.h" />
     <ClInclude Include="verify.h" />
     <ClInclude Include="working_code.h" />
   </ItemGroup>
