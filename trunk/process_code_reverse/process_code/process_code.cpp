@@ -89,45 +89,45 @@ void add_byte(int bitfield_byte_pos, node * bit_field[], node * r_bit0, node * r
 	// carry = g | (p & c)
 
 
-	g0 = new node(NODE_OP, OP_AND, new node(l_bit0), new node(r_bit0));
-	p0 = new node(NODE_OP, OP_OR, new node(l_bit0), new node(r_bit0));
+	g0 = new_node(NODE_OP, OP_AND, new_node(l_bit0), new_node(r_bit0));
+	p0 = new_node(NODE_OP, OP_OR, new_node(l_bit0), new_node(r_bit0));
 	// Since there is no carry, the (p & c) term would drop out and you are left with g
 	carry0 = g0;
 	// No carry for the 0th bit
-	bit_field[BIT_POS(bitfield_byte_pos,0)] = new node(NODE_OP, OP_XOR, new node(l_bit0), new node(r_bit0));
+	bit_field[BIT_POS(bitfield_byte_pos,0)] = new_node(NODE_OP, OP_XOR, new_node(l_bit0), new_node(r_bit0));
 	
-	g1 = new node(NODE_OP,OP_AND,new node(l_bit1), new node(r_bit1));
-	p1 = new node(NODE_OP, OP_OR,new node(l_bit1), new node(r_bit1));
-	carry1 = new node(NODE_OP, OP_OR,g1,new node(NODE_OP, OP_AND,p1,new node(carry0)));
-	bit_field[BIT_POS(bitfield_byte_pos,1)] = new node(NODE_OP, OP_XOR,new node(NODE_OP, OP_XOR,new node(l_bit1),new node(r_bit1)),new node(carry0));
+	g1 = new_node(NODE_OP,OP_AND,new_node(l_bit1), new_node(r_bit1));
+	p1 = new_node(NODE_OP, OP_OR,new_node(l_bit1), new_node(r_bit1));
+	carry1 = new_node(NODE_OP, OP_OR,g1,new_node(NODE_OP, OP_AND,p1,new_node(carry0)));
+	bit_field[BIT_POS(bitfield_byte_pos,1)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit1),new_node(r_bit1)),new_node(carry0));
 
-	g2 = new node(NODE_OP, OP_AND,new node(l_bit2), new node(r_bit2));
-	p2 = new node(NODE_OP, OP_OR,new node(l_bit2), new node(r_bit2));
-	carry2 = new node(NODE_OP, OP_OR,g2,new node(NODE_OP, OP_AND,p2,new node(carry1)));
-	bit_field[BIT_POS(bitfield_byte_pos,2)] = new node(NODE_OP, OP_XOR,new node(NODE_OP, OP_XOR,new node(l_bit2),new node(r_bit2)),new node(carry1));
+	g2 = new_node(NODE_OP, OP_AND,new_node(l_bit2), new_node(r_bit2));
+	p2 = new_node(NODE_OP, OP_OR,new_node(l_bit2), new_node(r_bit2));
+	carry2 = new_node(NODE_OP, OP_OR,g2,new_node(NODE_OP, OP_AND,p2,new_node(carry1)));
+	bit_field[BIT_POS(bitfield_byte_pos,2)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit2),new_node(r_bit2)),new_node(carry1));
 
-	g3 = new node(NODE_OP, OP_AND,new node(l_bit3), new node(r_bit3));
-	p3 = new node(NODE_OP, OP_OR,new node(l_bit3), new node(r_bit3));
-	carry3 = new node(NODE_OP, OP_OR,g3,new node(NODE_OP, OP_AND,p3,new node(carry2)));
-	bit_field[BIT_POS(bitfield_byte_pos,3)] = new node(NODE_OP, OP_XOR,new node(NODE_OP, OP_XOR,new node(l_bit3),new node(r_bit3)),new node(carry2));
+	g3 = new_node(NODE_OP, OP_AND,new_node(l_bit3), new_node(r_bit3));
+	p3 = new_node(NODE_OP, OP_OR,new_node(l_bit3), new_node(r_bit3));
+	carry3 = new_node(NODE_OP, OP_OR,g3,new_node(NODE_OP, OP_AND,p3,new_node(carry2)));
+	bit_field[BIT_POS(bitfield_byte_pos,3)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit3),new_node(r_bit3)),new_node(carry2));
 
-	g4 = new node(NODE_OP, OP_AND, new node(l_bit4), new node(r_bit4));
-	p4 = new node(NODE_OP, OP_OR, new node(l_bit4), new node(r_bit4));
-	carry4 = new node(NODE_OP, OP_OR,g4,new node(NODE_OP, OP_AND,p4,new node(carry3)));
-	bit_field[BIT_POS(bitfield_byte_pos,4)] = new node(NODE_OP, OP_XOR,new node(NODE_OP, OP_XOR,new node(l_bit4),new node(r_bit4)),new node(carry3));
+	g4 = new_node(NODE_OP, OP_AND, new_node(l_bit4), new_node(r_bit4));
+	p4 = new_node(NODE_OP, OP_OR, new_node(l_bit4), new_node(r_bit4));
+	carry4 = new_node(NODE_OP, OP_OR,g4,new_node(NODE_OP, OP_AND,p4,new_node(carry3)));
+	bit_field[BIT_POS(bitfield_byte_pos,4)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit4),new_node(r_bit4)),new_node(carry3));
 
-	g5 = new node(NODE_OP, OP_AND,new node(l_bit5), new node(r_bit5));
-	p5 = new node(NODE_OP, OP_OR,new node(l_bit5), new node(r_bit5));
-	carry5 = new node(NODE_OP, OP_OR,g5,new node(NODE_OP, OP_AND,p5,new node(carry4)));
-	bit_field[BIT_POS(bitfield_byte_pos,5)] = new node(NODE_OP, OP_XOR,new node(NODE_OP, OP_XOR,new node(l_bit5),new node(r_bit5)),new node(carry4));
+	g5 = new_node(NODE_OP, OP_AND,new_node(l_bit5), new_node(r_bit5));
+	p5 = new_node(NODE_OP, OP_OR,new_node(l_bit5), new_node(r_bit5));
+	carry5 = new_node(NODE_OP, OP_OR,g5,new_node(NODE_OP, OP_AND,p5,new_node(carry4)));
+	bit_field[BIT_POS(bitfield_byte_pos,5)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit5),new_node(r_bit5)),new_node(carry4));
 
-	g6 = new node(NODE_OP, OP_AND,new node(l_bit6), new node(r_bit6));
-	p6 = new node(NODE_OP, OP_OR,new node(l_bit6), new node(r_bit6));
-	carry6 = new node(NODE_OP, OP_OR,g6,new node(NODE_OP, OP_AND,p6,new node(carry5)));
-	bit_field[BIT_POS(bitfield_byte_pos,6)] = new node(NODE_OP, OP_XOR,new node(NODE_OP, OP_XOR,new node(l_bit6),new node(r_bit6)),new node(carry5));
+	g6 = new_node(NODE_OP, OP_AND,new_node(l_bit6), new_node(r_bit6));
+	p6 = new_node(NODE_OP, OP_OR,new_node(l_bit6), new_node(r_bit6));
+	carry6 = new_node(NODE_OP, OP_OR,g6,new_node(NODE_OP, OP_AND,p6,new_node(carry5)));
+	bit_field[BIT_POS(bitfield_byte_pos,6)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit6),new_node(r_bit6)),new_node(carry5));
 
 	// Carry for bit 7 is dropped
-	bit_field[BIT_POS(bitfield_byte_pos,7)] = new node(NODE_OP, OP_XOR,new node(NODE_OP, OP_XOR,new node(l_bit7),new node(r_bit7)),new node(carry6));
+	bit_field[BIT_POS(bitfield_byte_pos,7)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit7),new_node(r_bit7)),new_node(carry6));
 }
 
 void sub_rng_byte(int bitfield_byte_pos, int rng_pos, node * bit_field[])
@@ -149,51 +149,51 @@ void sub_rng_byte(int bitfield_byte_pos, int rng_pos, node * bit_field[])
 
 	node * g0;
 
-	g0 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,0), new node(true));
+	g0 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,0), new_node(true));
 	//p0 = 1
-	carry0 = new node(g0);
-	node * r0 = new node(NODE_RNG,rng_pos,0);
+	carry0 = new_node(g0);
+	node * r0 = new_node(NODE_RNG,rng_pos,0);
 
 	// g1 = 0
-	p1 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,1), new node(true));
-	carry1 = new node(NODE_OP, OP_AND, new node(p1), new node(carry0));
-	node * r1 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,1), new node(true)), new node(carry0));
+	p1 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,1), new_node(true));
+	carry1 = new_node(NODE_OP, OP_AND, new_node(p1), new_node(carry0));
+	node * r1 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,1), new_node(true)), new_node(carry0));
 
-	p2 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,2), new node(true));
-	carry2 = new node(NODE_OP, OP_AND, new node(p2), new node(carry1));
-	node * r2 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,2), new node(true)), new node(carry1));
+	p2 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,2), new_node(true));
+	carry2 = new_node(NODE_OP, OP_AND, new_node(p2), new_node(carry1));
+	node * r2 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,2), new_node(true)), new_node(carry1));
 
-	p3 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,3), new node(true));
-	carry3 = new node(NODE_OP, OP_AND, new node(p3), new node(carry2));
-	node * r3 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,3), new node(true)), new node(carry2));
+	p3 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,3), new_node(true));
+	carry3 = new_node(NODE_OP, OP_AND, new_node(p3), new_node(carry2));
+	node * r3 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,3), new_node(true)), new_node(carry2));
 
-	p4 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,4), new node(true));
-	carry4 = new node(NODE_OP, OP_AND, new node(p4), new node(carry3));
-	node * r4 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,4), new node(true)), new node(carry3));
+	p4 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,4), new_node(true));
+	carry4 = new_node(NODE_OP, OP_AND, new_node(p4), new_node(carry3));
+	node * r4 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,4), new_node(true)), new_node(carry3));
 
-	p5 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,5), new node(true));
-	carry5 = new node(NODE_OP, OP_AND, new node(p5), new node(carry4));
-	node * r5 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,5), new node(true)), new node(carry4));
+	p5 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,5), new_node(true));
+	carry5 = new_node(NODE_OP, OP_AND, new_node(p5), new_node(carry4));
+	node * r5 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,5), new_node(true)), new_node(carry4));
 
-	p6 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,6), new node(true));
-	carry6 = new node(NODE_OP, OP_AND, new node(p6), new node(carry5));
-	node * r6 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,6), new node(true)), new node(carry5));
+	p6 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,6), new_node(true));
+	carry6 = new_node(NODE_OP, OP_AND, new_node(p6), new_node(carry5));
+	node * r6 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,6), new_node(true)), new_node(carry5));
 
-	node * r7 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,7), new node(true)), new node(carry6));
+	node * r7 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,7), new_node(true)), new_node(carry6));
 
 	add_byte(bitfield_byte_pos, bit_field, r0, r1, r2, r3, r4, r5, r6, r7);
 }
 
 void add_rng_byte(int bitfield_byte_pos, int rng_pos, node * bit_field[])
 {
-	node * r_bit0 = new node(NODE_RNG,rng_pos,0);
-	node * r_bit1 = new node(NODE_RNG,rng_pos,1);
-	node * r_bit2 = new node(NODE_RNG,rng_pos,2);
-	node * r_bit3 = new node(NODE_RNG,rng_pos,3);
-	node * r_bit4 = new node(NODE_RNG,rng_pos,4);
-	node * r_bit5 = new node(NODE_RNG,rng_pos,5);
-	node * r_bit6 = new node(NODE_RNG,rng_pos,6);
-	node * r_bit7 = new node(NODE_RNG,rng_pos,7);
+	node * r_bit0 = new_node(NODE_RNG,rng_pos,0);
+	node * r_bit1 = new_node(NODE_RNG,rng_pos,1);
+	node * r_bit2 = new_node(NODE_RNG,rng_pos,2);
+	node * r_bit3 = new_node(NODE_RNG,rng_pos,3);
+	node * r_bit4 = new_node(NODE_RNG,rng_pos,4);
+	node * r_bit5 = new_node(NODE_RNG,rng_pos,5);
+	node * r_bit6 = new_node(NODE_RNG,rng_pos,6);
+	node * r_bit7 = new_node(NODE_RNG,rng_pos,7);
 
 	add_byte(bitfield_byte_pos, bit_field, r_bit0, r_bit1, r_bit2, r_bit3, r_bit4, r_bit5, r_bit6, r_bit7);
 }
@@ -219,7 +219,7 @@ void inverse_alg0(node* bitfield[], int &rng_pos, std::vector<rng_info> &rng_bit
 		bitfield[BIT_POS(byte_pos,5)] = bitfield[BIT_POS(byte_pos,6)];
 		bitfield[BIT_POS(byte_pos,6)] = bitfield[BIT_POS(byte_pos,7)];
 		// recovered an unknown bit
-		bitfield[BIT_POS(byte_pos,7)] = new node();
+		bitfield[BIT_POS(byte_pos,7)] = new_node();
 	}
 }
 
@@ -239,7 +239,7 @@ void inverse_alg2(node* bitfield[], int &rng_pos, std::vector<rng_info> &rng_bit
 	// TODO: 
 	// Mark this is as a lost bit, not a static value
 	// Shouldn't matter for now, we don't look at the bytes this should affect anyway
-	node * carry = new node();
+	node * carry = new_node();
 
 	for (int byte_pos = 0; byte_pos < 128; byte_pos+=2)
 	{
@@ -288,7 +288,7 @@ void inverse_alg3(node* bitfield[], int &rng_pos, std::vector<rng_info> &rng_bit
 		for (int bit_pos = 0; bit_pos < 8; bit_pos++)
 		{
 			// XOR with an RNG bit
-			bitfield[BIT_POS(byte_pos,bit_pos)] = new node(NODE_OP, OP_XOR, bitfield[BIT_POS(byte_pos,bit_pos)], new node(NODE_RNG, rng_pos-byte_pos, bit_pos));
+			bitfield[BIT_POS(byte_pos,bit_pos)] = new_node(NODE_OP, OP_XOR, bitfield[BIT_POS(byte_pos,bit_pos)], new_node(NODE_RNG, rng_pos-byte_pos, bit_pos));
 		}
 	}
 
@@ -301,7 +301,7 @@ void inverse_alg4(node* bitfield[], int &rng_pos, std::vector<rng_info> &rng_bit
 	{
 		// Add an RNG value 
 		add_rng_byte(byte_pos,rng_pos-byte_pos,bitfield);
-		//bitfield[BIT_POS(byte_pos,bit_pos)] = new node(NODE_OP,OP_XOR,bitfield[BIT_POS(byte_pos,bit_pos)],new node(NODE_RNG,rng_pos-byte_pos,bit_pos));
+		//bitfield[BIT_POS(byte_pos,bit_pos)] = new_node(NODE_OP,OP_XOR,bitfield[BIT_POS(byte_pos,bit_pos)],new_node(NODE_RNG,rng_pos-byte_pos,bit_pos));
 	}
 
 	rng_pos -= 128;
@@ -312,7 +312,7 @@ void inverse_alg5(node* bitfield[], int &rng_pos, std::vector<rng_info> &rng_bit
 	// TODO: 
 	// Mark this is as a lost bit, not a static value
 	// Shouldn't matter for now, we don't look at the bytes this should affect anyway
-	node * carry = new node();
+	node * carry = new_node();
 
 	for (int byte_pos = 0; byte_pos < 128; byte_pos+=2)
 	{
@@ -375,7 +375,7 @@ void inverse_alg6(node* bitfield[], int &rng_pos, std::vector<rng_info> &rng_bit
 		bitfield[BIT_POS(byte_pos,2)] = bitfield[BIT_POS(byte_pos,1)];
 		bitfield[BIT_POS(byte_pos,1)] = bitfield[BIT_POS(byte_pos,0)];
 		// recovered an unknown bit
-		bitfield[BIT_POS(byte_pos,0)] = new node();
+		bitfield[BIT_POS(byte_pos,0)] = new_node();
 	}
 }
 
@@ -383,7 +383,7 @@ void inverse_alg7(node* bitfield[], int &rng_pos, std::vector<rng_info> &rng_bit
 {
 	for (int i = 0; i < 128 * 8; i++)
 	{
-		bitfield[i] = new node(NODE_OP,OP_XOR,bitfield[i],new node(true));
+		bitfield[i] = new_node(NODE_OP,OP_XOR,bitfield[i],new_node(true));
 	}
 }
 
@@ -421,7 +421,7 @@ int main(int argc, char **argv)
 	{
 		for (int bit_pos = 0; bit_pos < 8; bit_pos++)
 		{
-			all_bits[BIT_POS(byte_pos,bit_pos)] = new node();
+			all_bits[BIT_POS(byte_pos,bit_pos)] = new_node();
 
 			
 			// bytes 0x6A5-0x6AC, 0x6B4-0x6C3, and 0x6CA-0x6CC
@@ -452,8 +452,10 @@ int main(int argc, char **argv)
 
 	std::vector<int> path;
 
-
-	attack(all_bits, rng_pos, rng_bits, path, 2);
+	for (int i = 1; i < 10; i++)
+	{
+		attack(all_bits, rng_pos, rng_bits, path, i);
+	}
 	return 0;
 
 
@@ -490,7 +492,7 @@ int main(int argc, char **argv)
 				bool actual_value = get_bit_value(rng_seed, -(last_rng_pos - rng_bits[index].byte_pos), rng_bits[index].bit_pos);
 
 				// evaluate the bit formula
-				node * bit_copy = new node(rng_bits[index].bit);
+				node * bit_copy = new_node(rng_bits[index].bit);
 
 				//printf("%s must equal %i%s\n",bit_copy->to_string().c_str(),actual_value ? 1 : 0, bit_copy->value == actual_value ? " <---" : "");
 
@@ -511,7 +513,7 @@ int main(int argc, char **argv)
 					bits_matched++;
 				}
 
-				delete bit_copy;
+				free_tree(bit_copy);
 			}
 		}
 
@@ -585,7 +587,7 @@ void attack(node * bitfield[], int rng_pos, std::vector<rng_info> rng_bits, std:
 		node * bitfield_copy[128 * 8];
 		for (int bitfield_index = 0; bitfield_index < 128*8; bitfield_index++)
 		{
-			bitfield_copy[bitfield_index] = new node(bitfield[bitfield_index]);
+			bitfield_copy[bitfield_index] = new_node(bitfield[bitfield_index]);
 		}
 
 		// Clone the path
@@ -664,7 +666,7 @@ void attack(node * bitfield[], int rng_pos, std::vector<rng_info> rng_bits, std:
 						bool actual_value = get_bit_value(rng_seed, -(last_rng_pos - rng_bits_copy[index].byte_pos), rng_bits_copy[index].bit_pos);
 
 						// evaluate the bit formula
-						node * bit_copy = new node(rng_bits_copy[index].bit);
+						node * bit_copy = new_node(rng_bits_copy[index].bit);
 
 						//printf("%s must equal %i%s\n",bit_copy->to_string().c_str(),actual_value ? 1 : 0, bit_copy->value == actual_value ? " <---" : "");
 
@@ -685,7 +687,7 @@ void attack(node * bitfield[], int rng_pos, std::vector<rng_info> rng_bits, std:
 							bits_matched++;
 						}
 
-						delete bit_copy;
+						free_tree(bit_copy);
 					}
 				}
 
@@ -698,7 +700,7 @@ void attack(node * bitfield[], int rng_pos, std::vector<rng_info> rng_bits, std:
 				//printf("\t%i\t / %i\n",bits_matched,bits_compared);
 			}
 
-			printf("\t %04X %i / %i\n",largest_mach_seed,largest_match_count, bits_to_match);
+			printf("\t %04X %i / %i\t%i\t%s\n",largest_mach_seed,largest_match_count, bits_to_match, bits_to_match-largest_match_count, ((bits_to_match-largest_match_count) == 0? "<---" : ""));
 		}
 		else
 		{
@@ -709,7 +711,7 @@ void attack(node * bitfield[], int rng_pos, std::vector<rng_info> rng_bits, std:
 		// destroy copies
 		for (int bitfield_index = 0; bitfield_index < 128*8; bitfield_index++)
 		{
-			delete bitfield_copy[bitfield_index];
+			free_tree(bitfield_copy[bitfield_index]);
 		} 
 	}
 }
