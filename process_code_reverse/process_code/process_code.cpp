@@ -132,27 +132,56 @@ void add_byte(int bitfield_byte_pos, node * bit_field[], node * r_bit0, node * r
 
 void sub_rng_byte(int bitfield_byte_pos, int rng_pos, node * bit_field[])
 {
-	node * r_bit0 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,0), new node(true));
-	node * r_bit1 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,1), new node(true));
-	node * r_bit2 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,2), new node(true));
-	node * r_bit3 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,3), new node(true));
-	node * r_bit4 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,4), new node(true));
-	node * r_bit5 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,5), new node(true));
-	node * r_bit6 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,6), new node(true));
-	node * r_bit7 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,7), new node(true));
+	node * carry0;
+	node * carry1;
+	node * carry2;
+	node * carry3;
+	node * carry4;
+	node * carry5;
+	node * carry6;
 
-	add_byte(bitfield_byte_pos, bit_field, r_bit0, r_bit1, r_bit2, r_bit3, r_bit4, r_bit5, r_bit6, r_bit7);
+	node * p1;
+	node * p2;
+	node * p3;
+	node * p4;
+	node * p5;
+	node * p6;
 
-	r_bit0 = new node(true);
-	r_bit1 = new node(false);
-	r_bit2 = new node(false);
-	r_bit3 = new node(false);
-	r_bit4 = new node(false);
-	r_bit5 = new node(false);
-	r_bit6 = new node(false);
-	r_bit7 = new node(false);
+	node * g0;
 
-	add_byte(bitfield_byte_pos, bit_field, r_bit0, r_bit1, r_bit2, r_bit3, r_bit4, r_bit5, r_bit6, r_bit7);
+	g0 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,0), new node(true));
+	//p0 = 1
+	carry0 = new node(g0);
+	node * r0 = new node(NODE_RNG,rng_pos,0);
+
+	// g1 = 0
+	p1 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,1), new node(true));
+	carry1 = new node(NODE_OP, OP_AND, new node(p1), new node(carry0));
+	node * r1 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,1), new node(true)), new node(carry0));
+
+	p2 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,2), new node(true));
+	carry2 = new node(NODE_OP, OP_AND, new node(p2), new node(carry1));
+	node * r2 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,2), new node(true)), new node(carry1));
+
+	p3 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,3), new node(true));
+	carry3 = new node(NODE_OP, OP_AND, new node(p3), new node(carry2));
+	node * r3 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,3), new node(true)), new node(carry2));
+
+	p4 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,4), new node(true));
+	carry4 = new node(NODE_OP, OP_AND, new node(p4), new node(carry3));
+	node * r4 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,4), new node(true)), new node(carry3));
+
+	p5 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,5), new node(true));
+	carry5 = new node(NODE_OP, OP_AND, new node(p5), new node(carry4));
+	node * r5 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,5), new node(true)), new node(carry4));
+
+	p6 = new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,6), new node(true));
+	carry6 = new node(NODE_OP, OP_AND, new node(p6), new node(carry5));
+	node * r6 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,6), new node(true)), new node(carry5));
+
+	node * r7 = new node (NODE_OP, OP_XOR, new node(NODE_OP, OP_XOR, new node(NODE_RNG,rng_pos,7), new node(true)), new node(carry6));
+
+	add_byte(bitfield_byte_pos, bit_field, r0, r1, r2, r3, r4, r5, r6, r7);
 }
 
 void add_rng_byte(int bitfield_byte_pos, int rng_pos, node * bit_field[])
@@ -536,7 +565,7 @@ void attack(node * bitfield[], int rng_pos, std::vector<rng_info> rng_bits, std:
 	}
 	else
 	{
-		//algs.push_back(1);
+		algs.push_back(1);
 		algs.push_back(2);
 		algs.push_back(3);
 		algs.push_back(4);
