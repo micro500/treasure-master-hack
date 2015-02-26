@@ -40,26 +40,13 @@ public:
 	
 	node();
 	
-	node(NODE_TYPE, OP_TYPE, node *, node *);
-	/*
-	node(NODE_TYPE,char, node *);
-	node(NODE_TYPE,int, node *);
-	node(NODE_TYPE,node *, char);
-	node(NODE_TYPE,node *, int);
-	node(NODE_TYPE,char, char);
-	node(NODE_TYPE,char, int);
-	node(NODE_TYPE,int, char);
-	node(NODE_TYPE,int, int);
-	node(char);
-	*/
-	node(bool);
-	node(NODE_TYPE, int, uint8);
+	//node(NODE_TYPE, OP_TYPE, node *, node *);
 
-	node(node *);
+	//node(bool);
+	//node(NODE_TYPE, int, uint8);
 
+	//node(node *);
 
-	//void assign_var(char var, int val);
-	//std::vector<char> get_vars();
 
 	// DATA
 	NODE_TYPE node_type;
@@ -96,5 +83,15 @@ void free_tree(node * to_free);
 node * remove_xor(node * exp);
 node * canon(node * exp);
 */
+
+void free_tree(node * to_free);
+
+node * new_node();
+
+node * new_node(node * original);
+node * new_node(NODE_TYPE, OP_TYPE, node *, node *);
+
+node * new_node(bool);
+node * new_node(NODE_TYPE, int, uint8);
 
 #endif //TREE_H
