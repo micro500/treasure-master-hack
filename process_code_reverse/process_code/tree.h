@@ -85,6 +85,7 @@ node * canon(node * exp);
 */
 
 void free_tree(node * to_free);
+void delete_all_nodes();
 
 node * new_node();
 

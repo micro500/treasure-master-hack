@@ -1,7 +1,13 @@
+#include <vector>
+
 #include "tree.h"
 #include "rng.h"
 
+#define REUSE_NODES 1
+
 node * freenode;
+
+std::vector<node *> chunk_heads;
 
 void generate_new_nodes()
 {
@@ -11,10 +17,22 @@ void generate_new_nodes()
 		freenode[i].right = &freenode[i+1];
 	}
 	freenode[CHUNK_SIZE - 1].right = NULL;
+	chunk_heads.push_back(freenode);
+}
+
+void delete_all_nodes()
+{
+	for (size_t i = 0; i < chunk_heads.size(); i++)
+	{
+		delete[] chunk_heads[i];
+	}
+
+	std::vector<node *>().swap(chunk_heads); 
 }
 
 node * get_new_node()
 {
+#if REUSE_NODES
 	if (freenode == NULL)
 	{
 		generate_new_nodes();
@@ -23,23 +41,32 @@ node * get_new_node()
 	freenode = freenode->right;
 	temp->left = NULL;
 	temp->right = NULL;
+#else
+	node * temp = new node();
+#endif
 
 	return temp;
 }
 
 void free_node(node * to_free)
 {
+#if REUSE_NODES
 	to_free->left = NULL;
 	to_free->right = freenode;
 	freenode = to_free;
+#else
+	delete to_free;
+#endif
 }
 
 void free_tree(node * to_free)
 {
+#if REUSE_NODES
 	if (to_free->left)
 		free_tree(to_free->left);
 	if (to_free->right)
 		free_tree(to_free->right);
+#endif
 
 	free_node(to_free);
 }
@@ -76,6 +103,7 @@ node * new_node()
 
 node::~node()
 {
+#if !REUSE_NODES
 	if (this->node_type == NODE_OP)
 	{
 		delete this->left;
@@ -84,6 +112,7 @@ node::~node()
 			delete this->right;
 		}
 	}
+#endif
 }
 
 /*
@@ -213,11 +242,14 @@ node::node(NODE_TYPE node_type, OP_TYPE op_type, node * left, node * right)
 node * new_node(NODE_TYPE node_type, OP_TYPE op_type, node * left, node * right)
 {
 	node * result = get_new_node();
-	if (op_type != OP_NOT && right->node_type == NODE_UNKNOWN)
+	if (op_type != OP_NOT && (right->node_type == NODE_UNKNOWN || left->node_type == NODE_UNKNOWN))
 	{
 		result->node_type = NODE_UNKNOWN;
 		free_tree(left);
 		free_tree(right);
+
+		result->left = NULL;
+		result->right = NULL;
 	}
 	else if (left->node_type == NODE_UNKNOWN)
 	{
