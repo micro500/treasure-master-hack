@@ -59,7 +59,7 @@ void add_byte(int bitfield_byte_pos, node * bit_field[], node * r_bit0, node * r
 	node * carry4;
 	node * carry5;
 	node * carry6;
-	node * p0;
+	//node * p0;
 	node * p1;
 	node * p2;
 	node * p3;
@@ -90,44 +90,44 @@ void add_byte(int bitfield_byte_pos, node * bit_field[], node * r_bit0, node * r
 
 
 	g0 = new_node(NODE_OP, OP_AND, new_node(l_bit0), new_node(r_bit0));
-	p0 = new_node(NODE_OP, OP_OR, new_node(l_bit0), new_node(r_bit0));
+	//p0 = new_node(NODE_OP, OP_OR, new_node(l_bit0), new_node(r_bit0));
 	// Since there is no carry, the (p & c) term would drop out and you are left with g
 	carry0 = g0;
 	// No carry for the 0th bit
-	bit_field[BIT_POS(bitfield_byte_pos,0)] = new_node(NODE_OP, OP_XOR, new_node(l_bit0), new_node(r_bit0));
+	bit_field[BIT_POS(bitfield_byte_pos,0)] = new_node(NODE_OP, OP_XOR, l_bit0, r_bit0);
 	
 	g1 = new_node(NODE_OP,OP_AND,new_node(l_bit1), new_node(r_bit1));
 	p1 = new_node(NODE_OP, OP_OR,new_node(l_bit1), new_node(r_bit1));
 	carry1 = new_node(NODE_OP, OP_OR,g1,new_node(NODE_OP, OP_AND,p1,new_node(carry0)));
-	bit_field[BIT_POS(bitfield_byte_pos,1)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit1),new_node(r_bit1)),new_node(carry0));
+	bit_field[BIT_POS(bitfield_byte_pos,1)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,l_bit1,r_bit1),carry0);
 
 	g2 = new_node(NODE_OP, OP_AND,new_node(l_bit2), new_node(r_bit2));
 	p2 = new_node(NODE_OP, OP_OR,new_node(l_bit2), new_node(r_bit2));
 	carry2 = new_node(NODE_OP, OP_OR,g2,new_node(NODE_OP, OP_AND,p2,new_node(carry1)));
-	bit_field[BIT_POS(bitfield_byte_pos,2)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit2),new_node(r_bit2)),new_node(carry1));
+	bit_field[BIT_POS(bitfield_byte_pos,2)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,l_bit2,r_bit2),carry1);
 
 	g3 = new_node(NODE_OP, OP_AND,new_node(l_bit3), new_node(r_bit3));
 	p3 = new_node(NODE_OP, OP_OR,new_node(l_bit3), new_node(r_bit3));
 	carry3 = new_node(NODE_OP, OP_OR,g3,new_node(NODE_OP, OP_AND,p3,new_node(carry2)));
-	bit_field[BIT_POS(bitfield_byte_pos,3)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit3),new_node(r_bit3)),new_node(carry2));
+	bit_field[BIT_POS(bitfield_byte_pos,3)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,l_bit3,r_bit3),carry2);
 
 	g4 = new_node(NODE_OP, OP_AND, new_node(l_bit4), new_node(r_bit4));
 	p4 = new_node(NODE_OP, OP_OR, new_node(l_bit4), new_node(r_bit4));
 	carry4 = new_node(NODE_OP, OP_OR,g4,new_node(NODE_OP, OP_AND,p4,new_node(carry3)));
-	bit_field[BIT_POS(bitfield_byte_pos,4)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit4),new_node(r_bit4)),new_node(carry3));
+	bit_field[BIT_POS(bitfield_byte_pos,4)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,l_bit4,r_bit4),carry3);
 
 	g5 = new_node(NODE_OP, OP_AND,new_node(l_bit5), new_node(r_bit5));
 	p5 = new_node(NODE_OP, OP_OR,new_node(l_bit5), new_node(r_bit5));
 	carry5 = new_node(NODE_OP, OP_OR,g5,new_node(NODE_OP, OP_AND,p5,new_node(carry4)));
-	bit_field[BIT_POS(bitfield_byte_pos,5)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit5),new_node(r_bit5)),new_node(carry4));
+	bit_field[BIT_POS(bitfield_byte_pos,5)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,l_bit5,r_bit5),carry4);
 
 	g6 = new_node(NODE_OP, OP_AND,new_node(l_bit6), new_node(r_bit6));
 	p6 = new_node(NODE_OP, OP_OR,new_node(l_bit6), new_node(r_bit6));
 	carry6 = new_node(NODE_OP, OP_OR,g6,new_node(NODE_OP, OP_AND,p6,new_node(carry5)));
-	bit_field[BIT_POS(bitfield_byte_pos,6)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit6),new_node(r_bit6)),new_node(carry5));
+	bit_field[BIT_POS(bitfield_byte_pos,6)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,l_bit6,r_bit6),carry5);
 
 	// Carry for bit 7 is dropped
-	bit_field[BIT_POS(bitfield_byte_pos,7)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,new_node(l_bit7),new_node(r_bit7)),new_node(carry6));
+	bit_field[BIT_POS(bitfield_byte_pos,7)] = new_node(NODE_OP, OP_XOR,new_node(NODE_OP, OP_XOR,l_bit7,r_bit7),carry6);
 }
 
 void sub_rng_byte(int bitfield_byte_pos, int rng_pos, node * bit_field[])
@@ -151,35 +151,35 @@ void sub_rng_byte(int bitfield_byte_pos, int rng_pos, node * bit_field[])
 
 	g0 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,0), new_node(true));
 	//p0 = 1
-	carry0 = new_node(g0);
+	carry0 = g0;
 	node * r0 = new_node(NODE_RNG,rng_pos,0);
 
 	// g1 = 0
 	p1 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,1), new_node(true));
-	carry1 = new_node(NODE_OP, OP_AND, new_node(p1), new_node(carry0));
-	node * r1 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,1), new_node(true)), new_node(carry0));
+	carry1 = new_node(NODE_OP, OP_AND, p1, new_node(carry0));
+	node * r1 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,1), new_node(true)), carry0);
 
 	p2 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,2), new_node(true));
-	carry2 = new_node(NODE_OP, OP_AND, new_node(p2), new_node(carry1));
-	node * r2 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,2), new_node(true)), new_node(carry1));
+	carry2 = new_node(NODE_OP, OP_AND, p2, new_node(carry1));
+	node * r2 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,2), new_node(true)), carry1);
 
 	p3 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,3), new_node(true));
-	carry3 = new_node(NODE_OP, OP_AND, new_node(p3), new_node(carry2));
-	node * r3 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,3), new_node(true)), new_node(carry2));
+	carry3 = new_node(NODE_OP, OP_AND, p3, new_node(carry2));
+	node * r3 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,3), new_node(true)), carry2);
 
 	p4 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,4), new_node(true));
-	carry4 = new_node(NODE_OP, OP_AND, new_node(p4), new_node(carry3));
-	node * r4 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,4), new_node(true)), new_node(carry3));
+	carry4 = new_node(NODE_OP, OP_AND, p4, new_node(carry3));
+	node * r4 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,4), new_node(true)), carry3);
 
 	p5 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,5), new_node(true));
-	carry5 = new_node(NODE_OP, OP_AND, new_node(p5), new_node(carry4));
-	node * r5 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,5), new_node(true)), new_node(carry4));
+	carry5 = new_node(NODE_OP, OP_AND, p5, new_node(carry4));
+	node * r5 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,5), new_node(true)), carry4);
 
 	p6 = new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,6), new_node(true));
-	carry6 = new_node(NODE_OP, OP_AND, new_node(p6), new_node(carry5));
-	node * r6 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,6), new_node(true)), new_node(carry5));
+	carry6 = new_node(NODE_OP, OP_AND, p6, new_node(carry5));
+	node * r6 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,6), new_node(true)), carry5);
 
-	node * r7 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,7), new_node(true)), new_node(carry6));
+	node * r7 = new_node (NODE_OP, OP_XOR, new_node(NODE_OP, OP_XOR, new_node(NODE_RNG,rng_pos,7), new_node(true)), carry6);
 
 	add_byte(bitfield_byte_pos, bit_field, r0, r1, r2, r3, r4, r5, r6, r7);
 }
@@ -452,11 +452,41 @@ int main(int argc, char **argv)
 
 	std::vector<int> path;
 
-	for (int i = 1; i < 10; i++)
+	for (int i = 1; i <= 10; i++)
 	{
 		attack(all_bits, rng_pos, rng_bits, path, i);
 	}
 	return 0;
+
+	/*
+	// Check for memory leaks
+	inverse_alg0(all_bits,rng_pos,rng_bits);
+	inverse_alg1(all_bits,rng_pos,rng_bits);
+	inverse_alg2(all_bits,rng_pos,rng_bits);
+	inverse_alg3(all_bits,rng_pos,rng_bits);
+	inverse_alg4(all_bits,rng_pos,rng_bits);
+	inverse_alg5(all_bits,rng_pos,rng_bits);
+	inverse_alg6(all_bits,rng_pos,rng_bits);
+	inverse_alg7(all_bits,rng_pos,rng_bits);
+
+	for (int i = 0; i < 128*8; i++)
+	{
+		free_tree(all_bits[i]);
+	}
+
+	for (size_t index = 0; index < rng_bits.size(); index++)
+	{
+		free_tree(rng_bits[index].bit);
+	}
+
+	delete_all_nodes();
+	std::vector<rng_info>().swap(rng_bits);
+	std::vector<int>().swap(path);
+
+	_CrtDumpMemoryLeaks();
+	printf("%i\n",sizeof(node));
+	return 0;
+	*/
 
 
 	// try 0 or 6
@@ -641,21 +671,15 @@ void attack(node * bitfield[], int rng_pos, std::vector<rng_info> rng_bits, std:
 			{
 				printf("%i ",path_copy[path_index]);
 			}
-
+			//printf("\n");
 			int last_rng_pos = rng_pos_copy + 1;
-
-			int largest_match_count = 0;
-			int largest_mach_seed = 0x10000;
-
-			int bits_to_match = 0;
 
 			// loop through all RNG seeds
 			for (int rng_seed = 0; rng_seed < 0x10000; rng_seed++)
 			{
 				//printf("RNG seed: %04X: ",rng_seed);
 
-				int bits_compared = 0;
-				int bits_matched = 0;
+				bool perfect_match = true;
 
 				// loop through rng_bits vector
 				for (uint32 index = 0; index < rng_bits_copy.size(); index++)
@@ -681,26 +705,31 @@ void attack(node * bitfield[], int rng_pos, std::vector<rng_info> rng_bits, std:
 
 						// compare
 						// count how many match
-						bits_compared++;
-						if (bit_copy->value == actual_value)
+						if (bit_copy->value != actual_value)
 						{
-							bits_matched++;
+							perfect_match = false;
+							break;
 						}
 
 						free_tree(bit_copy);
 					}
 				}
 
-				if (bits_matched > largest_match_count)
-				{
-					largest_match_count = bits_matched;
-					largest_mach_seed = rng_seed;
-					bits_to_match = bits_compared;
-				}
-				//printf("\t%i\t / %i\n",bits_matched,bits_compared);
-			}
+				//printf("%04X",rng_seed);
 
-			printf("\t %04X %i / %i\t%i\t%s\n",largest_mach_seed,largest_match_count, bits_to_match, bits_to_match-largest_match_count, ((bits_to_match-largest_match_count) == 0? "<---" : ""));
+				//printf("\t%i\t / %i\n",bits_matched,bits_compared);
+				if (perfect_match)
+				{
+					//printf("\n");
+					printf("\t %04X",rng_seed);
+				}
+				else
+				{
+					//printf("\r");
+				}
+			}
+			
+			printf("\n");
 		}
 		else
 		{
