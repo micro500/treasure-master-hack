@@ -1,3 +1,4 @@
+#include <vector>
 #include <stdio.h>
 #include "data_sizes.h"
 #include "working_code.h"
@@ -19,6 +20,40 @@ working_code::working_code(uint8 value[8])
 	for (int i = 8; i < 0x80; i++)
 	{
 		working_code_data.as_uint8[i] = working_code_data.as_uint8[i-8] + rng.run();
+	}
+}
+
+working_code::working_code(working_code * original)
+{
+	this->rng.seed(original->rng.rng1,original->rng.rng2);
+
+	for (int i = 0; i < 8; i++)
+	{
+		this->starting_value[i] = original->starting_value[i];
+	}
+
+	for (int i = 0; i < 0x80; i++)
+	{
+		this->working_code_data.as_uint8[i] = original->working_code_data.as_uint8[i];
+		this->trust_mask.as_uint8[i] = original->trust_mask.as_uint8[i];
+	}
+}
+
+void working_code::copy(working_code * original)
+{
+	this->rng.seed(original->rng.rng1,original->rng.rng2);
+
+	/*
+	for (int i = 0; i < 8; i++)
+	{
+		this->starting_value[i] = original->starting_value[i];
+	}
+	*/
+
+	for (int i = 0; i < 0x80; i++)
+	{
+		this->working_code_data.as_uint8[i] = original->working_code_data.as_uint8[i];
+		this->trust_mask.as_uint8[i] = original->trust_mask.as_uint8[i];
 	}
 }
 
@@ -227,6 +262,169 @@ void working_code::working_code_algorithm(uint8 algorithm_number, uint8 map_numb
 	}
 	//memcpy(bytes,temp_bytes,128);
 	//printf("%02X\n",working_code[0x7f]);
+}
+
+void working_code::inverse_working_code_algorithm(uint8 algorithm_number, int &rng_pos, rng_info rng_bits[], int &bits_used, uint8 reverse_rng_table[])
+{
+	if (algorithm_number == 0x00)
+	{
+		for (int i = 0; i < 0x80; i++)
+		{
+			// Save the lowest bit if we trust it
+
+			if ((trust_mask.as_uint8[i] & 0x01) == 0x01)
+			{
+				rng_bits[bits_used].byte_pos = rng_pos;
+				rng_bits[bits_used].bit_pos = 7;
+				rng_bits[bits_used].bit = working_code_data.as_uint8[i] & 0x01;
+				bits_used++;
+			}
+			rng_pos++;
+
+			// Shift right, drop the lowest bit, gain an unknown bit 
+			working_code_data.as_uint8[i] = working_code_data.as_uint8[i] >> 1;
+			trust_mask.as_uint8[i] = trust_mask.as_uint8[i] >> 1;			
+		}
+	}
+	else if (algorithm_number == 0x01)
+	{
+		for (int i = 0; i < 0x80; i++)
+		{
+			// TODO: Run RNG Back
+			working_code_data.as_uint8[i] = working_code_data.as_uint8[i] - reverse_rng_table[rng_pos++];
+
+			// If we think of the subtraction as a twos-complement addition the same rules as 4 apply:
+			// The first untrusted bit propogates through the whole byte
+			//   ex: 11101111 becomes 00001111
+			// Formula: x & ((x^0xff)-1)
+			trust_mask.as_uint8[i] = trust_mask.as_uint8[i] & ((trust_mask.as_uint8[i]^0xff) - 1);
+		}
+	}
+	else if (algorithm_number == 0x02)
+	{
+		// Gain an untrusted bit
+		unsigned char wc_carry = 0;
+		unsigned char tm_carry = 0;
+
+		for (int i = 0; i < 0x80; i+=2)
+		{
+			// Save bit 0 of byte 1 as the new carry
+			unsigned char next_wc_carry = working_code_data.as_uint8[i+1] & 0x01;
+			unsigned char next_tm_carry = trust_mask.as_uint8[i+1] & 0x01;
+
+			// Shift byte 1 right
+			// Set byte 1, bit 7 as byte 0, bit 7
+			working_code_data.as_uint8[i+1] = (working_code_data.as_uint8[i+1] >> 1) | (working_code_data.as_uint8[i] & 0x80);
+			trust_mask.as_uint8[i+1] = (trust_mask.as_uint8[i+1] >> 1) | (trust_mask.as_uint8[i] & 0x80);
+
+			// Shift byte 0 left
+			// Set byte 0, bit 0 as old carry
+			working_code_data.as_uint8[i] = (working_code_data.as_uint8[i] << 1) | wc_carry;
+			trust_mask.as_uint8[i] = (trust_mask.as_uint8[i] << 1) | wc_carry;
+
+			wc_carry = next_wc_carry;
+			tm_carry = next_tm_carry;
+		}
+
+		// Remaining carry is from the RNG 
+		// Check if we trust it
+		if (tm_carry == 0x01)
+		{
+			rng_bits[bits_used].byte_pos = rng_pos;
+			rng_bits[bits_used].bit_pos = 7;
+			rng_bits[bits_used].bit = wc_carry & 0x01;
+			bits_used++;
+		}
+		rng_pos++;
+	}
+	else if (algorithm_number == 0x03)
+	{
+		for (int i = 0; i < 0x80; i++)
+		{
+			// TODO: Run RNG Back
+			working_code_data.as_uint8[i] = working_code_data.as_uint8[i] ^ reverse_rng_table[rng_pos++];
+
+			// No change to the trust mask
+		}
+	}
+	else if (algorithm_number == 0x04)
+	{
+		for (int i = 0; i < 0x80; i++)
+		{
+			// The forward algorithm was just a twos-complement subtraction. Reverse is addition
+			working_code_data.as_uint8[i] = working_code_data.as_uint8[i] + reverse_rng_table[rng_pos++];
+
+			// The first untrusted bit propogates through the whole byte
+			//   ex: 11101111 becomes 00001111
+			// Formula: x & ((x^0xff)-1)
+			trust_mask.as_uint8[i] = trust_mask.as_uint8[i] & ((trust_mask.as_uint8[i]^0xff) - 1);
+		}
+	}
+	else if (algorithm_number == 0x05)
+	{
+		// Gain an untrusted bit
+		unsigned char wc_carry = 0;
+		unsigned char tm_carry = 0;
+
+		for (int i = 0; i < 0x80; i+=2)
+		{
+			// Save bit 7 of byte 1 as the new carry
+			unsigned char next_wc_carry = working_code_data.as_uint8[i+1] & 0x80;
+			unsigned char next_tm_carry = trust_mask.as_uint8[i+1] & 0x80;
+
+			// Shift byte 1 left
+			// Set byte 1, bit 0 as byte 0, bit 0
+			working_code_data.as_uint8[i+1] = (working_code_data.as_uint8[i+1] << 1) | (working_code_data.as_uint8[i] & 0x01);
+			trust_mask.as_uint8[i+1] = (trust_mask.as_uint8[i+1] << 1) | (trust_mask.as_uint8[i] & 0x01);
+
+			// Shift byte 0 right
+			// Set byte 0, bit 7 as old carry
+			working_code_data.as_uint8[i] = (working_code_data.as_uint8[i] >> 1) | wc_carry;
+			trust_mask.as_uint8[i] = (trust_mask.as_uint8[i] >> 1) | tm_carry;
+
+			wc_carry = next_wc_carry;
+			tm_carry = next_tm_carry;
+		}
+
+		// Remaining carry is from the RNG 
+		// Check if we trust it
+		if (tm_carry == 0x01)
+		{
+			rng_bits[bits_used].byte_pos = rng_pos;
+			rng_bits[bits_used].bit_pos = 7;
+			rng_bits[bits_used].bit = (wc_carry >> 7) & 0x01;
+			bits_used++;
+		}
+		rng_pos++;
+	}
+	else if (algorithm_number == 0x06)
+	{
+		for (int i = 0x7F; i >= 0; i--)
+		{
+			// Save the lowest bit if we trust it
+			if ((trust_mask.as_uint8[i] & 0x80) == 0x80)
+			{
+				rng_bits[bits_used].byte_pos = rng_pos;
+				rng_bits[bits_used].bit_pos = 7;
+				rng_bits[bits_used].bit = (working_code_data.as_uint8[i] & 0x80) >> 7;
+				bits_used++;
+			}
+			rng_pos++;
+
+			// Shift left, drop the highest bit, gain an unknown bit 
+			working_code_data.as_uint8[i] = working_code_data.as_uint8[i] << 1;
+			trust_mask.as_uint8[i] = trust_mask.as_uint8[i] << 1;			
+		}
+	}
+	else if (algorithm_number == 0x07)
+	{
+		for (int i = 0x7F; i >= 0; i--)
+		{
+			working_code_data.as_uint8[i] = working_code_data.as_uint8[i] ^ 0xFF;
+
+			// No change to the trust mask
+		}
+	}
 }
 
 bool working_code::operator==(const working_code &other) const

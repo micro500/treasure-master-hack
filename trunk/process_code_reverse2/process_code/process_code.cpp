@@ -20,812 +20,199 @@
 #include "verify.h"
 #include "MurmurHash3_wrapper.h"
 
+void attack (working_code * initial_code, working_code * in_progress, std::vector<int> &path, rng_info rng_bits[], int depth_limit);
+
 int main(int argc, char **argv)
 {
-	// Usage:
-	//  -k, --key "XXXXXXXX": supply 8 hex values to use as the key value, defaults to all 0's?
-	//  -d, --data "XXXXXXXX": supply 8 hex values to use as the starting data value, defaults to all 0's
-	//  -c, --count 
-	//  -a, --attack attack_type:
-	//               "individual": each IV is processed and checked individually
-	//               "vector":     each working code is added to a std::vector, processed one round, sorted, then std::unique'd
-	//               "hash":       each working code is processed a round, then checked against a hash table. collisions are not processed any further
-	//  -b, --big-registers: use 128bit registers as an optimization
-	//  -s, --key-schedule: pre-process the key schedule as an optimization instead of processing it for every IV
-	//  -f, --file filename: read a list of IVs to process from a file. Overrides -k and -d
+	using std::chrono::duration_cast;
+	using std::chrono::microseconds;
+	typedef std::chrono::high_resolution_clock clock;
 
-	int map_list[26] = { 0x00, 0x02, 0x05, 0x04, 0x03, 0x1D, 0x1C, 0x1E, 0x1B, 0x07, 0x08, 0x06, 0x09, 0x0C, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x0E, 0x0F, 0x10, 0x12, 0x11};
-
-	initialize_boinc();
 
 	generate_rng_table();
 
-	// Process command line
-	process_command_line(argc, argv);
+	// end of known code processing (2-3-7-2-3-7-4-3-6)
+	//uint8 known_working_code[128] = { 0x56, 0xD2, 0x3D, 0xCF, 0x42, 0xBF, 0x93, 0xD0, 0x29, 0xD1, 0xF0, 0xA3, 0x7F, 0x36, 0x99, 0xD6, 0xC2, 0x58, 0x94, 0x0F, 0xDE, 0x2C, 0x52, 0x1C, 0x72, 0x4A, 0x4C, 0x82, 0x4E, 0x96, 0x82, 0x03, 0xCF, 0xFE, 0xFA, 0x9C, 0x14, 0x8C, 0xF2, 0x54, 0x8F, 0x4F, 0x80, 0xF8, 0x81, 0x8C, 0xEF, 0x4A, 0x8F, 0x1F, 0x51, 0x86, 0xAA, 0xB0, 0xA9, 0xDA, 0x0E, 0x24, 0xD5, 0xE9, 0xC7, 0x3C, 0xF5, 0xDF, 0xF8, 0xF7, 0xA0, 0x7C, 0x1B, 0xF3, 0x3E, 0x56, 0xFE, 0x43, 0x70, 0xF6, 0x89, 0xB2, 0x18, 0x88, 0x4D, 0x30, 0xD9, 0x1F, 0xD6, 0xCA, 0xED, 0xAE, 0xBF, 0xCD, 0x25, 0x05, 0x78, 0x4E, 0x44, 0xE2, 0x97, 0xF1, 0xD9, 0xAA, 0x31, 0x11, 0x47, 0x5C, 0x77, 0x3E, 0xE3, 0xDD, 0x22, 0x84, 0x93, 0x14, 0x97, 0x10, 0xF8, 0xD7, 0x1C, 0x93, 0x44, 0x9C, 0xEF, 0xD4, 0xEB, 0x77, 0x40, 0x3C, 0x22, 0xFD };
 
+	// 6 test
+	//uint8 known_working_code[128] = { 0xFD, 0x31, 0x0C, 0xFD, 0x78, 0x62, 0xD7, 0x67, 0x37, 0xAF, 0xA1, 0x6A, 0xF6, 0xD7, 0xC6, 0x17, 0xFF, 0xE9, 0x05, 0xB6, 0xF6, 0x60, 0xDE, 0x87, 0x49, 0xC9, 0xE1, 0x67, 0xAA, 0x97, 0x50, 0x8D, 0xBF, 0x7E, 0x80, 0xDF, 0x64, 0xC1, 0xFB, 0x52, 0xCD, 0xE9, 0x46, 0xE5, 0xDF, 0x50, 0x93, 0x96, 0x00, 0xA1, 0x3D, 0xDB, 0xF8, 0x56, 0xE6, 0x05, 0x2E, 0xFD, 0x11, 0x16, 0xFB, 0x4A, 0xDD, 0x1E, 0x68, 0xB2, 0x6B, 0xA8, 0xD4, 0x66, 0xFF, 0x73, 0xA6, 0x05, 0x2E, 0xB3, 0x10, 0xF1, 0x6E, 0xEA, 0x84, 0x47, 0xF3, 0x11, 0xE4, 0xE7, 0x3B, 0xAE, 0x9B, 0xB7, 0x56, 0x2B, 0x9D, 0xAE, 0x93, 0x56, 0xE5, 0xBF, 0xA3, 0x6B, 0x6C, 0x17, 0x8C, 0x80, 0x05, 0x4E, 0x27, 0xA7, 0x95, 0xB8, 0x6A, 0xDC, 0xD2, 0xF9, 0x4C, 0x4E, 0x46, 0xF9, 0xF2, 0xF7, 0x26, 0x02, 0x55, 0xAD, 0x6E, 0x93, 0xF1, 0xC8 };
 
-	uint8 value[8];
+	// 3-6 test
+	//uint8 known_working_code[128] = { 0x26, 0x78, 0x58, 0x18, 0xC2, 0x48, 0x63, 0x80, 0xC2, 0xE7, 0x8F, 0x2B, 0xF4, 0xC5, 0xB9, 0xDD, 0xAF, 0x52, 0x89, 0x42, 0xF7, 0x1B, 0xE0, 0xD3, 0x79, 0xA4, 0x4C, 0xF8, 0x2D, 0x67, 0x18, 0xB2, 0xE6, 0x6F, 0xD2, 0x7D, 0xC8, 0x3E, 0xE7, 0x02, 0xDE, 0x90, 0xBB, 0x4F, 0x11, 0x34, 0x50, 0xCB, 0x1D, 0xEF, 0xEB, 0x5B, 0x53, 0x7F, 0xE3, 0x2F, 0x88, 0x79, 0xBA, 0x4B, 0xFE, 0x74, 0x13, 0x6E, 0x2B, 0xCB, 0x86, 0x43, 0x0A, 0x22, 0x8E, 0xCA, 0x1D, 0x9F, 0x3B, 0xA7, 0x26, 0x0C, 0x04, 0xA4, 0x23, 0x81, 0x6B, 0x19, 0xF0, 0xCE, 0xF2, 0xCC, 0xE1, 0x08, 0x05, 0x9B, 0xFE, 0xA3, 0x60, 0x75, 0x29, 0x83, 0x5D, 0xFB, 0x1D, 0xBF, 0xD6, 0x29, 0x53, 0x6C, 0xBC, 0xA2, 0x61, 0x7F, 0x54, 0x04, 0xDD, 0x2D, 0xEB, 0x65, 0xCF, 0x7D, 0xB8, 0x51, 0x45, 0x69, 0xE8, 0xE9, 0xF0, 0xDD, 0xA6, 0x4B };
 
-	uint64 IVs_to_run = command_line_options.iv_count;
+	// 4-3-6 test
+	uint8 known_working_code[128] = { 0xCD, 0x4C, 0xCE, 0xFA, 0x9F, 0x95, 0x46, 0x54, 0x34, 0xC1, 0x68, 0x90, 0xCB, 0x71, 0x2F, 0xA7, 0x6C, 0xD7, 0xAC, 0xEE, 0x99, 0x1D, 0x2A, 0xA2, 0xDF, 0x0F, 0x37, 0x41, 0x2F, 0x7E, 0xA9, 0x8C, 0x25, 0x57, 0xC8, 0xE4, 0xA2, 0xCC, 0x7C, 0x10, 0x3A, 0xC5, 0x33, 0x6B, 0x0C, 0xE9, 0x26, 0x87, 0x19, 0x8A, 0x62, 0x5C, 0xB0, 0xAF, 0x30, 0x42, 0x65, 0x16, 0x9E, 0xCF, 0x30, 0xC3, 0x4C, 0xE3, 0x43, 0xA6, 0x5C, 0x3D, 0x83, 0x54, 0xF3, 0xE9, 0xA8, 0x6D, 0xF5, 0x8B, 0xDB, 0x37, 0x7F, 0xCE, 0xF4, 0x79, 0x4B, 0x74, 0x40, 0x30, 0xCC, 0x96, 0xC2, 0x5D, 0x54, 0xF7, 0xDB, 0x8D, 0x34, 0x96, 0xA9, 0xD3, 0x10, 0x0B, 0x57, 0xF6, 0x6D, 0xBB, 0xB1, 0xAC, 0x2D, 0xA2, 0x32, 0x52, 0x74, 0x83, 0x84, 0xE3, 0x12, 0x81, 0x90, 0x4F, 0x88, 0x62, 0xC9, 0x29, 0x97, 0xB0, 0x56, 0xBF, 0xB1, 0x6C };
 
-	uint64 IVs_finished = 0;
+	// 5-7-7-1-0 test
+	//uint8 known_working_code[128] = { 0x1E, 0xA6, 0xD6, 0x44, 0x9B, 0x34, 0x6D, 0xC0, 0xD5, 0x3A, 0x17, 0x85, 0xE9, 0x38, 0x81, 0x21, 0xED, 0x64, 0xDB, 0x9E, 0x4D, 0xC6, 0xE2, 0x35, 0x07, 0x8E, 0x97, 0x37, 0xF9, 0x1C, 0x34, 0x04, 0x9E, 0xA8, 0xE9, 0x1C, 0x34, 0x5A, 0xCB, 0x78, 0x68, 0xB8, 0x98, 0x69, 0x0C, 0xA1, 0xA7, 0xE6, 0x7D, 0x34, 0xDA, 0xF1, 0x9C, 0x31, 0x1D, 0xC7, 0x48, 0xDC, 0x73, 0xD6, 0x6C, 0x30, 0x98, 0xB7, 0x59, 0x71, 0xEB, 0x27, 0x1B, 0xE0, 0x5A, 0x87, 0xE8, 0xAC, 0x58, 0x91, 0x10, 0xBC, 0xA2, 0x6B, 0x11, 0x41, 0x9A, 0x17, 0x55, 0x26, 0x61, 0xE3, 0xDD, 0xFC, 0x84, 0xAE, 0x16, 0x23, 0xB1, 0x54, 0x90, 0x87, 0x47, 0x3D, 0xA1, 0xBD, 0x57, 0x8E, 0x30, 0x48, 0x19, 0x33, 0x09, 0xF0, 0xF0, 0x44, 0xA9, 0xD5, 0x06, 0xFB, 0xC9, 0x22, 0x41, 0x99, 0x5A, 0x22, 0x76, 0x8F, 0xEA, 0x6E, 0x97, 0x50 };
 
-	std::ifstream myfile;
-	if (command_line_options.from_file)
+	// final result we are expecting (1)
+	//uint8 known_working_code[128] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE9, 0x6E, 0xA1, 0xE6, 0xF0, 0x9E, 0x01, 0xA9, 0x88, 0x85, 0x01, 0xC9, 0xF0, 0x62, 0xE6, 0x38, 0x26, 0xB9, 0xA1, 0x58, 0xBA, 0xB7, 0x76, 0x58, 0xEF, 0x76, 0x62, 0xC0, 0x95, 0xCD, 0x05, 0x6A, 0x74, 0x16, 0x92, 0x38, 0xC4, 0x27, 0xA2, 0xA7, 0x8A, 0x8A, 0x5D, 0xE3, 0x9B, 0xFF, 0xAA, 0x6C, 0x37, 0x98, 0x29, 0x9E, 0x46, 0xB9, 0xA7, 0xB5, 0x17, 0x8B, 0x08, 0xE4, 0xA2, 0xCA, 0x00, 0x40, 0xF6, 0x94, 0x01, 0x8A, 0x97, 0x46, 0xB7, 0xA1, 0xA5, 0x98, 0x50, 0x7E, 0xB5, 0x63, 0x38, 0xD1, 0xB7, 0xF4, 0xF0 };
+
+	// final result we are expecting (2)
+	//uint8 known_working_code[128] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE9, 0x6E, 0xA1, 0xE6, 0xF0, 0x9E, 0x01, 0xA9, 0x88, 0x85, 0x01, 0xC9, 0xF0, 0x62, 0xE6, 0x38, 0x26, 0xB9, 0xA1, 0x58, 0xBA, 0xB7, 0x76, 0x58, 0xEF, 0x76, 0x62, 0xC0, 0x95, 0xCD, 0x05, 0x6A, 0x74, 0x16, 0x92, 0x38, 0xC4, 0x27, 0xA2, 0xA7, 0x8A, 0x8A, 0x5D, 0xE3, 0x9B, 0xFF, 0xAA, 0x6C, 0x37, 0x98, 0x29, 0x9E, 0x46, 0xB9, 0xA7, 0xB5, 0x17, 0x8B, 0x08, 0xE4, 0xA2, 0xCA, 0x00, 0x40, 0xF6, 0x94, 0x01, 0x8A, 0x60, 0xBA, 0x1E, 0x08, 0xAE, 0x98, 0x50, 0x7E, 0xB5, 0x63, 0x38, 0xD1, 0xB7, 0xF4, 0xF0 };
+
+	bool inverted = true;
+
+	uint8 dummy[8] = {0,0,0,0,0,0,0,0};
+
+	working_code starting_code(dummy);
+
+	for (int i = 0; i < 0x80; i++)
 	{
-		myfile.open(command_line_options.filename, std::ios::in);
-		if (!myfile.is_open())
+		int byte_pos = i;
+		if (inverted)
 		{
-			boinc_log("File open error\n");
-
-			return 1;
+			byte_pos = 127 - i;
 		}
+
+		starting_code.working_code_data.as_uint8[i] = known_working_code[byte_pos];
+
+		if ((i >= 115 && i <= 127) || (i >= 97 && i <= 112) || (i >= 88 && i <= 90))
+		{
+			starting_code.trust_mask.as_uint8[byte_pos] = 0xFF;
+		}
+		else
+		{
+			starting_code.trust_mask.as_uint8[byte_pos] = 0x00;
+		}
+		starting_code.trust_mask.as_uint8[byte_pos] = 0xFF;
 	}
 
-	if (command_line_options.attack == INDIVIDUAL)
-	{
-		while (true)
-		{
-			// Get a key
-			if (command_line_options.from_file)
-			{
-				std::string line;
-				if (!getline(myfile, line))
-				{
-					break;
-				}
+	working_code in_progress(&starting_code);
 
-				std::stringstream ss;
-				ss << std::hex << line.substr(0,8);
+	rng_info rng_bits[256];
+	
 
-				uint32 key;
-				ss >> key;
-
-				std::stringstream ss2;
-				ss2 << std::hex << line.substr(8,16);
-
-				uint32 data;
-				ss2 >> data;
-
-				// something about skipping bad lines?
-
-				value[0] = (key >> 24) & 0xFF;
-				value[1] = (key >> 16) & 0xFF;
-				value[2] = (key >> 8) & 0xFF;
-				value[3] = key & 0xFF;
-
-				value[4] = (data >> 24) & 0xFF;
-				value[5] = (data >> 16) & 0xFF;
-				value[6] = (data >> 8) & 0xFF;
-				value[7] = data & 0xFF;
-			}
-			else
-			{
-				if (IVs_to_run == IVs_finished)
-				{
-					break;
-				}
-
-				if (IVs_finished == 0)
-				{
-					value[0] = (command_line_options.start_key >> 24) & 0xFF;
-					value[1] = (command_line_options.start_key >> 16) & 0xFF;
-					value[2] = (command_line_options.start_key >> 8) & 0xFF;
-					value[3] = command_line_options.start_key & 0xFF;
-
-					value[4] = (command_line_options.start_data >> 24) & 0xFF;
-					value[5] = (command_line_options.start_data >> 16) & 0xFF;
-					value[6] = (command_line_options.start_data >> 8) & 0xFF;
-					value[7] = command_line_options.start_data & 0xFF;
-				}
-				else
-				{
-					// Increment to the next IV
-					for (int i = 7; i >= 0; i--)
-					{
-						value[i]++;
-						if (value[i] != 0x00)
-						{
-							break;
-						}
-					}
-				}
-			}
-
-			// Pre-process the key schedule
-			key_schedule_data schedule_data;
-			schedule_data.as_uint8[0] = value[0];
-			schedule_data.as_uint8[1] = value[1];
-			schedule_data.as_uint8[2] = value[2];
-			schedule_data.as_uint8[3] = value[3];
-
-			key_schedule_entry schedule_entries[27];
-
-			int schedule_counter = 0;
-			for (int i = 0; i < 26; i++)
-			{
-				schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data);
-
-				if (map_list[i] == 0x22)
-				{
-					schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data,4);
-				}
-			}
-
-			working_code in_progress(value);
-
-			schedule_counter = 0;
-
-			for (int map_index = 0; map_index < 26; map_index++)
-			{
-				in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter]);
-
-				if (map_list[map_index] == 0x22)
-				{
-					in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter+1]);
-				}
-
-				schedule_counter++;
-				if (map_list[map_index] == 0x22)
-				{
-					schedule_counter++;
-				}
-			}
-
-			output_stats(&in_progress);
-
-			IVs_finished++;
-
-			if (command_line_options.from_file)
-			{
-				// TODO
-			}
-			else
-			{
-				fraction_done(((double)IVs_finished)/((double)IVs_to_run));
-			}
-		}
-	}
-	else if (command_line_options.attack == VECTOR)
-	{
-		boinc_log("vector attack\n");
-		// will force a pre-processed key schedule for now
-
-		std::vector<working_code> IVs_in_progress;
-
-		key_schedule_entry schedule_entries[27];
-
-		while (true)
-		{
-			// Get a key
-			if (command_line_options.from_file)
-			{
-				std::string line;
-				if (!getline(myfile, line))
-				{
-					break;
-				}
-
-				std::stringstream ss;
-				ss << std::hex << line.substr(0,8);
-
-				uint32 key;
-				ss >> key;
-
-				std::stringstream ss2;
-				ss2 << std::hex << line.substr(8,16);
-
-				uint32 data;
-				ss2 >> data;
-
-				// something about skipping bad lines?
-
-				value[0] = (key >> 24) & 0xFF;
-				value[1] = (key >> 16) & 0xFF;
-				value[2] = (key >> 8) & 0xFF;
-				value[3] = key & 0xFF;
-
-				value[4] = (data >> 24) & 0xFF;
-				value[5] = (data >> 16) & 0xFF;
-				value[6] = (data >> 8) & 0xFF;
-				value[7] = data & 0xFF;
-			}
-			else
-			{
-				if (IVs_to_run == IVs_finished)
-				{
-					break;
-				}
-
-				if (IVs_finished == 0)
-				{
-					value[0] = (command_line_options.start_key >> 24) & 0xFF;
-					value[1] = (command_line_options.start_key >> 16) & 0xFF;
-					value[2] = (command_line_options.start_key >> 8) & 0xFF;
-					value[3] = command_line_options.start_key & 0xFF;
-
-					value[4] = (command_line_options.start_data >> 24) & 0xFF;
-					value[5] = (command_line_options.start_data >> 16) & 0xFF;
-					value[6] = (command_line_options.start_data >> 8) & 0xFF;
-					value[7] = command_line_options.start_data & 0xFF;
-				}
-				else
-				{
-					// Increment to the next IV
-					for (int i = 7; i >= 0; i--)
-					{
-						value[i]++;
-						if (value[i] != 0x00)
-						{
-							break;
-						}
-					}
-				}
-			}
-
-			// Get the key from the first IV
-			if (IVs_finished == 0)
-			{
-				key_schedule_data schedule_data;
-				// Pre-process the key schedule
-				schedule_data.as_uint8[0] = value[0];
-				schedule_data.as_uint8[1] = value[1];
-				schedule_data.as_uint8[2] = value[2];
-				schedule_data.as_uint8[3] = value[3];
-
-				int schedule_counter = 0;
-				for (int i = 0; i < 26; i++)
-				{
-					schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data);
-
-					if (map_list[i] == 0x22)
-					{
-						schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data,4);
-					}
-				}
-			}
-
-			IVs_in_progress.push_back(value);
-
-			IVs_finished++;
-		}
-
-		int schedule_counter = 0;
-
-		for (int map_index = 0; map_index < 26; map_index++)
-		{
-			uint64 count = 0;
-			for (std::vector<working_code>::iterator it = IVs_in_progress.begin(); it != IVs_in_progress.end(); ++it)
-			{
-				it->process_map_exit(map_list[map_index],schedule_entries[schedule_counter]);
-
-				if (map_list[map_index] == 0x22)
-				{
-					it->process_map_exit(map_list[map_index],schedule_entries[schedule_counter+1]);
-				}
-
-				count++;
-
-				if (command_line_options.from_file)
-				{
-					// TODO
-				}
-				else
-				{
-					// TODO
-					fraction_done((((double)count)+((double)(map_index*command_line_options.iv_count)))/(((double)26)*((double)command_line_options.iv_count)));
-				} 
-			}
-
-			// Advance the schedule
-			schedule_counter++;
-			if (map_list[map_index] == 0x22)
-			{
-				schedule_counter++;
-			}
-
-			boinc_log("%lu run\n",IVs_in_progress.size());
-
-			size_t x = IVs_in_progress.size();
-			std::sort(IVs_in_progress.begin(), IVs_in_progress.end());
-			IVs_in_progress.erase(std::unique(IVs_in_progress.begin(),IVs_in_progress.end()),IVs_in_progress.end());
-			// shrink to fit
-			std::vector<working_code>(IVs_in_progress).swap(IVs_in_progress);
-			x -= IVs_in_progress.size();
-			boinc_log("%lu deleted\n",x);
-
-			boinc_log("\n");
-		}
-
-		boinc_log("%lu checking\n\n",IVs_in_progress.size());
-
-		for (std::vector<working_code>::iterator it = IVs_in_progress.begin(); it != IVs_in_progress.end(); ++it)
-		{
-			output_stats(&(*it));
-		}
-	}
-	else if (command_line_options.attack == VECTOR_CONSTANT_SIZE)
-	{
-		boinc_log("vector attack, constant size of %d\n", command_line_options.vector_size);
-		// will force a pre-processed key schedule for now
-
-		std::vector<working_code> IVs_in_progress;
-
-		key_schedule_entry schedule_entries[27];
-
-		int schedule_counter = 0;
-
-		bool no_more = false;
-
-		// Go one map at a time
-		for (int map_index = 0; map_index < 26; map_index++)
-		{
-			printf("vector size before add: %lu\n",IVs_in_progress.size());
-
-			// Add more to the vector if there are not enough
-			while (IVs_in_progress.size() < command_line_options.vector_size && !no_more)
-			{
-				std::vector<working_code> new_IVs;
-				printf("want: %lu\n", command_line_options.vector_size - IVs_in_progress.size());
-				while ((IVs_in_progress.size() + new_IVs.size()) < command_line_options.vector_size)
-				{
-					// Get a key
-					if (command_line_options.from_file)
-					{
-						std::string line;
-						if (!getline(myfile, line))
-						{
-							no_more = true;
-							break;
-						}
-
-						std::stringstream ss;
-						ss << std::hex << line.substr(0,8);
-
-						uint32 key;
-						ss >> key;
-
-						std::stringstream ss2;
-						ss2 << std::hex << line.substr(8,16);
-
-						uint32 data;
-						ss2 >> data;
-
-						// something about skipping bad lines?
-
-						value[0] = (key >> 24) & 0xFF;
-						value[1] = (key >> 16) & 0xFF;
-						value[2] = (key >> 8) & 0xFF;
-						value[3] = key & 0xFF;
-
-						value[4] = (data >> 24) & 0xFF;
-						value[5] = (data >> 16) & 0xFF;
-						value[6] = (data >> 8) & 0xFF;
-						value[7] = data & 0xFF;
-					}
-					else
-					{
-						if (IVs_to_run == IVs_finished)
-						{
-							no_more = true;
-							break;
-						}
-
-						if (IVs_finished == 0)
-						{
-							value[0] = (command_line_options.start_key >> 24) & 0xFF;
-							value[1] = (command_line_options.start_key >> 16) & 0xFF;
-							value[2] = (command_line_options.start_key >> 8) & 0xFF;
-							value[3] = command_line_options.start_key & 0xFF;
-
-							value[4] = (command_line_options.start_data >> 24) & 0xFF;
-							value[5] = (command_line_options.start_data >> 16) & 0xFF;
-							value[6] = (command_line_options.start_data >> 8) & 0xFF;
-							value[7] = command_line_options.start_data & 0xFF;
-						}
-						else
-						{
-							// Increment to the next IV
-							for (int i = 7; i >= 0; i--)
-							{
-								value[i]++;
-								if (value[i] != 0x00)
-								{
-									break;
-								}
-							}
-						}
-					}
-
-					// Get the key from the first IV
-					if (IVs_finished == 0)
-					{
-						key_schedule_data schedule_data;
-						// Pre-process the key schedule
-						schedule_data.as_uint8[0] = value[0];
-						schedule_data.as_uint8[1] = value[1];
-						schedule_data.as_uint8[2] = value[2];
-						schedule_data.as_uint8[3] = value[3];
-
-						int schedule_counter = 0;
-						for (int i = 0; i < 26; i++)
-						{
-							schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data);
-
-							if (map_list[i] == 0x22)
-							{
-								schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i],&schedule_data,4);
-							}
-						}
-					}
-
-					new_IVs.push_back(value);
-
-					IVs_finished++;
-				}
-				printf("new IVs: %lu\n",new_IVs.size());
-
-				// catch the new IVs up
-				if (new_IVs.size() > 0)
-				{
-					int sub_schedule_counter = 0;
-					for (int sub_map_index = 0; sub_map_index < map_index; sub_map_index++)
-					{
-
-						for (std::vector<working_code>::iterator it = new_IVs.begin(); it != new_IVs.end(); ++it)
-						{
-							it->process_map_exit(map_list[sub_map_index],schedule_entries[sub_schedule_counter]);
-
-							if (map_list[sub_map_index] == 0x22)
-							{
-								it->process_map_exit(map_list[sub_map_index],schedule_entries[sub_schedule_counter+1]);
-							}
-						} 
-
-						// Advance the schedule
-						sub_schedule_counter++;
-						if (map_list[sub_map_index] == 0x22)
-						{
-							sub_schedule_counter++;
-						}
-
-						boinc_log("%lu subrun\n",new_IVs.size());
-
-						size_t x = new_IVs.size();
-						std::sort(new_IVs.begin(), new_IVs.end());
-						new_IVs.erase(std::unique(new_IVs.begin(),new_IVs.end()),new_IVs.end());
-						// shrink to fit
-						std::vector<working_code>(new_IVs).swap(new_IVs);
-						x -= new_IVs.size();
-						boinc_log("%lu subdeleted\n",x);
-					}
-				}
-				printf("new IVs after: %lu\n",new_IVs.size());
-				IVs_in_progress.insert(IVs_in_progress.end(), new_IVs.begin(), new_IVs.end());
-				new_IVs.empty();
-
-				printf("vector size after add: %lu\n",IVs_in_progress.size());
-
-				std::vector<working_code>(IVs_in_progress).swap(IVs_in_progress);
-			}
-			
-			//std::vector<working_code>(new_IVs).swap(new_IVs);
-
-			printf("finished so far: %lu\n", IVs_finished);
-			printf("process main vector, index: %i\n", map_index);
-			uint64 count = 0;
-			for (std::vector<working_code>::iterator it = IVs_in_progress.begin(); it != IVs_in_progress.end(); ++it)
-			{
-				it->process_map_exit(map_list[map_index],schedule_entries[schedule_counter]);
-
-				if (map_list[map_index] == 0x22)
-				{
-					it->process_map_exit(map_list[map_index],schedule_entries[schedule_counter+1]);
-				}
-
-				count++;
-
-				if (command_line_options.from_file)
-				{
-					// TODO
-				}
-				else
-				{
-					// TODO
-					fraction_done((((double)count)+((double)(map_index*command_line_options.iv_count)))/(((double)26)*((double)command_line_options.iv_count)));
-				} 
-			}
-
-			// Advance the schedule
-			schedule_counter++;
-			if (map_list[map_index] == 0x22)
-			{
-				schedule_counter++;
-			}
-
-			boinc_log("%lu run\n",IVs_in_progress.size());
-
-			size_t x = IVs_in_progress.size();
-			std::sort(IVs_in_progress.begin(), IVs_in_progress.end());
-			IVs_in_progress.erase(std::unique(IVs_in_progress.begin(),IVs_in_progress.end()),IVs_in_progress.end());
-			// shrink to fit
-			std::vector<working_code>(IVs_in_progress).swap(IVs_in_progress);
-			x -= IVs_in_progress.size();
-			boinc_log("%lu deleted\n",x);
-
-			boinc_log("\n");
-		}
-
-		boinc_log("%lu checking\n\n",IVs_in_progress.size());
-
-		for (std::vector<working_code>::iterator it = IVs_in_progress.begin(); it != IVs_in_progress.end(); ++it)
-		{
-			output_stats(&(*it));
-		}
-
-		printf("finished: %lu\n", IVs_finished);
-	}
-	else if (command_line_options.attack == HASH)
-	{
-		boinc_log("hash attack\n");
-		// will force a pre-processed key schedule for now
-
-		int skip_count = 0;
-
-		key_schedule_entry schedule_entries[27];
-
-		std::unordered_set<MurmurHashKey> global_hash_table;
-		uint32 global_hash_count = 0;
-
-		int schedule_counter = 0;
-		while (IVs_finished < command_line_options.iv_count)
-		{
-			printf("\nstarting some attack\n");
-			// Start a blank vector
-			std::vector<working_code> IVs_in_progress;
-
-			// go map by map	
-			for (int map_index = 0; map_index < 26; map_index++)
-			{
-				if (map_index == 0)
-				{
-					std::unordered_set<MurmurHashKey> local_hash_table;
-					local_hash_table.reserve(0x10000);
-
-					printf("First round\n");
-					// On first round, do a vector add
-					while (IVs_in_progress.size() < command_line_options.vector_size)
-					{
-						// Get a key
-						if (command_line_options.from_file)
-						{
-							std::string line;
-							if (!getline(myfile, line))
-							{
-								break;
-							}
-
-							std::stringstream ss;
-							ss << std::hex << line.substr(0,8);
-
-							uint32 key;
-							ss >> key;
-
-							std::stringstream ss2;
-							ss2 << std::hex << line.substr(8,16);
-
-							uint32 data;
-							ss2 >> data;
-
-							// something about skipping bad lines?
-
-							value[0] = (key >> 24) & 0xFF;
-							value[1] = (key >> 16) & 0xFF;
-							value[2] = (key >> 8) & 0xFF;
-							value[3] = key & 0xFF;
-
-							value[4] = (data >> 24) & 0xFF;
-							value[5] = (data >> 16) & 0xFF;
-							value[6] = (data >> 8) & 0xFF;
-							value[7] = data & 0xFF;
-						}
-						else
-						{
-							if (IVs_to_run == IVs_finished)
-							{
-								break;
-							}
-
-							if (IVs_finished == 0)
-							{
-								value[0] = (command_line_options.start_key >> 24) & 0xFF;
-								value[1] = (command_line_options.start_key >> 16) & 0xFF;
-								value[2] = (command_line_options.start_key >> 8) & 0xFF;
-								value[3] = command_line_options.start_key & 0xFF;
-
-								value[4] = (command_line_options.start_data >> 24) & 0xFF;
-								value[5] = (command_line_options.start_data >> 16) & 0xFF;
-								value[6] = (command_line_options.start_data >> 8) & 0xFF;
-								value[7] = command_line_options.start_data & 0xFF;
-							}
-							else
-							{
-								// Increment to the next IV
-								for (int i = 7; i >= 0; i--)
-								{
-									value[i]++;
-									if (value[i] != 0x00)
-									{
-										break;
-									}
-								}
-							}
-						}
-
-						// Get the key from the first IV
-						if (IVs_finished == 0)
-						{
-							key_schedule_data schedule_data;
-							// Pre-process the key schedule
-							schedule_data.as_uint8[0] = value[0];
-							schedule_data.as_uint8[1] = value[1];
-							schedule_data.as_uint8[2] = value[2];
-							schedule_data.as_uint8[3] = value[3];
-
-							int schedule_counter_gen = 0;
-							for (int i = 0; i < 26; i++)
-							{
-								schedule_entries[schedule_counter_gen++] = generate_schedule_entry(map_list[i],&schedule_data);
-
-								if (map_list[i] == 0x22)
-								{
-									schedule_entries[schedule_counter_gen++] = generate_schedule_entry(map_list[i],&schedule_data,4);
-								}
-							}
-						}
-
-						working_code in_progress(value);
-
-						// run a round, check hash, add if new
-						in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter]);
-
-						if (map_list[map_index] == 0x22)
-						{
-							in_progress.process_map_exit(map_list[map_index],schedule_entries[schedule_counter+1]);
-						}
-
-						//boinc_log("%02X%02X%02X%02X%02X%02X%02X%02X\t",in_progress.starting_value[0],in_progress.starting_value[1],in_progress.starting_value[2],in_progress.starting_value[3],in_progress.starting_value[4],in_progress.starting_value[5],in_progress.starting_value[6],in_progress.starting_value[7]);
-
-						// check hash
-						MurmurHashKey hashKey = generateHashKey(in_progress);
-
-						// check the hash?
-						if (local_hash_table.count(hashKey) > 0)
-						{
-							// in hash
-							//printf("Already in hash\n");
-							//printf("%i\n",skip_count);
-							skip_count++;
-							//printf("%i\n",skip_count);
-						}
-						else
-						{
-							local_hash_table.insert(hashKey);
-							IVs_in_progress.push_back(in_progress);
-							//printf("New\n");
-						}
-
-						IVs_finished++;
-					}
-					printf("processed: %i\n",IVs_finished);
-					printf("skipped: %i\n\n",skip_count);
-
-					// Advance the schedule
-					schedule_counter++;
-					if (map_list[map_index] == 0x22)
-					{
-						schedule_counter++;
-					}
-				}
-				else
-				{
-					uint64 count = 0;
-					for (std::vector<working_code>::iterator it = IVs_in_progress.begin(); it != IVs_in_progress.end(); ++it)
-					{
-						it->process_map_exit(map_list[map_index],schedule_entries[schedule_counter]);
-
-						if (map_list[map_index] == 0x22)
-						{
-							it->process_map_exit(map_list[map_index],schedule_entries[schedule_counter+1]);
-						}
-
-						count++;
-
-						if (command_line_options.from_file)
-						{
-							// TODO
-						}
-						else
-						{
-							// TODO
-							fraction_done((((double)count)+((double)(map_index*command_line_options.iv_count)))/(((double)26)*((double)command_line_options.iv_count)));
-						} 
-					}
-
-					// Advance the schedule
-					schedule_counter++;
-					if (map_list[map_index] == 0x22)
-					{
-						schedule_counter++;
-					}
-
-					boinc_log("%lu run\n",IVs_in_progress.size());
-
-					// for now do a vector redcuction
-					size_t x = IVs_in_progress.size();
-					std::sort(IVs_in_progress.begin(), IVs_in_progress.end());
-					IVs_in_progress.erase(std::unique(IVs_in_progress.begin(),IVs_in_progress.end()),IVs_in_progress.end());
-					// shrink to fit
-					std::vector<working_code>(IVs_in_progress).swap(IVs_in_progress);
-					x -= IVs_in_progress.size();
-					boinc_log("%lu deleted\n",x);
-
-					if (map_index == 4)
-					{
-						size_t x2 = IVs_in_progress.size();
-						boinc_log("global reduction\n");
-						// loop through IVs
-						
-						std::vector<working_code>::iterator it2 = IVs_in_progress.begin();
-						while (it2 != IVs_in_progress.end())
-						{
-							//it2->display_working_code();
-
-							// check hash
-							MurmurHashKey hashKey = generateHashKey((*it2));
-
-							// if found, remove from current working set
-							if (global_hash_table.count(hashKey) > 0)
-							{
-								// in hash
-								//printf("Already in hash\n");
-								//printf("%i\n",skip_count);
-								skip_count++;
-								it2 = IVs_in_progress.erase(it2);
-
-								//printf("%i\n",skip_count);
-							}
-							else
-							{
-								global_hash_table.insert(hashKey);
-								global_hash_count++;
-							}
-
-							// next
-							++it2;
-						}
-						
-						printf("end?\n");
-						x2 -= IVs_in_progress.size();
-						boinc_log("%lu hdeleted\n",x2);
-						
-					}
-
-					boinc_log("\n");
-				}
-			}
-
-			boinc_log("%lu checking\n\n",IVs_in_progress.size());
-
-			for (std::vector<working_code>::iterator it = IVs_in_progress.begin(); it != IVs_in_progress.end(); ++it)
-			{
-				output_stats(&(*it));
-			}
-		}
-		printf("global hash size: %i\n",global_hash_count);
-	}
-
-	finish_boinc();
+	attack(&starting_code,&in_progress,std::vector<int>(),rng_bits,4);
 
 	return 0;
+
+}
+
+void attack (working_code * initial_code, working_code * in_progress, std::vector<int> &path, rng_info rng_bits[], int depth_limit)
+{
+	using std::chrono::duration_cast;
+	using std::chrono::microseconds;
+	typedef std::chrono::high_resolution_clock clock;
+
+	if (path.size() == depth_limit)
+	{
+		auto start = clock::now();
+
+		// run algs, check all rng, etc
+		for (size_t i = 0; i < path.size(); i++)
+		{
+			printf("%i ",path[i]);
+		}	
+		printf("\n");
+
+		// Figure out how far back we need to go:
+		int bytes_needed = 0;
+
+		for (size_t i = 0; i < path.size(); i++)
+		{
+			switch (path[i])
+			{
+			case 0:
+			case 1:
+			case 3:
+			case 4:
+			case 6:
+				bytes_needed += 128;
+				break;
+
+			case 2:
+			case 5:
+				bytes_needed += 1;
+				break;
+
+			case 7:
+			default: 
+				break;
+			}
+		}
+
+		int rng_pos = 0;
+
+		// Loop through all possible ending points
+		for (size_t ending_index = bytes_needed; ending_index < reverse_rng.size(); ending_index++)
+		{
+			/*
+			if (reverse_rng[ending_index].rng1 != 0x85 || reverse_rng[ending_index].rng2 != 0x01)
+			{
+				continue;
+			}
+			*/
+			
+			int rng_bits_used = 0;
+			rng_pos = 0;
+		
+			// clone the initial working code
+			in_progress->copy(initial_code);
+
+			//printf("Trying %02X %02X %i:\t",reverse_rng[ending_index].rng1,reverse_rng[ending_index].rng2,reverse_rng[ending_index].branch_option);
+			// 5-7-7-1-0 test
+			for (size_t i = 0; i < path.size(); i++)
+			{
+				in_progress->inverse_working_code_algorithm(path[i],rng_pos,rng_bits,rng_bits_used,reverse_rng[ending_index].table);
+			} 
+
+			int bits_matched = 0;
+			// loop through rng_bits vector
+			for (size_t index = 0; index < rng_bits_used; index++)
+			{
+				if (rng_bits[index].bit == ((reverse_rng[ending_index].table[rng_bits[index].byte_pos] >> rng_bits[index].bit_pos) & 0x01))
+				{
+					bits_matched++;
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			//printf("\t",bits_matched, rng_bits.size());
+			if (bits_matched == rng_bits_used)
+			{
+				printf("%02X %02X %i:\t%i / %i\t<---\n",reverse_rng[ending_index].rng1,reverse_rng[ending_index].rng2,reverse_rng[ending_index].branch_option,bits_matched, rng_bits_used);
+				//printf("<--");
+			}
+
+			//printf("\n");
+		}
+
+		auto end = clock::now();
+		std::cout << duration_cast<microseconds>(end-start).count() << "us\n";
+	}
+	else
+	{
+		// Add alg to path, recurse
+		std::vector<int> algs;
+		if (path.size() + 1 == depth_limit)
+		{
+			algs.push_back(0);
+			algs.push_back(6);
+		}
+		else
+		{
+			algs.push_back(1);
+			algs.push_back(2);
+			algs.push_back(3);
+			algs.push_back(4);
+			algs.push_back(5);
+			if (path.size() > 0 && path.back() != 7)
+			{
+				algs.push_back(7);
+			}
+		}
+
+
+		for (size_t alg_index = 0; alg_index < algs.size(); alg_index++)
+		{
+			path.push_back(algs[alg_index]);
+			attack(initial_code, in_progress, path, rng_bits, depth_limit);
+			path.pop_back();
+		}
+	}
 }
