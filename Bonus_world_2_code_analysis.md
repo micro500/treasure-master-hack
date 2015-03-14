@@ -1,0 +1,78 @@
+# Overview #
+
+Bonus world 2 code is much simpler then bonus world 1. Much of the code to run platforms and warps already exists in subroutines used elsewhere, so we just need to find and reference them.
+
+**This is not the definitely final code**
+
+# Details #
+
+## Part 1 ##
+Unlike the code for bonus world 1, this code needs to load the level from scratch. This means that once the level initialization begins, the code will never return to 06A5
+
+```
+006A5  A2 LDA #$05
+006A7  4C JMP $8595
+```
+8595 is the code that technically ends a level. 05 happens to be the array index for the second bonus world.
+```
+006AA  A2 LDX #$04
+006AC  4C JMP $80B4
+```
+The Subroutine 80B4 controls teleporters. The 4 index tells it what teleporter it is checking.
+```
+006AF  A6 LDX $00F3
+006B1  AD LDA $045A
+006B4  BC LDY $B96F,X
+006B7  DD CMP $B96B,X
+006BA  90 BCC (03)
+006BC  BC LDY $B973,X
+006BF  CC CPY $042F
+006C2  F0 BEQ (06)
+006C4  8C STY $042F
+006C7  8C STY $0425
+006CA  4C JMP $8464
+```
+This block of code mainly controls sprite pallet swaps. 006AF and 006B1 can be swapped obviously without effecting the code, as can 006C4 and 006C7.
+```
+{{{
+006CD  AD LDA $0558
+
+006D0  C9 CMP #$E7
+
+006D2  90 BCC $006F5
+
+006D4  A2 LDX #$12
+
+006D6  BD LDA $B98B,X
+
+006D9  9D STA $0157,X
+
+006DC  CA DEX
+
+006DD  10 BPL $006D6
+
+006DF  20 JSR $8952
+
+006E2  4C JMP $81EE
+}}}
+```
+This part of the code should end the level, the same as in Carnival world but still needs testing.
+```
+006E5  AD LDA $045A
+006E8  C9 CMP #$04
+006EA  B0 BCS (04)
+006EC  0E ASL $0487
+006EF  18 CLC
+006F0  A2 LDX #$05
+006F2  4C JMP $80B4
+```
+This code is need to check the second teleporter, as well as clear the flag that marks the spring as being already hit. (A left over from level 4.) The CMP #$04 could possibly be a 3 or 2 or 1, but nothing else.
+```
+006F5  60 RTS? 
+006F6
+006F7
+```
+This part of the level can run with an RTS alone since nothing special is happening there. It is possible the last 2 bytes are for the checksum just as in code 1.
+
+
+# Subroutines #

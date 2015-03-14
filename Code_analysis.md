@@ -1,0 +1,173 @@
+An analysis of the basics of game code and how it might apply to the second bonus world
+
+# Prize code #
+
+The prize code decryption will first check the entered code against the check sum for carnival world. If this fails, it will automatically check if it passes for world 7. This is interesting because if it passes, it will jump to $06A5 with no other information set about it being in world 7.
+
+The point here is that part of the decrypted code must contain some steps to set the world to 7, since at this point the game still thinks its going to the carnival world
+
+
+(checksum failure)
+
+1FC93 A6 LDX $46
+
+1FC95 BD LDA $FCAD,X 
+
+1FC98 85 STA $42
+
+1FC9A BD LDA $FCAF,X 
+
+1FC9D 85 STA $43
+
+1FC9F 6C JMP ($0042)
+
+when $46 is 0, the indirect jump goes to the code that increments $46, then it immediately jumps to the code check again
+
+when $46 is 1, it just ends
+
+## Jump Table ##
+
+A6 A6 A6 55 4D 3B FE 1C ED DB 14 22 30 A6 D8 C7 DB BB D8 A6 AF AA AF AF CD
+F5 E5 96 A6 A6 96 39 A6 A6 A7 B5 15 0C 0F 15 03 06 52 D0 D8 E3 CE A6 A6 B2
+
+86 86 86 86 86 86 86 86 85 86 86 86 86 86 87 87 87 87 87 86 06 06 06 06 06
+06 06 88 86 86 88 87 86 86 86 86 88 88 88 88 88 88 FC 06 06 06 86 86 86 80
+
+These arrays contain jump tables used in all levels. 08B2 is the separate teleporter area used to end the bonus world.
+
+FC52 is jumped to after beating world 5 to run the decryption code.
+
+86CE seems to be the bonus level collecting the teddy bears within carnival world.
+
+The interesting part is of course the ones like 06XX
+
+06A5 is the first (highest) floor of carnival world
+06D0 is the second part
+06D8 is the third part
+06E3 is the lowest.
+
+So from this the second bonus world must have jump addresses:
+
+06AF is the jump location for map 16, 14, and 17
+
+06AA is the jump location for 15.
+
+06E5 is for map 1A
+
+06F5 goes to map 19
+
+06CD is for 18
+
+
+At the very least, these blocks must have an executable op code when decrypted. Of course, 06A5 is called first for both bonus worlds, even though it is only used in loading the level.
+
+## Code Execution ##
+
+The carnival world code is executed from B535 to B5FD. It also calls a subroutine with range B6CD to B77B.
+
+The first block of carnival world calls ED88, the level initializaing code. Since this was called the first time at the end of level 5, it needs to be called only once here to not be put in an infinite loop.
+
+006E2 DD CMP $03A0,X 
+
+006E5 20 JSR $88B6
+
+006E8 AD LDA $0558
+
+006EB C9 CMP #$F0
+
+006ED 90 BCC $00700
+
+006EF A2 LDX #$12
+
+006F1 BD LDA $B98B,X 
+
+006F4 9D STA $0157,X
+
+006F7 CA DEX
+
+006F8 10 BPL $006F1
+
+006FA 20 JSR $8952
+
+006FD 4C JMP $81EE
+
+
+This block of code ends the level after walking far enough right.
+
+
+
+The block of code directly before this seems to be involved in screen transitions within the levels (any level.)
+
+So My best guess at where level 7 code execution is is $B7C7, the next reasonable looking block of code after 4B77B.
+
+The first part of the second bonus world code has to reset the level choice. This is done normally with a call to $8595 with Y set to the level choice. the first part of the code should also only be 5 bytes long. It is called once by the jump to 06A5, but then never again. So we get:
+
+A0 05 4C 95 85
+
+which does correctly load the level.
+
+
+
+
+
+
+# General code #
+
+Basically, every frame in a level has a loop that looks like this:
+
+$0861 JSR $08AF
+> $08AF JMP ($006A) // 006A contains a level specific address
+> .
+> . // do a lot of level specific stuff
+> .
+$8064 JSR $9662
+> $9662 JSR $ED9F
+> > .
+> > .  // do a lot of stuff that is common for every level
+> > .
+(repeat)
+
+For the prize code, it works like this
+
+(first pass)
+
+$06A5  LDX #$05
+
+$06A7  CPX $0451 = #$FF //0451 will always be FF at this point
+
+$06AA  BEQ $06AF
+
+$06AC  JSR $ED88   // ED88 is level initialization
+
+after this, 0451 is set to 5, so all subsequent frames will look like this:
+
+
+> $80AF:6C 6A 00  JMP ($006A) = $06A5
+
+> $06A5:A2 05     LDX #$05
+
+> $06A7:EC 51 04  CPX $0451 = #$05
+
+> $06AA:F0 03     BEQ $06AF
+
+> $06AF:A9 00     LDA #$00
+
+> $06B1:85 3F     STA $003F = #$00
+
+> $06B3:A5 FC     LDA $00FC = #$00
+
+> $06B5:C9 02     CMP #$02
+
+> $06B7:D0 14     BNE $06CD
+
+> $06CD:4C 35 B5  JMP $B535
+
+> $B535:AD A8 05  LDA $05A8 = #$00
+
+// B535 seems to be the code block for level 6, meaning we need to find a code block for level 7, If we can do that, we will know the JMP instruction for the second code!
+
+> $B549:60        RTS (from $80AF)
+
+$8064:20 62 96  JSR $9662
+
+Now, the other sections of the code are loaded in different parts of the stages. For example the section after 'gates open' uses $06D8 to $0712

@@ -1,0 +1,177 @@
+# Overview #
+
+The carnival world code is separated into 4 parts, one for each area of carnival world. In general, the code at B535 really only takes care of the roller coaster, everything else is handled by $9662, just like in other levels.
+
+Level initialization and ending is handled mostly within the code itself.
+
+
+# Details #
+
+## Part 1 ##
+
+This part controls map 2A, as well as initialization
+```
+006A5  A2 LDX #$05
+```
+05 is the index associated with an array containing level data. All levels are initialized this way.
+```
+006A7  EC CPX $0451
+```
+$0451 will be FF at this point, because the subroutine ED88 has been called once at the end of world 5. This subroutine clears out the previous levels data when run with 0451=FF, and loads the current level otherwise.
+```
+006AA  F0 BEQ $006AF
+```
+If they are equal, skip initializing
+```
+006AC  20 JSR $ED88
+```
+Level initialization. Same for all levels.
+```
+006AF  A9 LDA #$00
+
+006B1  85 STA $3F
+
+006B3  A5 LDA $FC
+
+006B5  C9 CMP #$02
+
+006B7  D0 BNE $006CD
+```
+look into this
+```
+006B9  A0 LDY #$0F
+
+006BB  20 JSR $AF7F
+
+006BE  B0 BCS $006CD
+
+006C0  A5 LDA $D4
+
+006C2  D0 BNE $006CD
+```
+What this does is control your Y position when you are exiting the bonus world tents.without it the game becomes quite confused because one tent is higher then the other.
+
+```
+006C4  AD LDA $0568
+
+006C7  18 CLC
+
+006C8  69 ADC #$10
+
+006CA  8D STA $0568
+```
+For whatever reason, this code is adding 16 pixels (1 height block) to the characters Y position (0568)
+```
+006CD  4C JMP $B535
+```
+B535 is the exit point for all areas, in other words, this code block handles all 4 areas of the level.
+
+
+## Part 2 ##
+```
+006D0  A0 LDY #$00
+
+006D2  20 JSR $88B6
+
+006D5  4C JMP $B535
+```
+The code for section 2 is the shortest. Not much to do.
+
+## Part 3 ##
+
+```
+006D8  A0 LDY #$01
+
+006DA  20 JSR $88B6
+
+006DD  8A TXA
+
+006DE  F0 BEQ $00700
+
+006E0  A0 LDY #$02
+```
+## Part 3.1 and Part 4 ##
+```
+006E2  DD CMP $03A0,X
+```
+This line actually contains a subtle trick. When it is run through from the previous section, it does nothing, but when it is run from section 3 of the level, it loads at the next byte, and becomes A0 03, loading 3 into Y. Note that without this step, 2 is still in Y, since it is from part 2
+```
+006E5  20 JSR $88B6
+```
+Need to see what 88B6 does
+```
+006E8  AD LDA $0558
+
+006EB  C9 CMP #$F0
+
+006ED  90 BCC $00700
+
+006EF  A2 LDX #$12
+
+006F1  BD LDA $B98B,X
+
+006F4  9D STA $0157,X
+
+006F7  CA DEX
+
+006F8  10 BPL $006F1
+
+006FA  20 JSR $8952
+
+006FD  4C JMP $81EE
+```
+This section of code ends the level. It does so by comparing the X position of the character against F0, the right edge of the level. After the jump to 81EE, the game never returns to the carnival code.
+
+```
+00700  A5 LDA $48
+
+00702  29 AND #$07
+
+00704  D0 BNE $00712
+
+00706  AD LDA $010B
+
+00709  AE LDX $010A
+
+0070C  8E STX $010B
+
+0070F  8D STA $010A
+
+00712  4C JMP $B535
+```
+This code is swapping masks for the pallet. This creates the ferris wheel 'animation.'
+```
+00715  C9 CMP #$2D
+```
+check sum values
+
+# Subroutines #
+
+## 88B6 ##
+```
+LDX #$FF
+
+LDA $045A
+
+CMP $88C9,Y
+
+BCC $88C6
+
+CMP $88D2,Y
+
+BCS (01)
+
+INX
+
+STX $00C1
+
+RTS
+```
+
+This subroutine compares the characters X position against certain places in the level. It controls the code that is run for that particular region. If they are within the region, X stays at FF, otherwise INX is run. Then it is stored in 00C1. I don't think the value in 00C1 matters, but the flags might. What this flag does is tell the game where jumping up above the screen will or won't lead to a screen transition when there is no roof there.
+
+Interestingly, it seem like this code is missing in level 2 where you can climb through the ceiling on the rope : )
+
+## AF7F ##
+
+Specialized subroutine for controlling y position when leaving a tent.
