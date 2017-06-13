@@ -1,0 +1,183 @@
+<html>
+<body>
+<script type="text/javascript">
+
+function generate_rng_table(memory)
+{
+    for (var i = 0; i <= 0xFF; i++)
+    {
+        for (var j = 0; j <= 0xFF; j++)
+        {
+            var rngA = i
+            var rngB = j
+            
+            var carry = 0
+            
+            rngB = (rngB + rngA) & 0xFF
+            
+            rngA = rngA + 0x89
+            carry = rngA > 0xFF ? 1 : 0
+            rngA = rngA & 0xFF
+            
+            rngB = rngB + 0x2A + carry
+            carry = rngB > 0xFF ? 1 : 0
+            rngB = rngB & 0xFF
+            
+            rngA = rngA + 0x21 + carry
+            carry = rngA > 0xFF ? 1 : 0
+            rngA = rngA & 0xFF
+            
+            rngB = rngB + 0x43 + carry
+            carry = rngB > 0xFF ? 1 : 0
+            rngB = rngB & 0xFF
+            
+            i32_rng_table[(i * 0x100 + j) * 2] = rngA
+            i32_rng_table[(i * 0x100 + j) * 2 + 1] = rngB
+        }
+    }
+}
+
+function run_rng()
+{
+    var newA = i32_rng_table[((i32_rng_seed[0] << 8) + i32_rng_seed[1]) * 2]
+    var newB = i32_rng_table[((i32_rng_seed[0] << 8) + i32_rng_seed[1]) * 2 + 1]
+    i32_rng_seed[0] = newA
+    i32_rng_seed[1] = newB
+    
+    return newA ^ newB
+}
+
+function fetchAndInstantiate(url, importObject) {
+  return fetch(url).then(response =>
+    response.arrayBuffer()
+  ).then(bytes =>
+    WebAssembly.instantiate(bytes, importObject)
+  ).then(results =>
+    results.instance
+  );
+}
+
+var memory = new WebAssembly.Memory({initial:10});
+var i32 = new Uint8Array(memory.buffer);
+var i32_rng_seed = new Uint8Array(memory.buffer, 0x00100);
+var i32_rng_table = new Uint8Array(memory.buffer, 0x10000);
+generate_rng_table(memory)
+
+var IV = [0x2c, 0xa5, 0xb4, 0x2d, 0xf7, 0x3a, 0x26, 0x12]
+
+function print_wc()
+{
+    var blah = ""
+    for (var i = 0; i < 128; i++)
+    {
+        blah += i32[i] + " "
+    }
+    console.log(blah)
+}
+
+function print_tc_result(test_case)
+{
+    var blah = ""
+    for (var i = 0; i < 128; i++)
+    {
+        blah += test_case[3+128+i] + " "
+    }
+    console.log(blah)
+}
+
+function run_alg_test(alg_id, iterations)
+{
+  var t0
+  var t1
+  
+  if (alg_id == 0)
+  {
+    t0 = performance.now();
+    wasm_instance.exports.test_alg_0(iterations)
+    t1 = performance.now();
+  }
+  else if (alg_id == 1)
+  {
+    t0 = performance.now();
+    wasm_instance.exports.test_alg_1(iterations)
+    t1 = performance.now();
+  }
+  else if (alg_id == 2)
+  {
+    t0 = performance.now();
+    wasm_instance.exports.test_alg_2(iterations)
+    t1 = performance.now();
+  }
+  else if (alg_id == 3)
+  {
+    t0 = performance.now();
+    wasm_instance.exports.test_alg_3(iterations)
+    t1 = performance.now();
+  }
+  else if (alg_id == 4)
+  {
+    t0 = performance.now();
+    wasm_instance.exports.test_alg_4(iterations)
+    t1 = performance.now();
+  }
+  else if (alg_id == 5)
+  {
+    t0 = performance.now();
+    wasm_instance.exports.test_alg_5(iterations)
+    t1 = performance.now();
+  }
+  else if (alg_id == 6)
+  {
+    t0 = performance.now();
+    wasm_instance.exports.test_alg_6(iterations)
+    t1 = performance.now();
+  }
+  else if (alg_id == 7)
+  {
+    t0 = performance.now();
+    wasm_instance.exports.test_alg_7(iterations)
+    t1 = performance.now();
+  }
+  
+  result_string = "Alg" + alg_id + " x" + iterations + " took " + (t1 - t0) + " milliseconds."
+  document.body.innerHTML += result_string + "<br />"
+  console.log(result_string);
+}
+
+
+var importObj = { js: { mem: memory } };
+
+var wasm_instance
+
+fetchAndInstantiate('process_code_8bit_manual.wasm', importObj).then(function(instance) {
+  wasm_instance = instance
+  
+  // Copy the starting value in, and back it up for later
+  for (var i = 0; i < 8; i++)
+  {
+      i32[i] = IV[i];
+  }
+
+  // Seed the RNG
+  i32_rng_seed[0] = i32[0]
+  i32_rng_seed[1] = i32[1]
+
+  // Expand the code to 128 bytes
+  for (var i = 8; i < 0x80; i++)
+  {
+      i32[i] = i32[i-8] + run_rng();
+  }
+
+  
+  for (var i = 0; i < 8; i++)
+  {
+      run_alg_test(i,100000)
+  }
+  
+  
+});
+
+
+</script>
+</body>
+</html>
