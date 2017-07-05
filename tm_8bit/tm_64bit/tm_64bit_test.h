@@ -1,6 +1,6 @@
 #ifndef TM_64BIT_TEST_H
 #define TM_64BIT_TEST_H
-#include "..\tm_8bit\data_sizes.h"
+#include "../tm_8bit/data_sizes.h"
 
 class tm_64bit_test
 {

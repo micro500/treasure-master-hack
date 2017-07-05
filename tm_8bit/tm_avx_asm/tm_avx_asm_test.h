@@ -1,6 +1,6 @@
 #ifndef TM_AVX_ASM_TEST_H
 #define TM_AVX_ASM_TEST_H
-#include "..\tm_8bit\data_sizes.h"
+#include "../tm_8bit/data_sizes.h"
 
 class tm_avx_asm_test
 {

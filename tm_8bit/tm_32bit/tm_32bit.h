@@ -1,7 +1,7 @@
 #ifndef TM_32BIT_H
 #define TM_32BIT_H
 
-#include "..\tm_8bit\data_sizes.h"
+#include "../tm_8bit/data_sizes.h"
 
 void generate_rng_table(uint16 * rng_table);
 

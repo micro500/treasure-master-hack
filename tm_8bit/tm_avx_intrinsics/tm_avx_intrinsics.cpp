@@ -9,7 +9,12 @@
 #include <immintrin.h> //AVX
 //#include <zmmintrin.h> //AVX512
 
-#include "..\tm_8bit\data_sizes.h"
+#include "../tm_8bit/data_sizes.h"
+
+#if defined(__GNUC__)
+#define _mm256_set_m128i(vh, vl) \
+        _mm256_castpd_si256(_mm256_insertf128_pd(_mm256_castsi256_pd(_mm256_castsi128_si256(vl)), _mm_castsi128_pd(vh), 1))
+#endif
 
 void generate_rng_table(uint16 * rng_table)
 {

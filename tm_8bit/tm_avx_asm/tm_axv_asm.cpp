@@ -7,7 +7,7 @@
 #include <nmmintrin.h> //SSE4.2
 //#include <ammintrin.h> //SSE4A
 
-#include "..\tm_8bit\data_sizes.h"
+#include "../tm_8bit/data_sizes.h"
 
 void generate_rng_table(uint16 * rng_table)
 {

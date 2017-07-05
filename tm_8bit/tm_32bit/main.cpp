@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <chrono>
 #include <iostream>
-#include "..\tm_8bit\data_sizes.h"
+#include "../tm_8bit/data_sizes.h"
 #include "tm_32bit_test.h"
 
 

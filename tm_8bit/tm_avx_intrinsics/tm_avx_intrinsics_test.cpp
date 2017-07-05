@@ -1,4 +1,5 @@
-#include "..\tm_8bit\data_sizes.h"
+#include "../tm_8bit/data_sizes.h"
+#include "alignment.h"
 #include "tm_avx_intrinsics_test.h"
 #include "tm_avx_intrinsics.h"
 
@@ -32,7 +33,7 @@ tm_avx_intrinsics_test::tm_avx_intrinsics_test()
 
 void tm_avx_intrinsics_test::process_test_case(uint8 * test_case, uint16 * rng_seed, int algorithm)
 {
-	__declspec(align(32)) uint16 working_code[128];
+	ALIGNED(32) uint16 working_code[128];
 
 	for (int i = 0; i < 128; i++)
 	{
@@ -84,7 +85,7 @@ void tm_avx_intrinsics_test::process_test_case(uint8 * test_case, uint16 * rng_s
 
 void tm_avx_intrinsics_test::run_iterations(uint8 * test_case, uint16 * rng_seed, int algorithm, int iterations)
 {
-	__declspec(align(32)) uint16 working_code[128];
+	ALIGNED(32) uint16 working_code[128];
 
 	for (int i = 0; i < 128; i++)
 	{

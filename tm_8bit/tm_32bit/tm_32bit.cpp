@@ -1,4 +1,4 @@
-#include "..\tm_8bit\data_sizes.h"
+#include "../tm_8bit/data_sizes.h"
 #include "tm_32bit.h"
 
 void generate_rng_table(uint16 * rng_table)

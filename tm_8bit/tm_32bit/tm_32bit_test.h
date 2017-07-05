@@ -1,6 +1,6 @@
 #ifndef TM_32BIT_TEST_H
 #define TM_32BIT_TEST_H
-#include "..\tm_8bit\data_sizes.h"
+#include "../tm_8bit/data_sizes.h"
 
 class tm_32bit_test
 {

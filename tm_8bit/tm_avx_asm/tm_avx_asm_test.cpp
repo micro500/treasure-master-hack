@@ -1,4 +1,4 @@
-#include "..\tm_8bit\data_sizes.h"
+#include "../tm_8bit/data_sizes.h"
 #include "tm_avx_asm_test.h"
 #include "tm_avx_asm.h"
 

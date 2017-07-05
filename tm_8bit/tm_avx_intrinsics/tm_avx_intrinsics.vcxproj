@@ -149,6 +149,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tm_8bit\data_sizes.h" />
+    <ClInclude Include="alignment.h" />
     <ClInclude Include="tm_avx_intrinsics.h" />
     <ClInclude Include="tm_avx_intrinsics_test.h" />
   </ItemGroup>

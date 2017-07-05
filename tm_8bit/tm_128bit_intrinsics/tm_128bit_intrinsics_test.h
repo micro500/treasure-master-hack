@@ -1,6 +1,6 @@
 #ifndef TM_128BIT_INTRINSIC_TEST_H
 #define TM_128BIT_INTRINSIC_TEST_H
-#include "..\tm_8bit\data_sizes.h"
+#include "../tm_8bit/data_sizes.h"
 
 class tm_128bit_intrinsics_test
 {
