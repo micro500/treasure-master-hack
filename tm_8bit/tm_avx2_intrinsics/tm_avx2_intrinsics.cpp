@@ -445,51 +445,35 @@ void run_alg(int alg_id, int iterations, uint8 * working_code, uint8 * regular_r
 			uint8 * rng_start = regular_rng_values + ((*rng_seed) * 128 * 2);
 
 			__m256i rng_val = _mm256_load_si256((__m256i *)(rng_start));
-			rng_val = _mm256_xor_si256 (rng_val, mask_FF);
-			working_code0 = _mm256_add_epi16(working_code0, rng_val);
-			working_code0 = _mm256_add_epi16(working_code0, mask_01);
+			working_code0 = _mm256_sub_epi16(working_code0,rng_val);
 			working_code0 = _mm256_and_si256 (working_code0, mask_FF);
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 32));
-			rng_val = _mm256_xor_si256 (rng_val, mask_FF);
-			working_code1 = _mm256_add_epi16(working_code1, rng_val);
-			working_code1 = _mm256_add_epi16(working_code1, mask_01);
+			working_code1 = _mm256_sub_epi16(working_code1,rng_val);
 			working_code1 = _mm256_and_si256 (working_code1, mask_FF);
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 64));
-			rng_val = _mm256_xor_si256 (rng_val, mask_FF);
-			working_code2 = _mm256_add_epi16(working_code2, rng_val);
-			working_code2 = _mm256_add_epi16(working_code2, mask_01);
+			working_code2 = _mm256_sub_epi16(working_code2,rng_val);
 			working_code2 = _mm256_and_si256 (working_code2, mask_FF);
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 96));
-			rng_val = _mm256_xor_si256 (rng_val, mask_FF);
-			working_code3 = _mm256_add_epi16(working_code3, rng_val);
-			working_code3 = _mm256_add_epi16(working_code3, mask_01);
+			working_code3 = _mm256_sub_epi16(working_code3,rng_val);
 			working_code3 = _mm256_and_si256 (working_code3, mask_FF);
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 128));
-			rng_val = _mm256_xor_si256 (rng_val, mask_FF);
-			working_code4 = _mm256_add_epi16(working_code4, rng_val);
-			working_code4 = _mm256_add_epi16(working_code4, mask_01);
+			working_code4 = _mm256_sub_epi16(working_code4,rng_val);
 			working_code4 = _mm256_and_si256 (working_code4, mask_FF);
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 160));
-			rng_val = _mm256_xor_si256 (rng_val, mask_FF);
-			working_code5 = _mm256_add_epi16(working_code5, rng_val);
-			working_code5 = _mm256_add_epi16(working_code5, mask_01);
+			working_code5 = _mm256_sub_epi16(working_code5,rng_val);
 			working_code5 = _mm256_and_si256 (working_code5, mask_FF);
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 192));
-			rng_val = _mm256_xor_si256 (rng_val, mask_FF);
-			working_code6 = _mm256_add_epi16(working_code6, rng_val);
-			working_code6 = _mm256_add_epi16(working_code6, mask_01);
+			working_code6 = _mm256_sub_epi16(working_code6,rng_val);
 			working_code6 = _mm256_and_si256 (working_code6, mask_FF);
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 224));
-			rng_val = _mm256_xor_si256 (rng_val, mask_FF);
-			working_code7 = _mm256_add_epi16(working_code7, rng_val);
-			working_code7 = _mm256_add_epi16(working_code7, mask_01);
+			working_code7 = _mm256_sub_epi16(working_code7,rng_val);
 			working_code7 = _mm256_and_si256 (working_code7, mask_FF);
 
 			*rng_seed = rng_forward_128[*rng_seed];
