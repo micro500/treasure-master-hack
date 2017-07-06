@@ -418,22 +418,22 @@ void run_alg(int alg_id, int iterations, uint8 * working_code, uint8 * regular_r
 			working_code1 = _mm256_xor_si256 (working_code1, rng_val);
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 64));
-			working_code2 = _mm256_xor_si256 (working_code0, rng_val);
+			working_code2 = _mm256_xor_si256 (working_code2, rng_val);
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 96));
-			working_code3 = _mm256_xor_si256 (working_code0, rng_val);
+			working_code3 = _mm256_xor_si256 (working_code3, rng_val);
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 128));
-			working_code4 = _mm256_xor_si256 (working_code0, rng_val);
+			working_code4 = _mm256_xor_si256 (working_code4, rng_val);
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 160));
-			working_code5 = _mm256_xor_si256 (working_code0, rng_val);
+			working_code5 = _mm256_xor_si256 (working_code5, rng_val);
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 192));
-			working_code6 = _mm256_xor_si256 (working_code0, rng_val);
+			working_code6 = _mm256_xor_si256 (working_code6, rng_val);
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 224));
-			working_code7 = _mm256_xor_si256 (working_code0, rng_val);
+			working_code7 = _mm256_xor_si256 (working_code7, rng_val);
 
 			*rng_seed = rng_forward_128[*rng_seed];
 		}
