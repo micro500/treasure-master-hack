@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx_asm", "tm_avx_asm\tm
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_axv_intrinsics2", "tm_axv_intrinsics2\tm_axv_intrinsics2.vcxproj", "{53C08328-2A0A-4791-8103-5381163D382A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx2_intrinsics", "tm_avx2_intrinsics\tm_avx2_intrinsics.vcxproj", "{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -108,6 +110,17 @@ Global
 		{53C08328-2A0A-4791-8103-5381163D382A}.Release|Win32.Build.0 = Release|Win32
 		{53C08328-2A0A-4791-8103-5381163D382A}.Release|x64.ActiveCfg = Release|x64
 		{53C08328-2A0A-4791-8103-5381163D382A}.Release|x64.Build.0 = Release|x64
+		{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}.Debug|Win32.ActiveCfg = Debug|Win32
+		{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}.Debug|Win32.Build.0 = Debug|Win32
+		{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}.Debug|x64.ActiveCfg = Debug|Win32
+		{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}.Release|Win32.ActiveCfg = Release|Win32
+		{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}.Release|Win32.Build.0 = Release|Win32
+		{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}.Release|x64.ActiveCfg = Release|x64
+		{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
