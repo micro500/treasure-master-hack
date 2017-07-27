@@ -545,74 +545,50 @@ void run_alg(int alg_id, int iterations, uint8 * working_code, uint8 * regular_r
 			uint8 * rng_start = regular_rng_values + ((*rng_seed) * 128 * 2);
 
 			__m256i rng_val = _mm256_load_si256((__m256i *)(rng_start));
-			rng_val = _mm256_castpd_si256(_mm256_xor_pd (_mm256_castsi256_pd(rng_val), _mm256_castsi256_pd(mask_FF)));
-			__m128i sum_lo = _mm_add_epi16(_mm256_castsi256_si128(working_code0), _mm256_castsi256_si128(rng_val));
-			sum_lo = _mm_add_epi16(sum_lo, _mm256_castsi256_si128(mask_01));
-			__m128i sum_hi = _mm_add_epi16(_mm256_extractf128_si256(working_code0,1), _mm256_extractf128_si256(rng_val,1));
-			sum_hi = _mm_add_epi16(sum_hi, _mm256_castsi256_si128(mask_01));
+			__m128i sum_lo = _mm_sub_epi16(_mm256_castsi256_si128(working_code0), _mm256_castsi256_si128(rng_val));
+			__m128i sum_hi = _mm_sub_epi16(_mm256_extractf128_si256(working_code0,1), _mm256_extractf128_si256(rng_val,1));
 			working_code0 = _mm256_set_m128i(sum_hi, sum_lo);
 			working_code0 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(working_code0), _mm256_castsi256_pd(mask_FF)));
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 32));
-			rng_val = _mm256_castpd_si256(_mm256_xor_pd (_mm256_castsi256_pd(rng_val), _mm256_castsi256_pd(mask_FF)));
-			sum_lo = _mm_add_epi16(_mm256_castsi256_si128(working_code1), _mm256_castsi256_si128(rng_val));
-			sum_lo = _mm_add_epi16(sum_lo, _mm256_castsi256_si128(mask_01));
-			sum_hi = _mm_add_epi16(_mm256_extractf128_si256(working_code1,1), _mm256_extractf128_si256(rng_val,1));
-			sum_hi = _mm_add_epi16(sum_hi, _mm256_castsi256_si128(mask_01));
+			sum_lo = _mm_sub_epi16(_mm256_castsi256_si128(working_code1), _mm256_castsi256_si128(rng_val));
+			sum_hi = _mm_sub_epi16(_mm256_extractf128_si256(working_code1,1), _mm256_extractf128_si256(rng_val,1));
 			working_code1 = _mm256_set_m128i(sum_hi, sum_lo);
 			working_code1 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(working_code1), _mm256_castsi256_pd(mask_FF)));
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 64));
-			rng_val = _mm256_castpd_si256(_mm256_xor_pd (_mm256_castsi256_pd(rng_val), _mm256_castsi256_pd(mask_FF)));
-			sum_lo = _mm_add_epi16(_mm256_castsi256_si128(working_code2), _mm256_castsi256_si128(rng_val));
-			sum_lo = _mm_add_epi16(sum_lo, _mm256_castsi256_si128(mask_01));
-			sum_hi = _mm_add_epi16(_mm256_extractf128_si256(working_code2,1), _mm256_extractf128_si256(rng_val,1));
-			sum_hi = _mm_add_epi16(sum_hi, _mm256_castsi256_si128(mask_01));
+			sum_lo = _mm_sub_epi16(_mm256_castsi256_si128(working_code2), _mm256_castsi256_si128(rng_val));
+			sum_hi = _mm_sub_epi16(_mm256_extractf128_si256(working_code2,1), _mm256_extractf128_si256(rng_val,1));
 			working_code2 = _mm256_set_m128i(sum_hi, sum_lo);
 			working_code2 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(working_code2), _mm256_castsi256_pd(mask_FF)));
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 96));
-			rng_val = _mm256_castpd_si256(_mm256_xor_pd (_mm256_castsi256_pd(rng_val), _mm256_castsi256_pd(mask_FF)));
-			sum_lo = _mm_add_epi16(_mm256_castsi256_si128(working_code3), _mm256_castsi256_si128(rng_val));
-			sum_lo = _mm_add_epi16(sum_lo, _mm256_castsi256_si128(mask_01));
-			sum_hi = _mm_add_epi16(_mm256_extractf128_si256(working_code3,1), _mm256_extractf128_si256(rng_val,1));
-			sum_hi = _mm_add_epi16(sum_hi, _mm256_castsi256_si128(mask_01));
+			sum_lo = _mm_sub_epi16(_mm256_castsi256_si128(working_code3), _mm256_castsi256_si128(rng_val));
+			sum_hi = _mm_sub_epi16(_mm256_extractf128_si256(working_code3,1), _mm256_extractf128_si256(rng_val,1));
 			working_code3 = _mm256_set_m128i(sum_hi, sum_lo);
 			working_code3 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(working_code3), _mm256_castsi256_pd(mask_FF)));
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 128));
-			rng_val = _mm256_castpd_si256(_mm256_xor_pd (_mm256_castsi256_pd(rng_val), _mm256_castsi256_pd(mask_FF)));
-			sum_lo = _mm_add_epi16(_mm256_castsi256_si128(working_code4), _mm256_castsi256_si128(rng_val));
-			sum_lo = _mm_add_epi16(sum_lo, _mm256_castsi256_si128(mask_01));
-			sum_hi = _mm_add_epi16(_mm256_extractf128_si256(working_code4,1), _mm256_extractf128_si256(rng_val,1));
-			sum_hi = _mm_add_epi16(sum_hi, _mm256_castsi256_si128(mask_01));
+			sum_lo = _mm_sub_epi16(_mm256_castsi256_si128(working_code4), _mm256_castsi256_si128(rng_val));
+			sum_hi = _mm_sub_epi16(_mm256_extractf128_si256(working_code4,1), _mm256_extractf128_si256(rng_val,1));
 			working_code4 = _mm256_set_m128i(sum_hi, sum_lo);
 			working_code4 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(working_code4), _mm256_castsi256_pd(mask_FF)));
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 160));
-			rng_val = _mm256_castpd_si256(_mm256_xor_pd (_mm256_castsi256_pd(rng_val), _mm256_castsi256_pd(mask_FF)));
-			sum_lo = _mm_add_epi16(_mm256_castsi256_si128(working_code5), _mm256_castsi256_si128(rng_val));
-			sum_lo = _mm_add_epi16(sum_lo, _mm256_castsi256_si128(mask_01));
-			sum_hi = _mm_add_epi16(_mm256_extractf128_si256(working_code5,1), _mm256_extractf128_si256(rng_val,1));
-			sum_hi = _mm_add_epi16(sum_hi, _mm256_castsi256_si128(mask_01));
+			sum_lo = _mm_sub_epi16(_mm256_castsi256_si128(working_code5), _mm256_castsi256_si128(rng_val));
+			sum_hi = _mm_sub_epi16(_mm256_extractf128_si256(working_code5,1), _mm256_extractf128_si256(rng_val,1));
 			working_code5 = _mm256_set_m128i(sum_hi, sum_lo);
 			working_code5 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(working_code5), _mm256_castsi256_pd(mask_FF)));
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 192));
-			rng_val = _mm256_castpd_si256(_mm256_xor_pd (_mm256_castsi256_pd(rng_val), _mm256_castsi256_pd(mask_FF)));
-			sum_lo = _mm_add_epi16(_mm256_castsi256_si128(working_code6), _mm256_castsi256_si128(rng_val));
-			sum_lo = _mm_add_epi16(sum_lo, _mm256_castsi256_si128(mask_01));
-			sum_hi = _mm_add_epi16(_mm256_extractf128_si256(working_code6,1), _mm256_extractf128_si256(rng_val,1));
-			sum_hi = _mm_add_epi16(sum_hi, _mm256_castsi256_si128(mask_01));
+			sum_lo = _mm_sub_epi16(_mm256_castsi256_si128(working_code6), _mm256_castsi256_si128(rng_val));
+			sum_hi = _mm_sub_epi16(_mm256_extractf128_si256(working_code6,1), _mm256_extractf128_si256(rng_val,1));
 			working_code6 = _mm256_set_m128i(sum_hi, sum_lo);
 			working_code6 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(working_code6), _mm256_castsi256_pd(mask_FF)));
 
 			rng_val = _mm256_load_si256((__m256i *)(rng_start + 224));
-			rng_val = _mm256_castpd_si256(_mm256_xor_pd (_mm256_castsi256_pd(rng_val), _mm256_castsi256_pd(mask_FF)));
-			sum_lo = _mm_add_epi16(_mm256_castsi256_si128(working_code7), _mm256_castsi256_si128(rng_val));
-			sum_lo = _mm_add_epi16(sum_lo, _mm256_castsi256_si128(mask_01));
-			sum_hi = _mm_add_epi16(_mm256_extractf128_si256(working_code7,1), _mm256_extractf128_si256(rng_val,1));
-			sum_hi = _mm_add_epi16(sum_hi, _mm256_castsi256_si128(mask_01));
+			sum_lo = _mm_sub_epi16(_mm256_castsi256_si128(working_code7), _mm256_castsi256_si128(rng_val));
+			sum_hi = _mm_sub_epi16(_mm256_extractf128_si256(working_code7,1), _mm256_extractf128_si256(rng_val,1));
 			working_code7 = _mm256_set_m128i(sum_hi, sum_lo);
 			working_code7 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(working_code7), _mm256_castsi256_pd(mask_FF)));
 
@@ -915,8 +891,6 @@ void run_alg(int alg_id, int iterations, uint8 * working_code, uint8 * regular_r
 		}
 	}
 
-
-
 	_mm256_store_si256 ((__m256i *)(working_code), working_code0);
 	_mm256_store_si256 ((__m256i *)(working_code + 32), working_code1);
 	_mm256_store_si256 ((__m256i *)(working_code + 64), working_code2);
@@ -926,285 +900,6 @@ void run_alg(int alg_id, int iterations, uint8 * working_code, uint8 * regular_r
 	_mm256_store_si256 ((__m256i *)(working_code + 192), working_code6);
 	_mm256_store_si256 ((__m256i *)(working_code + 224), working_code7);
 }
-
-/*
-void alg0(uint8 * working_code, uint8 * alg0_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
-{
-	//return;
-    for (int i = 0; i < 8; i++)
-    {
-		__m128i cur_val_lo = _mm_loadu_si128((__m128i *)(working_code + i*32));
-		cur_val_lo = _mm_slli_epi16(cur_val_lo,1);
-
-		__m128i cur_val_hi = _mm_loadu_si128((__m128i *)(working_code + i*32 + 16));
-		cur_val_hi = _mm_slli_epi16(cur_val_hi,1);
-
-		__m256i cur_val = _mm256_set_m128i(cur_val_hi, cur_val_lo);
-
-		__m256i rng_val = _mm256_load_si256((__m256i *)(alg0_values + ((*rng_seed) * 128 * 2) + (i * 32)));
-
-		cur_val = _mm256_castpd_si256(_mm256_or_pd (_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(rng_val)));
-
-		__m256i mask = _mm256_set1_epi16(0x00FF);
-		cur_val = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(mask)));
-		_mm256_store_si256 ((__m256i *)(working_code + i*32), cur_val);
-    }
-	*rng_seed = rng_forward[*rng_seed];
-}
-*/
-
-/*
-void alg1(uint8 * working_code, uint8 * regular_rng_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
-{
-	//return;
-    for (int i = 0; i < 8; i++)
-    {
-		__m256i cur_val = _mm256_load_si256((__m256i *)(working_code + i*32));
-		__m256i rng_val = _mm256_load_si256((__m256i *)(regular_rng_values + ((*rng_seed) * 128 * 2) + (i * 32)));
-
-		__m128i sum_lo = _mm_add_epi16(_mm256_castsi256_si128(cur_val), _mm256_castsi256_si128(rng_val));
-
-		cur_val = _mm256_castpd_si256(_mm256_permute2f128_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(cur_val), 1));
-		rng_val = _mm256_castpd_si256(_mm256_permute2f128_pd(_mm256_castsi256_pd(rng_val), _mm256_castsi256_pd(rng_val), 1));
-
-		__m128i sum_hi = _mm_add_epi16(_mm256_castsi256_si128(cur_val), _mm256_castsi256_si128(rng_val));
-
-		cur_val = _mm256_set_m128i(sum_hi, sum_lo);
-
-		__m256i mask = _mm256_set1_epi16(0x00FF);
-		cur_val = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(mask)));
-
-		_mm256_store_si256 ((__m256i *)(working_code + i*32), cur_val);
-    }
-	*rng_seed = rng_forward[*rng_seed];
-}
-*/
-
-/*
-void alg2(uint8 * working_code, uint8 * alg2_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
-{
-	//return;
-	// Load the 256 carry
-
-	// Fetch current working value
-	// Set the next carry by getting lowest of cur_val, shifting to top of 256
-		// do 128bit shift to top of 128 lane, then 256 permute
-
-	// Get extra carry:
-		// do shift to cur val lo, store to temp
-		// permute, do shift to hi, store to temp2
-		// combine into 256
-		// 256 mask it
-		// or with carry
-
-	// final combine
-		// shift cur val lo, store to temp 1
-		// shift cur val hi, store to temp 2
-		// combine into temp large
-		// mask it
-
-		// shift cur val lo, store to temp 1
-		// shift cur val hi, store to temp 2
-		// combine into temp large
-		// mask it
-
-		// Shift across 128 lanes...
-		// shift cur_val hi down 1 cell
-		// shift cur_val hi up 7 cells, keep top 0xFF (probably don't need to mask it) (carry across lanes)
-		// shift cur_val lo down 1 cell, or it with lane carry
-		// combine into a thing
-		// 256 mask it
-
-
-		// 256-or the 4 parts together
-
-
-	__m256i carry = _mm256_load_si256((__m256i *)(alg2_values + ((*rng_seed) * 32)));
-    for (int i = 7; i >= 0; i--)
-    {
-		__m256i cur_val = _mm256_load_si256((__m256i *)(working_code + i*32));
-		__m128i cur_val_lo = _mm256_castsi256_si128(cur_val);
-		cur_val = _mm256_castpd_si256(_mm256_permute2f128_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(cur_val), 1));
-		__m128i cur_val_hi = _mm256_castsi256_si128(cur_val);
-
-		// Maybe 128-bit mask it, then reinterpret-cast it to 256 and permute it?
-		__m256i next_carry = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(_mm256_set_m128i(_mm_slli_si128(cur_val_lo,14), cur_val_lo)), _mm256_castsi256_pd(_mm256_set_epi16(0x01,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0))));
-
-		// Fetch extra carry and apply it to carry
-		__m128i temp_lo = _mm_srli_si128(cur_val_lo,2);
-		temp_lo = _mm_or_si128(temp_lo, _mm_slli_si128(cur_val_hi,14));
-		__m128i temp_hi = _mm_srli_si128(cur_val_hi,2);
-		__m256i cur_val_srl = _mm256_set_m128i(temp_hi, temp_lo);
-		__m256i temp256 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(cur_val_srl), _mm256_castsi256_pd(_mm256_set_epi16(0,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0))));
-		carry = _mm256_castpd_si256(_mm256_or_pd (_mm256_castsi256_pd(carry),_mm256_castsi256_pd(temp256)));
-
-
-		temp_lo = _mm_srli_epi16(cur_val_lo,1);
-		temp_hi = _mm_srli_epi16(cur_val_hi,1);
-		temp256 = _mm256_set_m128i(temp_hi, temp_lo);
-		__m256i part1 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(temp256), _mm256_castsi256_pd(_mm256_set_epi16(0,0x7F,0,0x7F,0,0x7F,0,0x7F,0,0x7F,0,0x7F,0,0x7F,0,0x7F))));
-
-		temp_lo = _mm_slli_epi16(cur_val_lo,1);
-		temp_hi = _mm_slli_epi16(cur_val_hi,1);
-		temp256 = _mm256_set_m128i(temp_hi, temp_lo);
-		__m256i part2 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(temp256), _mm256_castsi256_pd(_mm256_set_epi16(0xFE,0,0xFE,0,0xFE,0,0xFE,0,0xFE,0,0xFE,0,0xFE,0,0xFE,0))));
-
-		__m256i part3 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(cur_val_srl), _mm256_castsi256_pd(_mm256_set_epi16(0,0x80,0,0x80,0,0x80,0,0x80,0,0x80,0,0x80,0,0x80,0,0x80))));
-
-		cur_val = _mm256_castpd_si256(_mm256_or_pd (_mm256_castsi256_pd(part1),_mm256_castsi256_pd(part2)));
-		cur_val = _mm256_castpd_si256(_mm256_or_pd (_mm256_castsi256_pd(cur_val),_mm256_castsi256_pd(part3)));
-		cur_val = _mm256_castpd_si256(_mm256_or_pd (_mm256_castsi256_pd(cur_val),_mm256_castsi256_pd(carry)));
-
-		_mm256_store_si256 ((__m256i *)(working_code + i*32), cur_val);
-
-		carry = next_carry;
-    }
-	*rng_seed = rng_forward[*rng_seed];
-}
-*/
-
-/*
-void alg3(uint8 * working_code, uint8 * regular_rng_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
-{
-	uint8 * rng_start = regular_rng_values + ((*rng_seed) * 128 * 2);
-	//return;
-    for (int i = 0; i < 8; i++)
-    {
-		__m256i cur_val = _mm256_load_si256((__m256i *)(working_code + i*32));
-		__m256i rng_val = _mm256_load_si256((__m256i *)(rng_start + (i * 32)));
-		cur_val = _mm256_castpd_si256(_mm256_xor_pd (_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(rng_val)));
-		_mm256_store_si256 ((__m256i *)(working_code + i*32), cur_val);
-    }
-	*rng_seed = rng_forward[*rng_seed];
-}
-*/
-
-/*
-void alg4(uint8 * working_code, uint8 * regular_rng_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
-{
-	//return;
-    for (int i = 0; i < 8; i++)
-    {
-		__m256i cur_val = _mm256_load_si256((__m256i *)(working_code + i*32));
-		__m256i rng_val = _mm256_load_si256((__m256i *)(regular_rng_values + ((*rng_seed) * 128 * 2) + (i * 32)));
-		__m256i mask = _mm256_set1_epi16(0x00FF);
-		__m128i one = _mm_set1_epi16(0x0001);
-		rng_val = _mm256_castpd_si256(_mm256_xor_pd (_mm256_castsi256_pd(rng_val), _mm256_castsi256_pd(mask)));
-
-		__m128i sum_lo = _mm_add_epi16(_mm256_castsi256_si128(cur_val), _mm256_castsi256_si128(rng_val));
-		sum_lo = _mm_add_epi16(sum_lo, one);
-
-		cur_val = _mm256_castpd_si256(_mm256_permute2f128_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(cur_val), 1));
-		rng_val = _mm256_castpd_si256(_mm256_permute2f128_pd(_mm256_castsi256_pd(rng_val), _mm256_castsi256_pd(rng_val), 1));
-
-		__m128i sum_hi = _mm_add_epi16(_mm256_castsi256_si128(cur_val), _mm256_castsi256_si128(rng_val));
-		sum_hi = _mm_add_epi16(sum_hi, one);
-
-		cur_val = _mm256_set_m128i(sum_hi, sum_lo);
-
-		cur_val = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(mask)));
-
-		_mm256_store_si256 ((__m256i *)(working_code + i*32), cur_val);
-    }
-	*rng_seed = rng_forward[*rng_seed];
-}
-*/
-
-/*
-void alg5(uint8* working_code, uint8 * alg5_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
-{
-	__m256i carry = _mm256_load_si256((__m256i *)(alg5_values + ((*rng_seed) * 32)));
-    for (int i = 7; i >= 0; i--)
-    {
-		__m256i cur_val = _mm256_load_si256((__m256i *)(working_code + i*32));
-		__m128i cur_val_lo = _mm256_castsi256_si128(cur_val);
-		cur_val = _mm256_castpd_si256(_mm256_permute2f128_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(cur_val), 1));
-		__m128i cur_val_hi = _mm256_castsi256_si128(cur_val);
-
-		// Maybe 128-bit mask it, then reinterpret-cast it to 256 and permute it?
-		__m256i next_carry = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(_mm256_set_m128i(_mm_slli_si128(cur_val_lo,14), cur_val_lo)), _mm256_castsi256_pd(_mm256_set_epi16(0x80,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0))));
-
-		// Fetch extra carry and apply it to carry
-		__m128i temp_lo = _mm_srli_si128(cur_val_lo,2);
-		temp_lo = _mm_or_si128(temp_lo, _mm_slli_si128(cur_val_hi,14));
-		__m128i temp_hi = _mm_srli_si128(cur_val_hi,2);
-		__m256i cur_val_srl = _mm256_set_m128i(temp_hi, temp_lo);
-		__m256i temp256 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(cur_val_srl), _mm256_castsi256_pd(_mm256_set_epi16(0,0,0x80,0,0x80,0,0x80,0,0x80,0,0x80,0,0x80,0,0x80,0))));
-		carry = _mm256_castpd_si256(_mm256_or_pd (_mm256_castsi256_pd(carry),_mm256_castsi256_pd(temp256)));
-
-
-		temp_lo = _mm_srli_epi16(cur_val_lo,1);
-		temp_hi = _mm_srli_epi16(cur_val_hi,1);
-		temp256 = _mm256_set_m128i(temp_hi, temp_lo);
-		__m256i part1 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(temp256), _mm256_castsi256_pd(_mm256_set_epi16(0x7F,0,0x7F,0,0x7F,0,0x7F,0,0x7F,0,0x7F,0,0x7F,0,0x7F,0))));
-
-		temp_lo = _mm_slli_epi16(cur_val_lo,1);
-		temp_hi = _mm_slli_epi16(cur_val_hi,1);
-		temp256 = _mm256_set_m128i(temp_hi, temp_lo);
-		__m256i part2 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(temp256), _mm256_castsi256_pd(_mm256_set_epi16(0,0xFE,0,0xFE,0,0xFE,0,0xFE,0,0xFE,0,0xFE,0,0xFE,0,0xFE))));
-
-		__m256i part3 = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(cur_val_srl), _mm256_castsi256_pd(_mm256_set_epi16(0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1))));
-
-		cur_val = _mm256_castpd_si256(_mm256_or_pd (_mm256_castsi256_pd(part1),_mm256_castsi256_pd(part2)));
-		cur_val = _mm256_castpd_si256(_mm256_or_pd (_mm256_castsi256_pd(cur_val),_mm256_castsi256_pd(part3)));
-		cur_val = _mm256_castpd_si256(_mm256_or_pd (_mm256_castsi256_pd(cur_val),_mm256_castsi256_pd(carry)));
-
-		_mm256_store_si256 ((__m256i *)(working_code + i*32), cur_val);
-
-		carry = next_carry;
-    }
-	*rng_seed = rng_forward[*rng_seed];
-
-
-
-
-
-
-
-	return;
-}
-*/
-
-/*
-void alg6(uint8 * working_code, uint8 * alg6_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
-{
-	//return;
-    for (int i = 0; i < 8; i++)
-    {
-		__m128i cur_val_lo = _mm_loadu_si128((__m128i *)(working_code + i*32));
-		cur_val_lo = _mm_srli_epi16(cur_val_lo,1);
-
-		__m128i cur_val_hi = _mm_loadu_si128((__m128i *)(working_code + i*32 + 16));
-		cur_val_hi = _mm_srli_epi16(cur_val_hi,1);
-
-		__m256i cur_val = _mm256_set_m128i(cur_val_hi, cur_val_lo);
-
-		__m256i rng_val = _mm256_load_si256((__m256i *)(alg6_values + ((*rng_seed) * 128 * 2) + (i * 32)));
-
-		cur_val = _mm256_castpd_si256(_mm256_or_pd (_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(rng_val)));
-
-		__m256i mask = _mm256_set1_epi16(0x00FF);
-		cur_val = _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(mask)));
-		_mm256_store_si256 ((__m256i *)(working_code + i*32), cur_val);
-
-    }
-	*rng_seed = rng_forward[*rng_seed];
-}
-*/
-
-/*
-void alg7(uint8 * working_code)
-{
-	//return;
-    for (int i = 0; i < 8; i++)
-    {
-		__m256i cur_val = _mm256_load_si256((__m256i *)(working_code + i*32));
-		__m256i mask = _mm256_set1_epi16(0x00FF);
-		cur_val = _mm256_castpd_si256(_mm256_xor_pd (_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(mask)));
-		_mm256_store_si256 ((__m256i *)(working_code + i*32), cur_val);
-    }
-}
-*/
 
 void * aligned_malloc(int byte_count, int align_size)
 {
