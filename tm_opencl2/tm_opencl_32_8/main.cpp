@@ -132,10 +132,10 @@ int main()
 		//Cleanup(EXIT_FAILURE);
 	}
  
-	size_t global_item_size[3] = {512, 10000, 1};
+	size_t global_item_size[3] = {256, 10000, 1};
 	//size_t global_item_size[3] = {32, 1, 1};
 
-	size_t local_item_size[3] = {64,1,1};
+	size_t local_item_size[3] = {32,1,1};
 	//size_t local_item_size[3] = {32,1,1};
 
 	
@@ -154,18 +154,18 @@ int main()
 	uint16 * rng_table = new uint16[256*256];
 	generate_rng_table(rng_table);
 
-	uint16 * regular_rng_values = new uint16[0x10000 * 128];
-	generate_regular_rng_values_16(regular_rng_values, rng_table);
+	uint8 * regular_rng_values = new uint8[0x10000 * 128];
+	generate_regular_rng_values_8(regular_rng_values, rng_table);
 
 	cl_mem regular_rng_values_d = NULL;
-	regular_rng_values_d = clCreateBuffer(context, CL_MEM_READ_WRITE, 0x10000 * 128 * 2, NULL, &ret);
+	regular_rng_values_d = clCreateBuffer(context, CL_MEM_READ_WRITE, 0x10000 * 128, NULL, &ret);
 	if (ret != CL_SUCCESS)
 	{
 		printf("Error in clCreateBuffer, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
 		//Cleanup(EXIT_FAILURE);
 	}
 
-	ret = clEnqueueWriteBuffer(command_queue, regular_rng_values_d, CL_TRUE, 0, 0x10000 * 128 * 2, regular_rng_values, 0, NULL, NULL);
+	ret = clEnqueueWriteBuffer(command_queue, regular_rng_values_d, CL_TRUE, 0, 0x10000 * 128, regular_rng_values, 0, NULL, NULL);
 	if (ret != CL_SUCCESS)
 	{
 		printf("Error in clEnqueueWriteBuffer, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
@@ -174,18 +174,18 @@ int main()
 
 	ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&regular_rng_values_d);
 
-	uint16 * alg0_values = new uint16[0x10000 * 128];
-	generate_alg0_values_16(alg0_values, rng_table);
+	uint8 * alg0_values = new uint8[0x10000 * 128];
+	generate_alg0_values_8(alg0_values, rng_table);
 
 	cl_mem alg0_values_d = NULL;
-	alg0_values_d = clCreateBuffer(context, CL_MEM_READ_WRITE, 0x10000 * 128 * 2, NULL, &ret);
+	alg0_values_d = clCreateBuffer(context, CL_MEM_READ_WRITE, 0x10000 * 128, NULL, &ret);
 	if (ret != CL_SUCCESS)
 	{
 		printf("Error in clCreateBuffer, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
 		//Cleanup(EXIT_FAILURE);
 	}
 
-	ret = clEnqueueWriteBuffer(command_queue, alg0_values_d, CL_TRUE, 0, 0x10000 * 128 * 2, alg0_values, 0, NULL, NULL);
+	ret = clEnqueueWriteBuffer(command_queue, alg0_values_d, CL_TRUE, 0, 0x10000 * 128, alg0_values, 0, NULL, NULL);
 	if (ret != CL_SUCCESS)
 	{
 		printf("Error in clEnqueueWriteBuffer, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
@@ -194,18 +194,18 @@ int main()
 
 	ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&alg0_values_d);
 
-	uint16 * alg6_values = new uint16[0x10000 * 128];
-	generate_alg6_values_16(alg6_values, rng_table);
+	uint8 * alg6_values = new uint8[0x10000 * 128];
+	generate_alg6_values_8(alg6_values, rng_table);
 
 	cl_mem alg6_values_d = NULL;
-	alg6_values_d = clCreateBuffer(context, CL_MEM_READ_WRITE, 0x10000 * 128 * 2, NULL, &ret);
+	alg6_values_d = clCreateBuffer(context, CL_MEM_READ_WRITE, 0x10000 * 128, NULL, &ret);
 	if (ret != CL_SUCCESS)
 	{
 		printf("Error in clCreateBuffer, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
 		//Cleanup(EXIT_FAILURE);
 	}
 
-	ret = clEnqueueWriteBuffer(command_queue, alg6_values_d, CL_TRUE, 0, 0x10000 * 128 * 2, alg6_values, 0, NULL, NULL);
+	ret = clEnqueueWriteBuffer(command_queue, alg6_values_d, CL_TRUE, 0, 0x10000 * 128, alg6_values, 0, NULL, NULL);
 	if (ret != CL_SUCCESS)
 	{
 		printf("Error in clEnqueueWriteBuffer, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
@@ -257,7 +257,7 @@ int main()
 
 
 	uint32 * alg2_values = new uint32[0x10000];
-	generate_alg2_values_32_16(alg2_values, rng_table);
+	generate_alg2_values_32_8(alg2_values, rng_table);
 
 	cl_mem alg2_values_d = NULL;
 	alg2_values_d = clCreateBuffer(context, CL_MEM_READ_WRITE, 0x10000 * 4, NULL, &ret);
@@ -277,7 +277,7 @@ int main()
 	ret = clSetKernelArg(kernel, 6, sizeof(cl_mem), (void *)&alg2_values_d);
 
 	uint32 * alg5_values = new uint32[0x10000];
-	generate_alg5_values_32_16(alg5_values, rng_table);
+	generate_alg5_values_32_8(alg5_values, rng_table);
 
 	cl_mem alg5_values_d = NULL;
 	alg5_values_d = clCreateBuffer(context, CL_MEM_READ_WRITE, 0x10000 * 4, NULL, &ret);
@@ -306,7 +306,7 @@ int main()
 	}
 
 	unsigned char *test_case_answers = (unsigned char*)malloc((128 + 2) * 80000);
-	unsigned char *code_space_h = (unsigned char*)malloc((128*2 + 2 + 1) * 80000);
+	unsigned char *code_space_h = (unsigned char*)malloc((128 + 2 + 1) * 80000);
 
 	// Fetch all the test cases
 	for (int j = 0; j < 80000; j++)
@@ -315,14 +315,14 @@ int main()
 		{
 			int val;
 			fscanf (pFile, "%i,", &val);
-			*(code_space_h + j*(128*2+2+1) + i) = val & 0xFF;
+			*(code_space_h + j*(128+2+1) + i) = val & 0xFF;
 		}
 
 		for (int i = 0; i < 128; i++)
 		{
 			int val;
 			fscanf (pFile, "%i,", &val);
-			*(unsigned short*)(code_space_h + j*(128*2+2+1) + i*2 + 3) = val & 0xFF;
+			*(unsigned char*)(code_space_h + j*(128+2+1) + i + 3) = val & 0xFF;
 		}
 
 		for (int i = 0; i < 130; i++)
@@ -333,7 +333,7 @@ int main()
 		}
 	}
 
-	ret = clEnqueueWriteBuffer(command_queue, code_space_d, CL_TRUE, 0, (128*2 + 2 + 1) * 80000, code_space_h, 0, NULL, NULL);
+	ret = clEnqueueWriteBuffer(command_queue, code_space_d, CL_TRUE, 0, (128 + 2 + 1) * 80000, code_space_h, 0, NULL, NULL);
 	if (ret != CL_SUCCESS)
 	{
 		printf("Error in clEnqueueWriteBuffer, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
@@ -357,7 +357,7 @@ int main()
 	clWaitForEvents(1, &event);
 
 	// Copy results from the memory buffer
-	ret = clEnqueueReadBuffer(command_queue, code_space_d, CL_TRUE, 0, (128*2 + 2 + 1) * 80000, code_space_h, 0, NULL, NULL);
+	ret = clEnqueueReadBuffer(command_queue, code_space_d, CL_TRUE, 0, (128 + 2 + 1) * 80000, code_space_h, 0, NULL, NULL);
 	if (ret != CL_SUCCESS)
 	{
 		printf("(%i) Error in clEnqueueReadBuffer, Line %u in file %s !!!\n\n", ret, __LINE__, __FILE__);
@@ -371,14 +371,14 @@ int main()
 		int matching = 1;
 		for (int i = 0; i < 128; i++)
 		{
-			if (*(unsigned short*)(code_space_h + j*(128*2+2+1) + i*2 + 3) != test_case_answers[j * 130 + 2 + i])
+			if (*(unsigned char*)(code_space_h + j*(128+2+1) + i + 3) != test_case_answers[j * 130 + 2 + i])
 			{
 				matching = 0;
 				break;
 			}
 		}
 
-		if (*(unsigned short*)(code_space_h + j*(128*2+2+1) + 1) != *(unsigned short*)(test_case_answers  + j * 130))
+		if (*(unsigned short*)(code_space_h + j*(128+2+1) + 1) != *(unsigned short*)(test_case_answers  + j * 130))
 		{
 			matching = 0;
 		}
