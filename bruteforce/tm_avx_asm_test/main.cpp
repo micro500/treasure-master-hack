@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <chrono>
 #include <iostream>
-#include "../tm_8bit/data_sizes.h"
+#include "data_sizes.h"
 #include "tm_avx_asm_test.h"
 
 

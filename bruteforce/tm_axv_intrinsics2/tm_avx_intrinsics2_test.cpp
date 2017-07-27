@@ -1,4 +1,4 @@
-#include "../tm_8bit/data_sizes.h"
+#include "data_sizes.h"
 #include "alignment.h"
 #include "tm_avx_intrinsics2_test.h"
 #include "tm_avx_intrinsics2.h"

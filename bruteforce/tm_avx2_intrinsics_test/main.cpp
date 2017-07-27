@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <chrono>
 #include <iostream>
-#include "../tm_8bit/data_sizes.h"
+#include "data_sizes.h"
 #include "tm_avx2_intrinsics_test.h"
 
 

@@ -1,4 +1,4 @@
-#include "../tm_8bit/data_sizes.h"
+#include "data_sizes.h"
 #include "tm_64bit_test.h"
 #include "tm_64bit.h"
 

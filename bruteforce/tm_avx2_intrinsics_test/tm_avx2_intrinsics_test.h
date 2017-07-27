@@ -1,6 +1,6 @@
 #ifndef TM_AVX2_INTRINSICS_TEST_H
 #define TM_AVX2_INTRINSICS_TEST_H
-#include "../tm_8bit/data_sizes.h"
+#include "data_sizes.h"
 
 class tm_avx2_intrinsics_test
 {

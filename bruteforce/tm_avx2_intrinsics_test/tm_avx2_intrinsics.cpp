@@ -9,7 +9,7 @@
 #include <immintrin.h> //AVX
 //#include <zmmintrin.h> //AVX512
 
-#include "../tm_8bit/data_sizes.h"
+#include "data_sizes.h"
 
 #if defined(__GNUC__)
 #define _mm256_set_m128i(vh, vl) \

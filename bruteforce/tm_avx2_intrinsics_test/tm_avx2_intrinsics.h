@@ -12,7 +12,7 @@
 #include <immintrin.h> //AVX
 //#include <zmmintrin.h> //AVX512
 
-#include "../tm_8bit/data_sizes.h"
+#include "data_sizes.h"
 
 void generate_rng_table(uint16 * rng_table);
 
