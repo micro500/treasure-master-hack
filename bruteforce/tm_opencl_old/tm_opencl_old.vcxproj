@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{DD5EB7BD-C563-4CC9-B0E4-C4F23ED3F752}</ProjectGuid>
+    <ProjectGuid>{DD02FE2A-1930-4ABE-8A2A-FE7DDA2A01F8}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>tm_opencl</RootNamespace>
   </PropertyGroup>
