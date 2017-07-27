@@ -1,0 +1,8 @@
+**/Release/
+**/Debug/
+**/*.opensdf
+**/*.sdf
+**/*.vcxproj.filters
+**/*.vcxproj.user
+**/*.suo
+**/TM_test_cases_OUT.txt
