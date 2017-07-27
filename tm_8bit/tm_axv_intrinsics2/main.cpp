@@ -122,7 +122,7 @@ int main()
 		auto start = clock::now();
 		tester.run_iterations(test_data,&rng_seed,i,10000000);
 		auto end = clock::now();
-		std::cout << duration_cast<microseconds>(end-start).count() << "us\n";
+		std::cout << i << " " << duration_cast<microseconds>(end-start).count() << "us\n";
 	}
 
 }
