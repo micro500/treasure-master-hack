@@ -148,6 +148,7 @@
     <ClInclude Include="tm_64bit_test.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\common\rng.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tm_64bit.cpp" />
     <ClCompile Include="tm_64bit_test.cpp" />

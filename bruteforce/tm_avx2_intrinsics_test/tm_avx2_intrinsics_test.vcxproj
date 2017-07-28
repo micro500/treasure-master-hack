@@ -143,12 +143,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\common\rng.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tm_avx2_intrinsics.cpp" />
     <ClCompile Include="tm_avx2_intrinsics_test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="alignment.h" />
     <ClInclude Include="tm_avx2_intrinsics.h" />
     <ClInclude Include="tm_avx2_intrinsics_test.h" />
   </ItemGroup>

@@ -1,47 +1,6 @@
 #include "data_sizes.h"
 #include "tm_8bit.h"
-
-void generate_rng_table(uint16 * rng_table)
-{
-    for (int i = 0; i <= 0xFF; i++)
-    {
-        for (int j = 0; j <= 0xFF; j++)
-        {
-            unsigned int rngA = i;
-            unsigned int rngB = j;
-            
-            uint8 carry = 0;
-            
-            rngB = (rngB + rngA) & 0xFF;
-            
-            rngA = rngA + 0x89;
-            carry = rngA > 0xFF ? 1 : 0;
-            rngA = rngA & 0xFF;
-            
-            rngB = rngB + 0x2A + carry;
-            carry = rngB > 0xFF ? 1 : 0;
-            rngB = rngB & 0xFF;
-            
-            rngA = rngA + 0x21 + carry;
-            carry = rngA > 0xFF ? 1 : 0;
-            rngA = rngA & 0xFF;
-            
-            rngB = rngB + 0x43 + carry;
-            carry = rngB > 0xFF ? 1 : 0;
-            rngB = rngB & 0xFF;
-            
-            rng_table[(i * 0x100) + j] = (rngA << 8) | rngB;
-        }
-    }
-}
-
-uint8 run_rng(uint16 * rng_seed, uint16 * rng_table)
-{
-	uint16 result = rng_table[*rng_seed];
-	*rng_seed = result;
-
-	return ((result >> 8) ^ (result)) & 0xFF;
-}
+#include "rng.h"
 
 void working_code_alg_0 (uint8 * working_code, uint16 * rng_seed, uint16 * rng_table)
 {

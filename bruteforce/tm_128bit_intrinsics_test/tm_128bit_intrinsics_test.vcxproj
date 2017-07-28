@@ -143,13 +143,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\common\rng.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tm_128bit_intrinsics.cpp" />
     <ClCompile Include="tm_128bit_intrinsics_test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\tm_8bit\data_sizes.h" />
-    <ClInclude Include="alignment.h" />
     <ClInclude Include="tm_128bit_intrinsics.h" />
     <ClInclude Include="tm_128bit_intrinsics_test.h" />
   </ItemGroup>

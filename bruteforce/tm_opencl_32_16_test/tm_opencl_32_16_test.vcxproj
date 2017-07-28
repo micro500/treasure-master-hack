@@ -168,12 +168,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\common\rng.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="rng.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="data_sizes.h" />
-    <ClInclude Include="rng.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

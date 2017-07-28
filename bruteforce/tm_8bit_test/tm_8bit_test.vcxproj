@@ -144,6 +144,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\common\rng.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tm_8bit.cpp" />
     <ClCompile Include="tm_8bit_test.cpp" />

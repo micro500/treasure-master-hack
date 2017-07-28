@@ -1,6 +1,7 @@
 #include "data_sizes.h"
 #include "tm_8bit_test.h"
 #include "tm_8bit.h"
+#include "rng.h"
 
 tm_8bit_test::tm_8bit_test()
 {

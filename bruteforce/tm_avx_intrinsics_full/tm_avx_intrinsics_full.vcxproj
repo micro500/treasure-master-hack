@@ -144,13 +144,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\common\rng.cpp" />
     <ClCompile Include="key_schedule.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tm_avx_intrinsics.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="alignment.h" />
-    <ClInclude Include="data_sizes.h" />
     <ClInclude Include="key_schedule.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

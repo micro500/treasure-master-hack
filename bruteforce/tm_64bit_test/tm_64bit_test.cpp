@@ -1,6 +1,7 @@
 #include "data_sizes.h"
 #include "tm_64bit_test.h"
 #include "tm_64bit.h"
+#include "rng.h"
 
 tm_64bit_test::tm_64bit_test()
 {
@@ -8,25 +9,25 @@ tm_64bit_test::tm_64bit_test()
 	generate_rng_table(this->rng_table);
 
 	regular_rng_values = new uint16[0x10000 * 128];
-	generate_regular_rng_values(regular_rng_values, &rng_seed, rng_table);
+	generate_regular_rng_values_16(regular_rng_values, rng_table);
 
 	alg0_values = new uint16[0x10000 * 128];
-	generate_alg0_values(alg0_values, &rng_seed, rng_table);
+	generate_alg0_values_16(alg0_values, rng_table);
 
 	alg6_values = new uint16[0x10000 * 128];
-	generate_alg6_values(alg6_values, &rng_seed, rng_table);
+	generate_alg6_values_16(alg6_values, rng_table);
 
 	alg2_values_64 = new uint64[0x10000 * 128];
-	generate_alg2_values(alg2_values_64, &rng_seed, rng_table);
+	generate_alg2_values_64_16(alg2_values_64, rng_table);
 
 	alg5_values_64 = new uint64[0x10000 * 128];
-	generate_alg5_values(alg5_values_64, &rng_seed, rng_table);
+	generate_alg5_values_64_16(alg5_values_64, rng_table);
 
 	rng_seed_forward_1 = new uint16[256*256];
 	generate_seed_forward_1(rng_seed_forward_1, rng_table);
 
 	rng_seed_forward_128 = new uint16[256*256];
-	generate_seed_forward_128(rng_seed_forward_128, &rng_seed, rng_table);
+	generate_seed_forward_128(rng_seed_forward_128, rng_table);
 }
 
 void tm_64bit_test::process_test_case(uint8 * test_case, uint16 * rng_seed, int algorithm)

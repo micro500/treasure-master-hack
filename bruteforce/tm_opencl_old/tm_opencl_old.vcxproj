@@ -173,7 +173,6 @@
     <ClCompile Include="rng.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="data_sizes.h" />
     <ClInclude Include="key_schedule.h" />
     <ClInclude Include="rng.h" />
   </ItemGroup>
