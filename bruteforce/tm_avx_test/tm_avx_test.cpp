@@ -1,7 +1,7 @@
 #include "data_sizes.h"
 #include "alignment.h"
-#include "tm_avx_intrinsics_test.h"
-#include "tm_avx_intrinsics.h"
+#include "tm_avx_test.h"
+#include "tm_avx.h"
 #include "rng.h"
 
 tm_avx_intrinsics_test::tm_avx_intrinsics_test()

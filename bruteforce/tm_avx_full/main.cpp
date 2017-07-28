@@ -14,7 +14,7 @@
 #include <iostream>
 
 #include "alignment.h"
-#include "tm_avx_intrinsics.h"
+#include "tm_avx_full.h"
 #include "key_schedule.h"
 #include "data_sizes.h"
 #include "rng.h"

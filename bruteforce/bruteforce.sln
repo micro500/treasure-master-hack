@@ -7,17 +7,17 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_32bit_test", "tm_32bit_t
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_64bit_test", "tm_64bit_test\tm_64bit_test.vcxproj", "{8FB22887-C536-497E-8C98-A2AEEF5783B8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_128bit_intrinsics_test", "tm_128bit_intrinsics_test\tm_128bit_intrinsics_test.vcxproj", "{57F6372F-665D-49AF-AC6A-F3AF09F24410}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_128bit_test", "tm_128bit_test\tm_128bit_test.vcxproj", "{57F6372F-665D-49AF-AC6A-F3AF09F24410}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx_intrinsics_test", "tm_avx_intrinsics_test\tm_avx_intrinsics_test.vcxproj", "{D9601486-7DDA-413B-9A46-C9FCA5405566}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx_test", "tm_avx_test\tm_avx_test.vcxproj", "{D9601486-7DDA-413B-9A46-C9FCA5405566}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx_asm_test", "tm_avx_asm_test\tm_avx_asm_test.vcxproj", "{27D1CF92-1264-4615-87BD-55FC4E30C0A8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx_in_cpu_test", "tm_avx_in_cpu_test\tm_avx_in_cpu_test.vcxproj", "{53C08328-2A0A-4791-8103-5381163D382A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx2_intrinsics_test", "tm_avx2_intrinsics_test\tm_avx2_intrinsics_test.vcxproj", "{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx2_test", "tm_avx2_test\tm_avx2_test.vcxproj", "{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx_intrinsics_full", "tm_avx_intrinsics_full\tm_avx_intrinsics_full.vcxproj", "{1C06ABD4-26A0-452E-98F7-20426CFDF81C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx_full", "tm_avx_full\tm_avx_full.vcxproj", "{1C06ABD4-26A0-452E-98F7-20426CFDF81C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_opencl_32_8_test", "tm_opencl_32_8_test\tm_opencl_32_8_test.vcxproj", "{625DC25A-7231-4666-9C05-70485613BCFD}"
 EndProject

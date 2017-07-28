@@ -147,7 +147,7 @@
     <ClCompile Include="..\common\rng.cpp" />
     <ClCompile Include="key_schedule.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="tm_avx_intrinsics.h" />
+    <ClCompile Include="tm_avx_full.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="key_schedule.h" />

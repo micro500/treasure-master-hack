@@ -1,7 +1,7 @@
 #include "data_sizes.h"
 #include "alignment.h"
-#include "tm_128bit_intrinsics_test.h"
-#include "tm_128bit_intrinsics.h"
+#include "tm_128bit_test.h"
+#include "tm_128bit.h"
 #include "rng.h"
 
 tm_128bit_intrinsics_test::tm_128bit_intrinsics_test()
