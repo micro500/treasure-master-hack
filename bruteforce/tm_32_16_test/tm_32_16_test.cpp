@@ -1,6 +1,6 @@
 #include "data_sizes.h"
-#include "tm_32bit_test.h"
-#include "tm_32bit.h"
+#include "tm_32_16_test.h"
+#include "tm_32_16.h"
 #include "rng.h"
 
 tm_32bit_test::tm_32bit_test()

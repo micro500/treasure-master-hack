@@ -2,7 +2,7 @@
 #include <chrono>
 #include <iostream>
 #include "data_sizes.h"
-#include "tm_32bit_test.h"
+#include "tm_32_16_test.h"
 
 
 int main()
