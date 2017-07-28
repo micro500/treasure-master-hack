@@ -2,7 +2,7 @@
 #include <chrono>
 #include <iostream>
 #include "data_sizes.h"
-#include "tm_avx_intrinsics2_test.h"
+#include "tm_avx_in_cpu_test.h"
 
 
 int main()

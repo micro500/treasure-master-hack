@@ -146,12 +146,12 @@
   <ItemGroup>
     <ClCompile Include="..\common\rng.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="tm_avx_intrinsics2.cpp" />
-    <ClCompile Include="tm_avx_intrinsics2_test.cpp" />
+    <ClCompile Include="tm_avx_in_cpu.cpp" />
+    <ClCompile Include="tm_avx_in_cpu_test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="tm_avx_intrinsics2.h" />
-    <ClInclude Include="tm_avx_intrinsics2_test.h" />
+    <ClInclude Include="tm_avx_in_cpu.h" />
+    <ClInclude Include="tm_avx_in_cpu_test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
