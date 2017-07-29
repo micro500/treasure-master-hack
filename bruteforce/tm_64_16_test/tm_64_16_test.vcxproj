@@ -143,15 +143,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\tm_8bit\data_sizes.h" />
-    <ClInclude Include="tm_64bit.h" />
-    <ClInclude Include="tm_64bit_test.h" />
+    <ClInclude Include="tm_64_16.h" />
+    <ClInclude Include="tm_64_16_test.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\rng.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="tm_64bit.cpp" />
-    <ClCompile Include="tm_64bit_test.cpp" />
+    <ClCompile Include="tm_64_16.cpp" />
+    <ClCompile Include="tm_64_16_test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

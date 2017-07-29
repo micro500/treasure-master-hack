@@ -5,7 +5,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_8bit_test", "tm_8bit_tes
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_32_16_test", "tm_32_16_test\tm_32_16_test.vcxproj", "{790328D2-3EF0-4065-8333-87B6DE7170B8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_64bit_test", "tm_64bit_test\tm_64bit_test.vcxproj", "{8FB22887-C536-497E-8C98-A2AEEF5783B8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_64_16_test", "tm_64_16_test\tm_64_16_test.vcxproj", "{8FB22887-C536-497E-8C98-A2AEEF5783B8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_128bit_test", "tm_128bit_test\tm_128bit_test.vcxproj", "{57F6372F-665D-49AF-AC6A-F3AF09F24410}"
 EndProject

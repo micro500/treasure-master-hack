@@ -1,11 +1,11 @@
-#ifndef TM_64BIT_TEST_H
-#define TM_64BIT_TEST_H
+#ifndef TM_64_16_TEST_H
+#define TM_64_16_TEST_H
 #include "data_sizes.h"
 
-class tm_64bit_test
+class tm_64_16_test
 {
 public:
-	tm_64bit_test();
+	tm_64_16_test();
 
 	void process_test_case(uint8 * test_case, uint16 *rng_seed, int algorithm);
 	void run_iterations(uint8 * test_case, uint16 * rng_seed, int algorithm, int iterations);
@@ -28,4 +28,4 @@ public:
 
 };
 
-#endif //TM_64BIT_TEST_H
+#endif //TM_64_16_TEST_H

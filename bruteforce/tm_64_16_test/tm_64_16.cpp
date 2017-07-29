@@ -1,5 +1,5 @@
 #include "data_sizes.h"
-#include "tm_64bit.h"
+#include "tm_64_16.h"
 
 void alg0(uint64 * working_code, uint64 * alg0_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
 {
