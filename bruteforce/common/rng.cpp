@@ -70,6 +70,32 @@ void generate_regular_rng_values_16(uint16 * regular_rng_values, uint16 * rng_ta
     }
 }
 
+void generate_regular_rng_values_8_hi(uint8 * regular_rng_values_hi, uint16 * rng_table)
+{
+	generate_regular_rng_values_8(regular_rng_values_hi, rng_table);
+
+    for (int i = 0; i < 0x10000; i++)
+    {
+        for (int j = 0; j < 128; j+=2)
+        {
+            regular_rng_values_hi[i*128 + (127 - j) + 1] = 0;
+        }
+    }
+}
+
+void generate_regular_rng_values_8_lo(uint8 * regular_rng_values_lo, uint16 * rng_table)
+{
+	generate_regular_rng_values_8(regular_rng_values_lo, rng_table);
+
+    for (int i = 0; i < 0x10000; i++)
+    {
+        for (int j = 0; j < 128; j+=2)
+        {
+            regular_rng_values_lo[i*128 + (127 - j)] = 0;
+        }
+    }
+}
+
 void generate_alg0_values_8(uint8 * alg0_values, uint16 * rng_table)
 {
 	uint16 rng_seed;
@@ -92,6 +118,34 @@ void generate_alg0_values_16(uint16 * alg0_values, uint16 * rng_table)
         for (int j = 0; j < 128; j++)
         {
             alg0_values[i*128 + (127 - j)] = (run_rng(&rng_seed, rng_table) >> 7) & 0x01;
+        }
+    }
+}
+
+void generate_alg4_values_8_hi(uint8 * alg4_values_hi, uint16 * rng_table)
+{
+	generate_regular_rng_values_8(alg4_values_hi, rng_table);
+
+    for (int i = 0; i < 0x10000; i++)
+    {
+        for (int j = 0; j < 128; j+=2)
+        {
+			alg4_values_hi[i*128 + (127 - j)] = (alg4_values_hi[i*128 + (127 - j)] ^ 0xFF) + 1;
+            alg4_values_hi[i*128 + (127 - j) + 1] = 0;
+        }
+    }
+}
+
+void generate_alg4_values_8_lo(uint8 * alg4_values_lo, uint16 * rng_table)
+{
+	generate_regular_rng_values_8(alg4_values_lo, rng_table);
+
+    for (int i = 0; i < 0x10000; i++)
+    {
+        for (int j = 0; j < 128; j+=2)
+        {
+            alg4_values_lo[i*128 + (127 - j)] = 0;
+			alg4_values_lo[i*128 + (127 - j) + 1] = (alg4_values_lo[i*128 + (127 - j) + 1] ^ 0xFF) + 1;
         }
     }
 }
