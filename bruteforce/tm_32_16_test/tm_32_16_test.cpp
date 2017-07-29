@@ -3,7 +3,7 @@
 #include "tm_32_16.h"
 #include "rng.h"
 
-tm_32bit_test::tm_32bit_test()
+tm_32_16_test::tm_32_16_test()
 {
 	this->rng_table = new uint16[256*256];
 	generate_rng_table(this->rng_table);
@@ -30,7 +30,7 @@ tm_32bit_test::tm_32bit_test()
 	generate_seed_forward_128(rng_seed_forward_128, rng_table);
 }
 
-void tm_32bit_test::process_test_case(uint8 * test_case, uint16 * rng_seed, int algorithm)
+void tm_32_16_test::process_test_case(uint8 * test_case, uint16 * rng_seed, int algorithm)
 {
 	uint16 working_code[128];
 
@@ -82,7 +82,7 @@ void tm_32bit_test::process_test_case(uint8 * test_case, uint16 * rng_seed, int 
 	*rng_seed = this->rng_seed;
 }
 
-void tm_32bit_test::run_iterations(uint8 * test_case, uint16 * rng_seed, int algorithm, int iterations)
+void tm_32_16_test::run_iterations(uint8 * test_case, uint16 * rng_seed, int algorithm, int iterations)
 {
 	uint16 working_code[128];
 

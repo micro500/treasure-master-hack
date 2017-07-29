@@ -23,7 +23,7 @@ int main()
 		return 0;
 	}
 
-	tm_32bit_test tester;
+	tm_32_16_test tester;
 	bool all_tests_passed = true;
 	for (int j = 0; j < 80000; j++)
 	{
