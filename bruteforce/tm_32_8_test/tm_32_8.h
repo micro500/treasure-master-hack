@@ -1,5 +1,5 @@
-#ifndef TM_32BIT_H
-#define TM_32BIT_H
+#ifndef TM_32_8_H
+#define TM_32_8_H
 
 #include "data_sizes.h"
 
@@ -17,4 +17,4 @@ void alg6(uint32 * working_code, uint32 * alg6_values, uint16 * rng_seed, uint16
 
 void alg7(uint32 * working_code);
 
-#endif //TM_32BIT_H
+#endif //TM_32_8_H

@@ -1,5 +1,5 @@
-#ifndef TM_32BIT_TEST_H
-#define TM_32BIT_TEST_H
+#ifndef TM_32_16_TEST_H
+#define TM_32_16_TEST_H
 #include "data_sizes.h"
 
 class tm_32_16_test
@@ -29,4 +29,4 @@ public:
 
 };
 
-#endif //TM_32BIT_TEST_H
+#endif //TM_32_16_TEST_H
