@@ -150,6 +150,19 @@ void generate_alg4_values_8_lo(uint8 * alg4_values_lo, uint16 * rng_table)
     }
 }
 
+void generate_alg4_values_16(uint16 * alg4_values, uint16 * rng_table)
+{
+	generate_regular_rng_values_16(alg4_values, rng_table);
+
+    for (int i = 0; i < 0x10000; i++)
+    {
+        for (int j = 0; j < 128; j++)
+        {
+			alg4_values[i*128 + j] = (alg4_values[i*128 + j] ^ 0x00FF) + 1;
+        }
+    }
+}
+
 void generate_alg6_values_8(uint8 * alg6_values, uint16 * rng_table)
 {
 	uint16 rng_seed;

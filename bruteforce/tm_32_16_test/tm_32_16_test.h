@@ -20,6 +20,8 @@ public:
 
 	uint16 * alg6_values;
 
+	uint16 * alg4_values;
+
 	uint32 * alg2_values_32;
 
 	uint32 * alg5_values_32;

@@ -21,6 +21,8 @@ void generate_alg6_values_16(uint16 * alg6_values, uint16 * rng_table);
 void generate_alg4_values_8_lo(uint8 * alg4_values_lo, uint16 * rng_table);
 void generate_alg4_values_8_hi(uint8 * alg4_values_hi, uint16 * rng_table);
 
+void generate_alg4_values_16(uint16 * alg4_values, uint16 * rng_table);
+
 void generate_alg2_values_32_8(uint32 * alg2_values, uint16 * rng_table);
 void generate_alg2_values_32_16(uint32 * alg2_values, uint16 * rng_table);
 void generate_alg2_values_64_16(uint64 * alg2_values, uint16 * rng_table);

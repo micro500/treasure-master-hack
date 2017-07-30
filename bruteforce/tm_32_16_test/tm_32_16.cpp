@@ -42,15 +42,6 @@ void alg3(uint32 * working_code, uint32 * regular_rng_values, uint16 * rng_seed,
 	*rng_seed = rng_forward[*rng_seed];
 }
 
-void alg4(uint32 * working_code, uint32 * regular_rng_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
-{
-    for (int i = 0; i < 64; i++)
-    {
-        working_code[i] = (working_code[i] + (regular_rng_values[(*rng_seed * 128) / 2 + i] ^ 0xFF00FF) + 0x010001) & 0xFF00FF;
-    }
-	*rng_seed = rng_forward[*rng_seed];
-}
-
 void alg5(uint32 * working_code, uint32 * alg5_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
 {
     uint32 carry = alg5_values[*rng_seed];
