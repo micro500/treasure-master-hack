@@ -209,6 +209,16 @@ void generate_alg2_values_32_16(uint32 * alg2_values, uint16 * rng_table)
     }
 }
 
+void generate_alg2_values_64_8(uint64 * alg2_values, uint16 * rng_table)
+{
+	uint16 rng_seed;
+    for (int i = 0; i < 0x10000; i++)
+    {
+        rng_seed = i;
+        alg2_values[i] = ((uint64)run_rng(&rng_seed, rng_table) & 0x80) << 49;
+    }
+}
+
 void generate_alg2_values_64_16(uint64 * alg2_values, uint16 * rng_table)
 {
 	uint16 rng_seed;
@@ -264,6 +274,16 @@ void generate_alg5_values_32_16(uint32 * alg5_values, uint16 * rng_table)
     {
         rng_seed = i;
         alg5_values[i] = (run_rng(&rng_seed, rng_table) & 0x80) << 16;
+    }
+}
+
+void generate_alg5_values_64_8(uint64 * alg5_values, uint16 * rng_table)
+{
+	uint16 rng_seed;
+    for (int i = 0; i < 0x10000; i++)
+    {
+        rng_seed = i;
+        alg5_values[i] = ((uint64)run_rng(&rng_seed, rng_table) & 0x80) << 56;
     }
 }
 
