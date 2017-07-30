@@ -145,12 +145,12 @@
   <ItemGroup>
     <ClCompile Include="..\common\rng.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="tm_128bit.cpp" />
-    <ClCompile Include="tm_128bit_test.cpp" />
+    <ClCompile Include="tm_128_16.cpp" />
+    <ClCompile Include="tm_128_16_test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="tm_128bit.h" />
-    <ClInclude Include="tm_128bit_test.h" />
+    <ClInclude Include="tm_128_16.h" />
+    <ClInclude Include="tm_128_16_test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

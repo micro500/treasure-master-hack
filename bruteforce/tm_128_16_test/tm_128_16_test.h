@@ -1,11 +1,11 @@
-#ifndef TM_128BIT_INTRINSIC_TEST_H
-#define TM_128BIT_INTRINSIC_TEST_H
+#ifndef TM_128_16_TEST_H
+#define TM_128_16_TEST_H
 #include "data_sizes.h"
 
-class tm_128bit_intrinsics_test
+class tm_128_16_test
 {
 public:
-	tm_128bit_intrinsics_test();
+	tm_128_16_test();
 
 	void process_test_case(uint8 * test_case, uint16 *rng_seed, int algorithm);
 	void run_iterations(uint8 * test_case, uint16 * rng_seed, int algorithm, int iterations);
@@ -32,4 +32,4 @@ public:
 
 };
 
-#endif //TM_128BIT_INTRINSIC_TEST_H
+#endif //TM_128_16_TEST_H
