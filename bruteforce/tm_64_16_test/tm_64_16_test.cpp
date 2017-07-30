@@ -17,6 +17,9 @@ tm_64_16_test::tm_64_16_test()
 	alg6_values = new uint16[0x10000 * 128];
 	generate_alg6_values_16(alg6_values, rng_table);
 
+	alg4_values = new uint16[0x10000 * 128];
+	generate_alg4_values_16(alg4_values, rng_table);
+
 	alg2_values_64 = new uint64[0x10000 * 128];
 	generate_alg2_values_64_16(alg2_values_64, rng_table);
 
@@ -59,7 +62,7 @@ void tm_64_16_test::process_test_case(uint8 * test_case, uint16 * rng_seed, int 
 	}
 	else if (algorithm == 4)
 	{
-		alg4((uint64*)working_code, (uint64*)regular_rng_values, &(this->rng_seed), this->rng_table, rng_seed_forward_128);
+		alg1((uint64*)working_code, (uint64*)alg4_values, &(this->rng_seed), this->rng_table, rng_seed_forward_128);
 	}
 	else if (algorithm == 5)
 	{
@@ -126,7 +129,7 @@ void tm_64_16_test::run_iterations(uint8 * test_case, uint16 * rng_seed, int alg
 	{
 		for (int i = 0; i < iterations; i++)
 		{
-			alg4((uint64*)working_code, (uint64*)regular_rng_values, &(this->rng_seed), this->rng_table, rng_seed_forward_128);
+			alg1((uint64*)working_code, (uint64*)alg4_values, &(this->rng_seed), this->rng_table, rng_seed_forward_128);
 		}
 	}
 	else if (algorithm == 5)
