@@ -9,7 +9,6 @@ tm_128_16_test::tm_128_16_test()
 	this->rng_table = new uint16[256*256];
 	generate_rng_table(this->rng_table);
 
-
 	regular_rng_values = (uint16*)aligned_malloc(0x10000 * 128 * 2, 32); // new uint16[0x10000 * 128];
 	generate_regular_rng_values_16(regular_rng_values, rng_table);
 
@@ -18,6 +17,9 @@ tm_128_16_test::tm_128_16_test()
 
 	alg6_values = (uint16*)aligned_malloc(0x10000 * 128 * 2, 32); //new uint16[0x10000 * 128];
 	generate_alg6_values_16(alg6_values, rng_table);
+
+	alg4_values = (uint16*)aligned_malloc(0x10000 * 128 * 2, 32); //new uint16[0x10000 * 128];
+	generate_alg4_values_16(alg4_values, rng_table);
 
 	alg2_values_8 = (uint8*)aligned_malloc(0x10000 * 16, 32); //new uint64[0x10000 * 128];
 	generate_alg2_values_128_16(alg2_values_8, rng_table);
@@ -61,7 +63,7 @@ void tm_128_16_test::process_test_case(uint8 * test_case, uint16 * rng_seed, int
 	}
 	else if (algorithm == 4)
 	{
-		alg4((uint8*)working_code, (uint8*)regular_rng_values, &(this->rng_seed), this->rng_table, rng_seed_forward_128);
+		alg1((uint8*)working_code, (uint8*)alg4_values, &(this->rng_seed), this->rng_table, rng_seed_forward_128);
 	}
 	else if (algorithm == 5)
 	{
@@ -128,7 +130,7 @@ void tm_128_16_test::run_iterations(uint8 * test_case, uint16 * rng_seed, int al
 	{
 		for (int i = 0; i < iterations; i++)
 		{
-			alg4((uint8*)working_code, (uint8*)regular_rng_values, &(this->rng_seed), this->rng_table, rng_seed_forward_128);
+			alg1((uint8*)working_code, (uint8*)alg4_values, &(this->rng_seed), this->rng_table, rng_seed_forward_128);
 		}
 	}
 	else if (algorithm == 5)
