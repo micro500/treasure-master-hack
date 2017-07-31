@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2012 for Windows Desktop
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_8bit_test", "tm_8bit_test\tm_8bit_test.vcxproj", "{82D55A68-2299-4655-8C12-E478E5D72989}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_8_test", "tm_8_test\tm_8_test.vcxproj", "{82D55A68-2299-4655-8C12-E478E5D72989}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_32_16_test", "tm_32_16_test\tm_32_16_test.vcxproj", "{790328D2-3EF0-4065-8333-87B6DE7170B8}"
 EndProject

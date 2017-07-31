@@ -2,7 +2,7 @@
 #include <chrono>
 #include <iostream>
 #include "data_sizes.h"
-#include "tm_8bit_test.h"
+#include "tm_8_test.h"
 
 
 int main()
@@ -23,7 +23,7 @@ int main()
 		return 0;
 	}
 
-	tm_8bit_test tester;
+	tm_8_test tester;
 	bool all_tests_passed = true;
 	for (int j = 0; j < 80000; j++)
 	{

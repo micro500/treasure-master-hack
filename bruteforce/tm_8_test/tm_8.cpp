@@ -1,5 +1,5 @@
 #include "data_sizes.h"
-#include "tm_8bit.h"
+#include "tm_8.h"
 #include "rng.h"
 
 void working_code_alg_0 (uint8 * working_code, uint16 * rng_seed, uint16 * rng_table)

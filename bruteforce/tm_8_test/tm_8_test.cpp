@@ -1,15 +1,15 @@
 #include "data_sizes.h"
-#include "tm_8bit_test.h"
-#include "tm_8bit.h"
+#include "tm_8_test.h"
+#include "tm_8.h"
 #include "rng.h"
 
-tm_8bit_test::tm_8bit_test()
+tm_8_test::tm_8_test()
 {
 	rng_table = new uint16[256*256];
 	generate_rng_table(this->rng_table);
 }
 
-void tm_8bit_test::process_test_case(uint8 * test_case, uint16 * rng_seed, int algorithm)
+void tm_8_test::process_test_case(uint8 * test_case, uint16 * rng_seed, int algorithm)
 {
 	uint8 working_code[128];
 
@@ -61,7 +61,7 @@ void tm_8bit_test::process_test_case(uint8 * test_case, uint16 * rng_seed, int a
 	*rng_seed = this->rng_seed;
 }
 
-void tm_8bit_test::run_iterations(uint8 * test_case, uint16 * rng_seed, int algorithm, int iterations)
+void tm_8_test::run_iterations(uint8 * test_case, uint16 * rng_seed, int algorithm, int iterations)
 {
 	uint8 working_code[128];
 
