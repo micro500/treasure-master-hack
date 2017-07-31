@@ -183,13 +183,12 @@ void alg6(uint8 * working_code, uint8 * alg6_values, uint16 * rng_seed, uint16 *
 void alg7(uint8 * working_code)
 {
 	//return;
+	__m128i mask = _mm_set1_epi16(0x00FF);
     for (int i = 0; i < 16; i++)
     {
 		__m128i cur_val = _mm_loadu_si128((__m128i *)(working_code + i*16));
-		__m128i mask = _mm_set1_epi16(0x00FF);
+		
 		cur_val = _mm_xor_si128 (cur_val, mask);
 		_mm_store_si128 ((__m128i *)(working_code + i*16), cur_val);
-
-        //working_code[i] = working_code[i] ^ 0x00FF00FF00FF00FFull;
     }
 }
