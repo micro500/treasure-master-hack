@@ -79,7 +79,7 @@ void tm_64_16_test::process_test_case(uint8 * test_case, uint16 * rng_seed, int 
 
 	for (int i = 0; i < 128; i++)
 	{
-		test_case[i] = working_code[i];
+		test_case[i] = (uint8)working_code[i];
 	}
 
 	*rng_seed = this->rng_seed;

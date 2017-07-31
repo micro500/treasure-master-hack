@@ -155,7 +155,7 @@ void main()
 
 						// If the flag is a 1, get the high nibble of the current byte
 						// Otherwise use the low nibble
-						unsigned char current_byte = working_code[i];
+						unsigned char current_byte = (uint8)working_code[i];
 			
 						if (nibble == 1)
 						{

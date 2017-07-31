@@ -46,9 +46,9 @@ int main()
 		tester.process_test_case(test_data,&rng_seed,test_case[0]);
 
 		int matching = 1;
-		for (int j = 0; j < 128; j++)
+		for (int i = 0; i < 128; i++)
 		{
-			if (test_data[j] != test_case[3+128+2+j])
+			if (test_data[i] != test_case[3+128+2+i])
 			{
 				matching = 0;
 				break;
