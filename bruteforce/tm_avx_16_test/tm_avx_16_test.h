@@ -1,11 +1,11 @@
-#ifndef TM_AVX_INTRINSIC_TEST_H
-#define TM_AVX_INTRINSIC_TEST_H
+#ifndef TM_AVX_16_TEST_H
+#define TM_AVX_16_TEST_H
 #include "data_sizes.h"
 
-class tm_avx_intrinsics_test
+class tm_avx_16_test
 {
 public:
-	tm_avx_intrinsics_test();
+	tm_avx_16_test();
 
 	void process_test_case(uint8 * test_case, uint16 *rng_seed, int algorithm);
 	void run_iterations(uint8 * test_case, uint16 * rng_seed, int algorithm, int iterations);
@@ -29,4 +29,4 @@ public:
 
 };
 
-#endif //TM_AVX_INTRINSIC_TEST_H
+#endif //TM_AVX_16_TEST_H

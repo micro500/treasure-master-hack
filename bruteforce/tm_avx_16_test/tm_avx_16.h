@@ -1,5 +1,5 @@
-#ifndef TM_AVX_INTRINSICS_H
-#define TM_AVX_INTRINSICS_H
+#ifndef TM_AVX_16_H
+#define TM_AVX_16_H
 
 #include <mmintrin.h>  //MMX
 #include <xmmintrin.h> //SSE
@@ -28,4 +28,4 @@ void alg6(uint8 * working_code, uint8 * alg6_values, uint16 * rng_seed, uint16 *
 
 void alg7(uint8 * working_code);
 
-#endif //TM_AVX_INTRINSICS_H
+#endif //TM_AVX_16_H

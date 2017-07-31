@@ -2,7 +2,7 @@
 #include <chrono>
 #include <iostream>
 #include "data_sizes.h"
-#include "tm_avx_test.h"
+#include "tm_avx_16_test.h"
 
 
 int main()
@@ -23,7 +23,7 @@ int main()
 		return 0;
 	}
 
-	tm_avx_intrinsics_test tester;
+	tm_avx_16_test tester;
 	bool all_tests_passed = true;
 	for (int j = 0; j < 80000; j++)
 	{

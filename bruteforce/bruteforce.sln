@@ -9,7 +9,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_64_16_test", "tm_64_16_t
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_128_16_test", "tm_128_16_test\tm_128_16_test.vcxproj", "{57F6372F-665D-49AF-AC6A-F3AF09F24410}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx_test", "tm_avx_test\tm_avx_test.vcxproj", "{D9601486-7DDA-413B-9A46-C9FCA5405566}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx_16_test", "tm_avx_16_test\tm_avx_16_test.vcxproj", "{D9601486-7DDA-413B-9A46-C9FCA5405566}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx_asm_test", "tm_avx_asm_test\tm_avx_asm_test.vcxproj", "{27D1CF92-1264-4615-87BD-55FC4E30C0A8}"
 EndProject

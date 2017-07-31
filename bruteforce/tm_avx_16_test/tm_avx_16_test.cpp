@@ -1,10 +1,10 @@
 #include "data_sizes.h"
 #include "alignment.h"
-#include "tm_avx_test.h"
-#include "tm_avx.h"
+#include "tm_avx_16_test.h"
+#include "tm_avx_16.h"
 #include "rng.h"
 
-tm_avx_intrinsics_test::tm_avx_intrinsics_test()
+tm_avx_16_test::tm_avx_16_test()
 {
 	this->rng_table = new uint16[256*256];
 	generate_rng_table(this->rng_table);
@@ -35,7 +35,7 @@ tm_avx_intrinsics_test::tm_avx_intrinsics_test()
 	generate_seed_forward_128(rng_seed_forward_128, rng_table);
 }
 
-void tm_avx_intrinsics_test::process_test_case(uint8 * test_case, uint16 * rng_seed, int algorithm)
+void tm_avx_16_test::process_test_case(uint8 * test_case, uint16 * rng_seed, int algorithm)
 {
 	ALIGNED(32) uint16 working_code[128];
 
@@ -87,7 +87,7 @@ void tm_avx_intrinsics_test::process_test_case(uint8 * test_case, uint16 * rng_s
 	*rng_seed = this->rng_seed;
 }
 
-void tm_avx_intrinsics_test::run_iterations(uint8 * test_case, uint16 * rng_seed, int algorithm, int iterations)
+void tm_avx_16_test::run_iterations(uint8 * test_case, uint16 * rng_seed, int algorithm, int iterations)
 {
 	ALIGNED(32) uint16 working_code[128];
 
