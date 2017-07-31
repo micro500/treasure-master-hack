@@ -22,14 +22,10 @@ void alg2(uint8 * working_code, uint8 * alg2_values, uint16 * rng_seed, uint16 *
 
 void alg3(uint8 * working_code, uint8 * regular_rng_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward);
 
-void alg4(uint8 * working_code, uint8 * regular_rng_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward);
-
 void alg5(uint8* working_code, uint8 * alg5_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward);
-
 
 void alg6(uint8 * working_code, uint8 * alg6_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward);
 
-
 void alg7(uint8 * working_code);
-void * aligned_malloc(int byte_count, int align_size);
+
 #endif //TM_AVX_INTRINSICS_H

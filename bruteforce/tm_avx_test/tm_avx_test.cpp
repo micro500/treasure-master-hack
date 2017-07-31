@@ -19,6 +19,9 @@ tm_avx_intrinsics_test::tm_avx_intrinsics_test()
 	alg6_values = (uint16*)aligned_malloc(0x10000 * 128 * 2, 32); //new uint16[0x10000 * 128];
 	generate_alg6_values_16(alg6_values, rng_table);
 
+	alg4_values = (uint16*)aligned_malloc(0x10000 * 128 * 2, 32); //new uint16[0x10000 * 128];
+	generate_alg4_values_16(alg4_values, rng_table);
+
 	alg2_values_8 = (uint8*)aligned_malloc(0x10000 * 32, 32); //new uint64[0x10000 * 128];
 	generate_alg2_values_256_16(alg2_values_8, rng_table);
 
@@ -61,7 +64,7 @@ void tm_avx_intrinsics_test::process_test_case(uint8 * test_case, uint16 * rng_s
 	}
 	else if (algorithm == 4)
 	{
-		alg4((uint8*)working_code, (uint8*)regular_rng_values, &(this->rng_seed), this->rng_table, rng_seed_forward_128);
+		alg1((uint8*)working_code, (uint8*)alg4_values, &(this->rng_seed), this->rng_table, rng_seed_forward_128);
 	}
 	else if (algorithm == 5)
 	{
@@ -128,7 +131,7 @@ void tm_avx_intrinsics_test::run_iterations(uint8 * test_case, uint16 * rng_seed
 	{
 		for (int i = 0; i < iterations; i++)
 		{
-			alg4((uint8*)working_code, (uint8*)regular_rng_values, &(this->rng_seed), this->rng_table, rng_seed_forward_128);
+			alg1((uint8*)working_code, (uint8*)alg4_values, &(this->rng_seed), this->rng_table, rng_seed_forward_128);
 		}
 	}
 	else if (algorithm == 5)
