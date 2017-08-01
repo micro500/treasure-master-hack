@@ -11,8 +11,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_128_16_test", "tm_128_16
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx_16_test", "tm_avx_16_test\tm_avx_16_test.vcxproj", "{D9601486-7DDA-413B-9A46-C9FCA5405566}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx_asm_test", "tm_avx_asm_test\tm_avx_asm_test.vcxproj", "{27D1CF92-1264-4615-87BD-55FC4E30C0A8}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx_in_cpu_test", "tm_avx_in_cpu_test\tm_avx_in_cpu_test.vcxproj", "{53C08328-2A0A-4791-8103-5381163D382A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_avx2_test", "tm_avx2_test\tm_avx2_test.vcxproj", "{49092DCE-4AA5-4A9C-A1AF-A59A1114C590}"
@@ -103,14 +101,6 @@ Global
 		{D9601486-7DDA-413B-9A46-C9FCA5405566}.Release|Win32.Build.0 = Release|Win32
 		{D9601486-7DDA-413B-9A46-C9FCA5405566}.Release|x64.ActiveCfg = Release|x64
 		{D9601486-7DDA-413B-9A46-C9FCA5405566}.Release|x64.Build.0 = Release|x64
-		{27D1CF92-1264-4615-87BD-55FC4E30C0A8}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
-		{27D1CF92-1264-4615-87BD-55FC4E30C0A8}.Debug|Mixed Platforms.Build.0 = Debug|x64
-		{27D1CF92-1264-4615-87BD-55FC4E30C0A8}.Debug|Win32.ActiveCfg = Debug|x64
-		{27D1CF92-1264-4615-87BD-55FC4E30C0A8}.Debug|x64.ActiveCfg = Debug|x64
-		{27D1CF92-1264-4615-87BD-55FC4E30C0A8}.Release|Mixed Platforms.ActiveCfg = Release|x64
-		{27D1CF92-1264-4615-87BD-55FC4E30C0A8}.Release|Mixed Platforms.Build.0 = Release|x64
-		{27D1CF92-1264-4615-87BD-55FC4E30C0A8}.Release|Win32.ActiveCfg = Release|x64
-		{27D1CF92-1264-4615-87BD-55FC4E30C0A8}.Release|x64.ActiveCfg = Release|x64
 		{53C08328-2A0A-4791-8103-5381163D382A}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
 		{53C08328-2A0A-4791-8103-5381163D382A}.Debug|Mixed Platforms.Build.0 = Debug|Win32
 		{53C08328-2A0A-4791-8103-5381163D382A}.Debug|Win32.ActiveCfg = Debug|Win32
