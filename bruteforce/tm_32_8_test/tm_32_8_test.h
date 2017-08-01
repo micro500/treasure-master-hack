@@ -25,9 +25,9 @@ public:
 
 	uint8 * alg6_values;
 
-	uint32 * alg2_values_32;
+	uint32 * alg2_values;
 
-	uint32 * alg5_values_32;
+	uint32 * alg5_values;
 
 	uint16 *rng_seed_forward_1;
 	uint16 *rng_seed_forward_128;
