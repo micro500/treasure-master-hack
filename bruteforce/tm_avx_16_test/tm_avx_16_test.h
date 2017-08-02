@@ -21,8 +21,8 @@ public:
 
 	uint16 * alg4_values;
 
-	uint8 * alg2_values_8;
-	uint8 * alg5_values_8;
+	uint8 * alg2_values;
+	uint8 * alg5_values;
 
 	uint16 *rng_seed_forward_1;
 	uint16 *rng_seed_forward_128;
