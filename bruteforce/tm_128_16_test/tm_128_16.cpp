@@ -5,52 +5,42 @@
 #include <tmmintrin.h> //SSSE3
 #include <smmintrin.h> //SSE4.1
 #include <nmmintrin.h> //SSE4.2
-//#include <ammintrin.h> //SSE4A
 
 #include "data_sizes.h"
 
-void alg0(uint8 * working_code, uint8 * alg0_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
+void alg0(uint8 * working_code, const uint8 * alg0_values, const uint16 rng_seed)
 {
-	//return;
     for (int i = 0; i < 16; i++)
     {
 		__m128i cur_val = _mm_loadu_si128((__m128i *)(working_code + i*16));
-		__m128i rng_val = _mm_loadu_si128((__m128i *)(alg0_values + ((*rng_seed) * 128 * 2) + (i * 16)));
+		__m128i rng_val = _mm_loadu_si128((__m128i *)(alg0_values + (rng_seed * 128 * 2) + (i * 16)));
 		cur_val = _mm_slli_epi16(cur_val,1);
 		cur_val = _mm_or_si128 (cur_val, rng_val);
 
 		__m128i mask = _mm_set1_epi16(0x00FF);
 		cur_val = _mm_and_si128  (cur_val, mask);
-		_mm_store_si128 ((__m128i *)(working_code + i*16), cur_val);
 
-        //working_code[i] = ((working_code[i] << 1) | alg0_values[(*rng_seed * 128) / 4 + i]) & 0x00FF00FF00FF00FFull;
+		_mm_store_si128 ((__m128i *)(working_code + i*16), cur_val);
     }
-	*rng_seed = rng_forward[*rng_seed];
 }
 
-void alg1(uint8 * working_code, uint8 * regular_rng_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
+void alg1(uint8 * working_code, const uint8 * regular_rng_values, const uint16 rng_seed)
 {
-	//return;
     for (int i = 0; i < 16; i++)
     {
 		__m128i cur_val = _mm_loadu_si128((__m128i *)(working_code + i*16));
-		__m128i rng_val = _mm_loadu_si128((__m128i *)(regular_rng_values + ((*rng_seed) * 128 * 2) + (i * 16)));
+		__m128i rng_val = _mm_loadu_si128((__m128i *)(regular_rng_values + (rng_seed * 128 * 2) + (i * 16)));
 		cur_val = _mm_add_epi16 (cur_val, rng_val);
 		__m128i mask = _mm_set1_epi16(0x00FF);
 		cur_val = _mm_and_si128  (cur_val, mask);
 
 		_mm_store_si128 ((__m128i *)(working_code + i*16), cur_val);
-
-        //working_code[i] = (working_code[i] + regular_rng_values[(*rng_seed * 128) / 4 + i]) & 0x00FF00FF00FF00FFull;
     }
-	*rng_seed = rng_forward[*rng_seed];
 }
 
-void alg2(uint8 * working_code, uint8 * alg2_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
+void alg2(uint8 * working_code, const uint8 * alg2_values, const uint16 rng_seed)
 {
-	//return;
-    //uint64 carry = alg2_values[*rng_seed];
-	__m128i carry = _mm_loadu_si128((__m128i *)(alg2_values + ((*rng_seed) * 16)));
+	__m128i carry = _mm_loadu_si128((__m128i *)(alg2_values + (rng_seed * 16)));
     for (int i = 15; i >= 0; i--)
     {
 		__m128i cur_val = _mm_loadu_si128((__m128i *)(working_code + i*16));
@@ -77,40 +67,24 @@ void alg2(uint8 * working_code, uint8 * alg2_values, uint16 * rng_seed, uint16 *
 		_mm_store_si128 ((__m128i *)(working_code + i*16), cur_val);
 
 		carry = next_carry;
-
-		/*
-		working_code[i] = ((working_code[i] >> 1) & 0x0000007F0000007Full) | ((working_code[i] << 1) & 0x00FE000000FE0000ull) | ((working_code[i] >> 16) & 0x0000008000000080ull) | carry;
-
-
-
-        uint64 next_carry = (working_code[i] & 0x0000000000000001ull) << 48;
-        
-		carry = carry | ((working_code[i] & 0x0000000100000000ull) >> 16);
-        working_code[i] = ((working_code[i] >> 1) & 0x0000007F0000007Full) | ((working_code[i] << 1) & 0x00FE000000FE0000ull) | ((working_code[i] >> 16) & 0x0000008000000080ull) | carry;
-        
-        carry = next_carry;
-		*/
     }
-	*rng_seed = rng_forward[*rng_seed];
 }
 
-void alg3(uint8 * working_code, uint8 * regular_rng_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
+void alg3(uint8 * working_code, const uint8 * regular_rng_values, const uint16 rng_seed)
 {
     for (int i = 0; i < 16; i++)
     {
 		__m128i cur_val = _mm_loadu_si128((__m128i *)(working_code + i*16));
-		__m128i rng_val = _mm_loadu_si128((__m128i *)(regular_rng_values + ((*rng_seed) * 128 * 2) + (i * 16)));
+		__m128i rng_val = _mm_loadu_si128((__m128i *)(regular_rng_values + (rng_seed * 128 * 2) + (i * 16)));
 		cur_val = _mm_xor_si128 (cur_val, rng_val);
-		_mm_store_si128 ((__m128i *)(working_code + i*16), cur_val);
 
-        //working_code[i] = working_code[i] ^ regular_rng_values[(*rng_seed * 128) / 4 + i];
+		_mm_store_si128 ((__m128i *)(working_code + i*16), cur_val);
     }
-	*rng_seed = rng_forward[*rng_seed];
 }
 
-void alg5(uint8* working_code, uint8 * alg5_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
+void alg5(uint8* working_code, const uint8 * alg5_values, const uint16 rng_seed)
 {
-	__m128i carry = _mm_loadu_si128((__m128i *)(alg5_values + ((*rng_seed) * 16)));
+	__m128i carry = _mm_loadu_si128((__m128i *)(alg5_values + (rng_seed * 16)));
     for (int i = 15; i >= 0; i--)
     {
 		__m128i cur_val = _mm_loadu_si128((__m128i *)(working_code + i*16));
@@ -135,60 +109,35 @@ void alg5(uint8* working_code, uint8 * alg5_values, uint16 * rng_seed, uint16 * 
 		_mm_store_si128 ((__m128i *)(working_code + i*16), cur_val);
 
 		carry = next_carry;
-
     }
-	*rng_seed = rng_forward[*rng_seed];
-
-
-
-
-
-	/*
-    uint64 carry = alg5_values[*rng_seed];
-    for (int i = 31; i >= 0; i--)
-    {
-        uint64 next_carry = (working_code[i] & 0x0000000000000080ull) << 48;
-        
-		carry = carry | ((working_code[i] & 0x0000008000000000ull) >> 16);
-        working_code[i] = ((working_code[i] << 1) & 0x000000FE000000FEull) | ((working_code[i] >> 1) & 0x007F0000007F0000ull) | ((working_code[i] >> 16) & 0x0000000100000001ull) | carry;
-        
-        carry = next_carry;
-    }
-	
-	*rng_seed = rng_forward[*rng_seed];
-	*/
 }
 
 
-void alg6(uint8 * working_code, uint8 * alg6_values, uint16 * rng_seed, uint16 * rng_table, uint16 * rng_forward)
+void alg6(uint8 * working_code, const uint8 * alg6_values, const uint16 rng_seed)
 {
-	//return;
     for (int i = 0; i < 16; i++)
     {
 		__m128i cur_val = _mm_loadu_si128((__m128i *)(working_code + i*16));
-		__m128i rng_val = _mm_loadu_si128((__m128i *)(alg6_values + ((*rng_seed) * 128 * 2) + (i * 16)));
+		__m128i rng_val = _mm_loadu_si128((__m128i *)(alg6_values + (rng_seed * 128 * 2) + (i * 16)));
 		cur_val = _mm_srli_epi16(cur_val,1);
 		cur_val = _mm_or_si128 (cur_val, rng_val);
 
 		__m128i mask = _mm_set1_epi16(0x00FF);
 		cur_val = _mm_and_si128  (cur_val, mask);
-		_mm_store_si128 ((__m128i *)(working_code + i*16), cur_val);
 
-        //working_code[i] = ((working_code[i] >> 1) | alg6_values[(*rng_seed * 128) / 4 + i]) & 0x00FF00FF00FF00FFull;
+		_mm_store_si128 ((__m128i *)(working_code + i*16), cur_val);
     }
-	*rng_seed = rng_forward[*rng_seed];
 }
 
 
 void alg7(uint8 * working_code)
 {
-	//return;
 	__m128i mask = _mm_set1_epi16(0x00FF);
     for (int i = 0; i < 16; i++)
     {
 		__m128i cur_val = _mm_loadu_si128((__m128i *)(working_code + i*16));
-		
 		cur_val = _mm_xor_si128 (cur_val, mask);
+
 		_mm_store_si128 ((__m128i *)(working_code + i*16), cur_val);
     }
 }

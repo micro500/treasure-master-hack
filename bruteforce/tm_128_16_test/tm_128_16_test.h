@@ -21,13 +21,8 @@ public:
 
 	uint16 * alg4_values;
 
-	uint8 * alg2_values_8;
-	uint8 * alg5_values_8;
-
-	/*
-	uint64 * alg5_values_64 = new uint64[0x10000 * 128];
-	generate_alg5_values(alg5_values_64, &rng_seed, rng_table);
-	*/
+	uint8 * alg2_values;
+	uint8 * alg5_values;
 
 	uint16 *rng_seed_forward_1;
 	uint16 *rng_seed_forward_128;
