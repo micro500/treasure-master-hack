@@ -6,3 +6,5 @@
 **/*.vcxproj.user
 **/*.suo
 **/TM_test_cases_OUT.txt
+**/.vs/
+**/x64/

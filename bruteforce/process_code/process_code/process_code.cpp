@@ -172,6 +172,8 @@ int main(int argc, char **argv)
 				}
 			}
 
+			in_progress.display_working_code();
+
 			output_stats(&in_progress);
 
 			IVs_finished++;

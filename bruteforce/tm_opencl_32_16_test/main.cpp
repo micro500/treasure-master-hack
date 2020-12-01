@@ -298,7 +298,7 @@ int main()
 
 	FILE * pFile;
 
-	pFile = fopen ("../common/TM_test_cases_OUT.txt","r+");
+	pFile = fopen ("../common/TM_alg_test_cases.txt","r+");
 	if (pFile == NULL)
 	{
 		printf("File error\n");

@@ -47,4 +47,5 @@ void generate_alg5_values_256_16(uint8 * alg5_values, uint16 * rng_table);
 void generate_seed_forward_1(uint16 * values, uint16 * rng_table);
 void generate_seed_forward_128(uint16 * values, uint16 * rng_table);
 
+void generate_expansion_values_8(uint8* values, uint16* rng_table);
 #endif // RNG_H

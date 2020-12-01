@@ -435,3 +435,23 @@ void generate_seed_forward_128(uint16 * values, uint16 * rng_table)
 		values[i] = rng_seed;
     }
 }
+
+void generate_expansion_values_8(uint8* values, uint16* rng_table)
+{
+    uint16 rng_seed;
+    for (int i = 0; i < 0x10000; i++)
+    {
+        rng_seed = i;
+        for (int j = 0; j < 128; j++)
+        {
+            if (j < 8)
+            {
+                values[i * 128 + j] = 0;
+            }
+            else
+            {
+                values[i * 128 + j] = values[i * 128 + j - 8] + run_rng(&rng_seed, rng_table);
+            }
+        }
+    }
+}
