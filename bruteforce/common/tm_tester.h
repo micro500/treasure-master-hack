@@ -18,4 +18,4 @@ private:
 	TM_base * UUT;
 	key_schedule_entry * schedule_entries;
 };
-#endif TM_TESTER_H
+#endif // TM_TESTER_H

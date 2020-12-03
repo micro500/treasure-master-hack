@@ -6,6 +6,10 @@
 #include "rng_obj.h"
 #include "key_schedule.h"
 
+#ifdef __unix__
+#define __forceinline __attribute__((always_inline)) inline
+#endif
+
 #define reverse_offset(x) (127 - (x))
 
 #define OP_JAM 0x01
