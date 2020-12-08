@@ -164,6 +164,7 @@
     <ClInclude Include="..\cpu\tm_64_16.h" />
     <ClInclude Include="..\cpu\tm_64_8.h" />
     <ClInclude Include="..\cpu\tm_8.h" />
+    <ClInclude Include="..\cpu\tm_avx2_8_in_cpu_shuffled.h" />
     <ClInclude Include="..\cpu\tm_avx_16.h" />
     <ClInclude Include="..\cpu\tm_avx_8.h" />
     <ClInclude Include="..\cpu\tm_avx_8_in_cpu.h" />
@@ -186,6 +187,7 @@
     <ClCompile Include="..\cpu\tm_64_16.cpp" />
     <ClCompile Include="..\cpu\tm_64_8.cpp" />
     <ClCompile Include="..\cpu\tm_8.cpp" />
+    <ClCompile Include="..\cpu\tm_avx2_8_in_cpu_shuffled.cpp" />
     <ClCompile Include="..\cpu\tm_avx_16.cpp" />
     <ClCompile Include="..\cpu\tm_avx_8.cpp" />
     <ClCompile Include="..\cpu\tm_avx_8_in_cpu.cpp" />
