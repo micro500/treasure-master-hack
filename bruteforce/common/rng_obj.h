@@ -22,6 +22,7 @@ public:
 	void generate_regular_rng_values_8();
 	void generate_regular_rng_values_128_8_shuffled();
 	void generate_regular_rng_values_256_8_shuffled();
+	void generate_regular_rng_values_512_8_shuffled();
 	void generate_regular_rng_values_8_hi();
 	void generate_regular_rng_values_256_8_shuffled_hi();
 	void generate_regular_rng_values_8_lo();
@@ -34,6 +35,7 @@ public:
 	void generate_alg0_values_8();
 	void generate_alg0_values_128_8_shuffled();
 	void generate_alg0_values_256_8_shuffled();
+	void generate_alg0_values_512_8_shuffled();
 	void generate_alg0_values_16();
 
 	void _generate_alg2_values(uint8** rng_values, int bits, bool packing_16);
@@ -46,6 +48,7 @@ public:
 	void generate_alg2_values_128_16();
 	void generate_alg2_values_256_8();
 	void generate_alg2_values_256_16();
+	void generate_alg2_values_512_8();
 
 	void _generate_alg4_values(uint8** rng_values, bool shuffle, int bits, bool packing_16);
 	void _generate_alg4_values_8_split(uint8** rng_values, bool shuffle, int bits, bool hi);
@@ -53,6 +56,7 @@ public:
 	void generate_alg4_values_8_hi();
 	void generate_alg4_values_128_8_shuffled();
 	void generate_alg4_values_256_8_shuffled();
+	void generate_alg4_values_512_8_shuffled();
 	void generate_alg4_values_256_8_shuffled_hi();
 	void generate_alg4_values_8_lo();
 	void generate_alg4_values_256_8_shuffled_lo();
@@ -68,11 +72,13 @@ public:
 	void generate_alg5_values_128_16();
 	void generate_alg5_values_256_8();
 	void generate_alg5_values_256_16();
+	void generate_alg5_values_512_8();
 
 	void _generate_alg6_values(uint8** rng_values, bool shuffle, int bits, bool packing_16);
 	void generate_alg6_values_8();
 	void generate_alg6_values_128_8_shuffled();
 	void generate_alg6_values_256_8_shuffled();
+	void generate_alg6_values_512_8_shuffled();
 	void generate_alg6_values_16();
 
 
@@ -83,6 +89,7 @@ public:
 	static uint8* regular_rng_values_8;
 	static uint8* regular_rng_values_128_8_shuffled;
 	static uint8* regular_rng_values_256_8_shuffled;
+	static uint8* regular_rng_values_512_8_shuffled;
 	static uint8* regular_rng_values_8_hi;
 	static uint8* regular_rng_values_256_8_shuffled_hi;
 	static uint8* regular_rng_values_8_lo;
@@ -94,6 +101,7 @@ public:
 	static uint8* alg0_values_8;
 	static uint8* alg0_values_128_8_shuffled;
 	static uint8* alg0_values_256_8_shuffled;
+	static uint8* alg0_values_512_8_shuffled;
 	static uint16* alg0_values_16;
 
 	static uint8* alg2_values_8_8;
@@ -105,11 +113,13 @@ public:
 	static uint8* alg2_values_128_16;
 	static uint8* alg2_values_256_8;
 	static uint8* alg2_values_256_16;
+	static uint8* alg2_values_512_8;
 
 	static uint8* alg4_values_8;
 	static uint8* alg4_values_8_hi;
 	static uint8* alg4_values_128_8_shuffled;
 	static uint8* alg4_values_256_8_shuffled;
+	static uint8* alg4_values_512_8_shuffled;
 	static uint8* alg4_values_256_8_shuffled_hi;
 	static uint8* alg4_values_8_lo;
 	static uint8* alg4_values_256_8_shuffled_lo;
@@ -124,10 +134,12 @@ public:
 	static uint8* alg5_values_128_16;
 	static uint8* alg5_values_256_8;
 	static uint8* alg5_values_256_16;
+	static uint8* alg5_values_512_8;
 
 	static uint8* alg6_values_8;
 	static uint8* alg6_values_128_8_shuffled;
 	static uint8* alg6_values_256_8_shuffled;
+	static uint8* alg6_values_512_8_shuffled;
 	static uint16* alg6_values_16;
 };
 

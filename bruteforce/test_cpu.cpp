@@ -14,6 +14,7 @@
 #include "tm_avx_8_in_cpu_shuffled.h"
 #include "tm_avx_16.h"
 #include "tm_avx2_8_in_cpu_shuffled.h"
+#include "tm_avx512_8_in_cpu_shuffled.h"
 #include "rng_obj.h"
 #include "tester2.h"
 #include "tm_tester.h"
@@ -107,6 +108,9 @@ int main()
 	
 	tm_avx2_8_in_cpu_shuffled _tm_avx2_8_in_cpu_shuffled(&rng);
 	tms.push_back(&_tm_avx2_8_in_cpu_shuffled);
+	
+	tm_avx512_8_in_cpu_shuffled _tm_avx512_8_in_cpu_shuffled(&rng);
+	tms.push_back(&_tm_avx512_8_in_cpu_shuffled);
 	
 	for (std::vector<TM_base*>::iterator it = tms.begin(); it != tms.end(); ++it)
 	{

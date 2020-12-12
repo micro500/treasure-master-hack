@@ -143,6 +143,11 @@ void RNG::generate_regular_rng_values_256_8_shuffled()
 	_generate_regular_rng_values(&regular_rng_values_256_8_shuffled, true, 256, false);
 }
 
+void RNG::generate_regular_rng_values_512_8_shuffled()
+{
+	_generate_regular_rng_values(&regular_rng_values_512_8_shuffled, true, 512, false);
+}
+
 void RNG::generate_regular_rng_values_8_hi()
 {
 	_generate_regular_rng_values_8_split(&regular_rng_values_8_hi, false, -1, true);
@@ -229,6 +234,11 @@ void RNG::generate_alg0_values_256_8_shuffled()
 	_generate_alg0_values(&alg0_values_256_8_shuffled, true, 256, false);
 }
 
+void RNG::generate_alg0_values_512_8_shuffled()
+{
+	_generate_alg0_values(&alg0_values_512_8_shuffled, true, 512, false);
+}
+
 void RNG::generate_alg0_values_16()
 {
 	_generate_alg0_values((uint8**)&alg0_values_16, false, -1, true);
@@ -299,6 +309,11 @@ void RNG::generate_alg2_values_256_16()
 	_generate_alg2_values(&alg2_values_256_16, 256, true);
 }
 
+void RNG::generate_alg2_values_512_8()
+{
+	_generate_alg2_values(&alg2_values_512_8, 512, false);
+}
+
 void RNG::_generate_alg4_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)
 {
 	if (*rng_values == nullptr)
@@ -351,6 +366,11 @@ void RNG::generate_alg4_values_128_8_shuffled()
 void RNG::generate_alg4_values_256_8_shuffled()
 {
 	_generate_alg4_values(&alg4_values_256_8_shuffled, true, 256, false);
+}
+
+void RNG::generate_alg4_values_512_8_shuffled()
+{
+	_generate_alg4_values(&alg4_values_512_8_shuffled, true, 512, false);
 }
 
 void RNG::generate_alg4_values_256_8_shuffled_hi()
@@ -438,6 +458,11 @@ void RNG::generate_alg5_values_256_16()
 	_generate_alg5_values(&alg5_values_256_16, 256, true);
 }
 
+void RNG::generate_alg5_values_512_8()
+{
+	_generate_alg5_values(&alg5_values_512_8, 512, false);
+}
+
 void RNG::_generate_alg6_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)
 {
 	if (*rng_values == nullptr)
@@ -471,6 +496,11 @@ void RNG::generate_alg6_values_128_8_shuffled()
 void RNG::generate_alg6_values_256_8_shuffled()
 {
 	_generate_alg6_values(&alg6_values_256_8_shuffled, true, 256, false);
+}
+
+void RNG::generate_alg6_values_512_8_shuffled()
+{
+	_generate_alg6_values(&alg6_values_512_8_shuffled, true, 512, false);
 }
 
 void RNG::generate_alg6_values_8()
@@ -513,6 +543,7 @@ uint16* RNG::rng_table = nullptr;
 uint8* RNG::regular_rng_values_8 = nullptr;
 uint8* RNG::regular_rng_values_128_8_shuffled = nullptr;
 uint8* RNG::regular_rng_values_256_8_shuffled = nullptr;
+uint8* RNG::regular_rng_values_512_8_shuffled = nullptr;
 uint8* RNG::regular_rng_values_8_hi = nullptr;
 uint8* RNG::regular_rng_values_256_8_shuffled_hi = nullptr;
 uint8* RNG::regular_rng_values_8_lo = nullptr;
@@ -528,6 +559,7 @@ uint16* RNG::seed_forward_128 = nullptr;
 uint8* RNG::alg0_values_8 = nullptr;
 uint8* RNG::alg0_values_128_8_shuffled = nullptr;
 uint8* RNG::alg0_values_256_8_shuffled = nullptr;
+uint8* RNG::alg0_values_512_8_shuffled = nullptr;
 uint16* RNG::alg0_values_16 = nullptr;
 
 uint8* RNG::alg2_values_8_8 = nullptr;
@@ -539,11 +571,13 @@ uint8* RNG::alg2_values_128_8 = nullptr;
 uint8* RNG::alg2_values_128_16 = nullptr;
 uint8* RNG::alg2_values_256_8 = nullptr;
 uint8* RNG::alg2_values_256_16 = nullptr;
+uint8* RNG::alg2_values_512_8 = nullptr;
 
 uint8* RNG::alg4_values_8 = nullptr;
 uint8* RNG::alg4_values_8_hi = nullptr;
 uint8* RNG::alg4_values_128_8_shuffled = nullptr;
 uint8* RNG::alg4_values_256_8_shuffled = nullptr;
+uint8* RNG::alg4_values_512_8_shuffled = nullptr;
 uint8* RNG::alg4_values_256_8_shuffled_hi = nullptr;
 uint8* RNG::alg4_values_8_lo = nullptr;
 uint8* RNG::alg4_values_256_8_shuffled_lo = nullptr;
@@ -558,8 +592,10 @@ uint8* RNG::alg5_values_128_8 = nullptr;
 uint8* RNG::alg5_values_128_16 = nullptr;
 uint8* RNG::alg5_values_256_8 = nullptr;
 uint8* RNG::alg5_values_256_16 = nullptr;
+uint8* RNG::alg5_values_512_8 = nullptr;
 
 uint8* RNG::alg6_values_8 = nullptr;
 uint8* RNG::alg6_values_128_8_shuffled = nullptr;
 uint8* RNG::alg6_values_256_8_shuffled = nullptr;
+uint8* RNG::alg6_values_512_8_shuffled = nullptr;
 uint16* RNG::alg6_values_16 = nullptr;
