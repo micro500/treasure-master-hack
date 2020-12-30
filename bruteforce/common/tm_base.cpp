@@ -18,27 +18,67 @@ void TM_base::print_working_code()
 	printf("\n");
 }
 
+void TM_base::run_bruteforce_data(uint32 key, uint32 data, key_schedule_entry* schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size) {}
+
 uint16 TM_base::generate_stats(uint32 key, uint32 data, key_schedule_entry* schedule_entries, bool use_hashing)
 {
 	return 0;
 }
 
-uint8 TM_base::check_machine_code(uint8* data, int length)
+uint8 TM_base::check_machine_code(uint8* data, int world)
 {
-	// check for JAM (immediate failure)
-	// check for illegal opcodes (immediate failure)
-	// check for NOP (acceptable, but probably not correct)
-	// Is the first section, up to the first jump of any kind, valid machine code?
+	uint8 code_length;
+	uint8 entry_addrs[6];
+	if (world == CARNIVAL_WORLD)
+	{
+		code_length = CARNIVAL_WORLD_CODE_LENGTH;
 
-	// If no illegal or jam opcodes are used then you can assume all opcodes were valid
+		entry_addrs[0] = 0;
+		entry_addrs[1] = 0x2B;
+		entry_addrs[2] = 0x33;
+		entry_addrs[3] = 0x3E;
+		entry_addrs[4] = 0xFF;
+		entry_addrs[5] = 0xFF;
+	}
+	else
+	{
+		code_length = OTHER_WORLD_CODE_LENGTH;
+
+		entry_addrs[0] = 0;
+		entry_addrs[1] = 0x05;
+		entry_addrs[2] = 0x0A;
+		entry_addrs[3] = 0x28;
+		entry_addrs[4] = 0x50;
+		entry_addrs[5] = 0xFF;
+	}
+
+	uint8 active_entries[6] = { 0,0,0,0,0,0 };
+	uint8 hit_entries[6] = { 0,0,0,0,0,0 };
+	uint8 valid_entries[6] = { 0,0,0,0,0,0 };
+	int last_entry = -1;
 
 	uint8 result = 0;
+	uint8 next_entry_addr = entry_addrs[0];
 
-	bool first_jump_found = false;
-
-	for (int i = 0; i < length - 2; i++)
+	for (int i = 0; i < code_length - 2; i++)
 	{
+		if (i == next_entry_addr)
+		{
+			last_entry++;
+			hit_entries[last_entry] = 1;
+			active_entries[last_entry] = 1;
+			next_entry_addr = entry_addrs[last_entry + 1];
+		}
+		else if (i > next_entry_addr)
+		{
+			last_entry++;
+			next_entry_addr = entry_addrs[last_entry + 1];
+		}
+
 		uint8 opcode = data[reverse_offset(i)];
+
+		// illegal/jam: cancel all active, do not mark valid
+		// jump: mark all valid, then cancel all active
 		if (opcode_type[opcode] & OP_JAM)
 		{
 			result |= USES_JAM;
@@ -57,22 +97,97 @@ uint8 TM_base::check_machine_code(uint8* data, int length)
 		{
 			result |= USES_NOP;
 		}
-		else if (opcode_type[opcode] & OP_JUMP && !first_jump_found)
+		else if (opcode_type[opcode] & OP_JUMP)
 		{
-			result |= FIRST_BYTES_TO_JUMP_VALID;
-			first_jump_found = true;
-		}
-
-		if (i == 0)
-		{
-			result |= FIRST_BYTE_VALID;
+			for (int j = 0; j < 5; j++)
+			{
+				if (active_entries[j] == 1)
+				{
+					active_entries[j] = 0;
+					valid_entries[j] = 1;
+				}
+			}
 		}
 
 		i += opcode_bytes_used[opcode] - 1;
 	}
 
+	bool all_entries_valid = true;
+
+	for (int i = 0; i < 5; i++)
+	{
+		if (hit_entries[i] == 1)
+		{
+			if (valid_entries[i] == 1)
+			{
+				continue;
+			}
+			else
+			{
+				all_entries_valid = false;
+				break;
+			}
+		}
+		else if (entry_addrs[i] == 255)
+		{
+			continue;
+		}
+		else
+		{
+			for (int j = entry_addrs[i]; j < code_length - 2; j++)
+			{
+				uint8 opcode = data[reverse_offset(j)];
+				if ((opcode_type[opcode] & OP_JAM) || (opcode_type[opcode] & OP_ILLEGAL))
+				{
+					all_entries_valid = false;
+					break;
+				}
+				else if (opcode_type[opcode] & OP_JUMP)
+				{
+					break;
+				}
+
+				j += opcode_bytes_used[opcode] - 1;
+			}
+		}
+	}
+
+	if (all_entries_valid)
+	{
+		result |= ALL_ENTRIES_VALID;
+	}
+
+	if (valid_entries[0] == 1)
+	{
+		result |= FIRST_ENTRY_VALID;
+	}
+
 	return result;
 }
+
+void TM_base::shuffle_mem(uint8* src, uint8* dest, int bits, bool packing_16)
+{
+	for (int i = 0; i < 128; i++)
+	{
+		packing_store(dest, shuffle_8(i, bits), src[i], packing_16);
+	}
+}
+
+void TM_base::unshuffle_mem(uint8* src, uint8* dest, int bits, bool packing_16)
+{
+	for (int i = 0; i < 128; i++)
+	{
+		dest[i] = packing_load(src, shuffle_8(i, bits), packing_16);
+	}
+}
+
+void TM_base::decrypt_carnival_world() {}
+uint16 TM_base::calculate_carnival_world_checksum() { return 0; }
+uint16 TM_base::fetch_carnival_world_checksum_value() { return 0; }
+
+void TM_base::decrypt_other_world() {}
+uint16 TM_base::calculate_other_world_checksum() { return 0; }
+uint16 TM_base::fetch_other_world_checksum_value() { return 0; }
 
 uint8 TM_base::opcode_bytes_used[0x100] = { 1,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
 											2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,
@@ -95,7 +210,7 @@ uint8 TM_base::opcode_type[0x100] = { 0, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, O
 
 
 
-ALIGNED(64) uint8 TM_base::carnival_data[128] = 
+ALIGNED(64) uint8 TM_base::carnival_world_data[128] = 
 {   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x3D, 0x5E, 0xA1, 0xA6, 0xC8, 0x23,
 	0xD7, 0x6E, 0x3F, 0x7C, 0xD2, 0x46, 0x1B, 0x9F, 0xAB, 0xD2,
@@ -110,7 +225,7 @@ ALIGNED(64) uint8 TM_base::carnival_data[128] =
 	0x5A, 0x0B, 0x2A, 0x3C, 0x09, 0xFA, 0xA3, 0x59, 0x3C, 0xA1,
 	0xF0, 0x90, 0x4F, 0x46, 0x9E, 0xD1, 0xD7, 0xF4 };
 
-ALIGNED(64) uint8 TM_base::carnival_checksum_mask[128] =
+ALIGNED(64) uint8 TM_base::carnival_world_checksum_mask[128] =
 {   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,

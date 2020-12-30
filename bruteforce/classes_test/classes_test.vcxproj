@@ -152,6 +152,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\common\alignment2.h" />
     <ClInclude Include="..\common\key_schedule.h" />
     <ClInclude Include="..\common\rng_obj.h" />
     <ClInclude Include="..\common\tester2.h" />
@@ -173,7 +174,6 @@
     <ClInclude Include="..\cpu\tm_avx_in_cpu.h" />
     <ClInclude Include="..\cpu\tm_mmx_8.h" />
     <ClInclude Include="..\cpu\tm_sse2_8_shuffled.h" />
-    <ClInclude Include="alignment2.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\alignment2.cpp" />

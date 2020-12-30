@@ -261,18 +261,18 @@ uint16 tm_8::generate_stats(uint32 key, uint32 data, key_schedule_entry* schedul
 	uint16 stats_result = 0;
 
 	uint8 decrypted_data[128];
-	decrypt_data(working_code_data, carnival_data, decrypted_data, 0x72);
-	if (check_checksum(decrypted_data, 0x72))
+	decrypt_data(working_code_data, carnival_world_data, decrypted_data, CARNIVAL_WORLD_CODE_LENGTH);
+	if (check_checksum(decrypted_data, CARNIVAL_WORLD_CODE_LENGTH))
 	{
 		stats_result |= 0x8000;
-		stats_result |= (check_machine_code(decrypted_data, 0x72) << 8);
+		stats_result |= (check_machine_code(decrypted_data, CARNIVAL_WORLD) << 8);
 	}
 
-	decrypt_data(working_code_data, other_world_data, decrypted_data, 0x53);
-	if (check_checksum(decrypted_data, 0x53))
+	decrypt_data(working_code_data, other_world_data, decrypted_data, OTHER_WORLD_CODE_LENGTH);
+	if (check_checksum(decrypted_data, OTHER_WORLD_CODE_LENGTH))
 	{
 		stats_result |= 0x0080;
-		stats_result |= check_machine_code(decrypted_data, 0x53);
+		stats_result |= check_machine_code(decrypted_data, OTHER_WORLD);
 	}
 
 	return stats_result;

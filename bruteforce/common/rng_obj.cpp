@@ -10,28 +10,6 @@ RNG::RNG()
 	}
 }
 
-int shuffle_8(int offset, int bits)
-{
-	return (offset / (bits / 4)) * (bits / 4) + (offset % 2) * (bits / 8) + ((offset / 2) % (bits / 8));
-}
-
-uint8* packing_alloc(int size, bool packing_16)
-{
-	return (uint8*)aligned_malloc(size * (packing_16 ? 2 : 1), 64);
-}
-
-void packing_store(uint8* rng_values, int offset, uint8 value, bool packing_16)
-{
-	if (packing_16)
-	{
-		((uint16*)rng_values)[offset] = value;
-	}
-	else
-	{
-		((uint8*)rng_values)[offset] = value;
-	}
-}
-
 void RNG::generate_rng_table()
 {
 	rng_table = new uint16[256 * 256];
@@ -173,26 +151,53 @@ void RNG::generate_regular_rng_values_16()
 	_generate_regular_rng_values((uint8**)&regular_rng_values_16, false, -1, true);
 }
 
-void RNG::generate_expansion_values_8()
+void RNG::_generate_expansion_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)
 {
-	expansion_values_8 = (uint8*)aligned_malloc(0x10000 * 128, 32);
-	uint16 rng_seed;
-	for (int i = 0; i < 0x10000; i++)
+	if (*rng_values == nullptr)
 	{
-		rng_seed = i;
-		for (int j = 0; j < 128; j++)
+		*rng_values = packing_alloc(0x10000 * 128, packing_16);
+
+		uint16 rng_seed;
+		uint8 temp_values[8];
+
+		for (int i = 0; i < 0x10000; i++)
 		{
-			if (j < 8)
+			rng_seed = i;
+			for (int j = 0; j < 16; j++)
 			{
-				expansion_values_8[i * 128 + j] = 0;
-			}
-			else
-			{
-				expansion_values_8[i * 128 + j] = expansion_values_8[i * 128 + j - 8] + run_rng(&rng_seed);
+				for (int k = 0; k < 8; k++)
+				{
+					if (j == 0)
+					{
+						temp_values[k] = 0;
+					}
+					else
+					{
+						temp_values[k] = temp_values[k] + run_rng(&rng_seed);
+					}
+
+					int offset = j * 8 + k;
+					if (shuffle)
+					{
+						offset = shuffle_8(offset, bits);
+					}
+					packing_store(*rng_values, i * 128 + offset, temp_values[k], packing_16);
+				}
 			}
 		}
 	}
 }
+
+void RNG::generate_expansion_values_8()
+{
+	_generate_expansion_values(&expansion_values_8, false, -1, false);
+}
+
+void RNG::generate_expansion_values_256_8_shuffled()
+{
+	_generate_expansion_values(&expansion_values_256_8_shuffled, true, 256, false);
+}
+
 
 void RNG::_generate_alg0_values(uint8**rng_values, bool shuffle, int bits, bool packing_16)
 {
@@ -551,6 +556,7 @@ uint8* RNG::regular_rng_values_256_8_shuffled_lo = nullptr;
 uint16* RNG:: regular_rng_values_16 = nullptr;
 
 uint8* RNG::expansion_values_8 = nullptr;
+uint8* RNG::expansion_values_256_8_shuffled = nullptr;
 
 uint16* RNG::seed_forward_1 = nullptr;
 uint16* RNG::seed_forward_128 = nullptr;

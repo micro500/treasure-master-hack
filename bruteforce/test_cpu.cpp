@@ -28,9 +28,19 @@
 #include <stdlib.h>
 #include <time.h>
 
+float prev_percent;
+void report_progress(double percentage)
+{
+	if (((int)(percentage * 100) + 1) > prev_percent)
+	{
+		printf("%f\n", percentage*100);
+		prev_percent = (int)(percentage * 100) + 1;
+	}
+}
 
 int main()
 {
+	prev_percent = 0;
 	uint8 IV[4]; // = { 0x2C,0xA5,0xB4,0x2D };
 	
 	// Passes carnival checksum, might generate the correct machine code
@@ -38,7 +48,8 @@ int main()
 	//int data = 0x0009BE9F;
 
 	// Passes other world checksum
-	int key = 0x1218E45F;
+	//int key = 0x1218E45F;
+	int key = 0x2CA5B42D;
 	int data = 0x0735B1D2;
 
 	IV[0] = (key >> 24) & 0xFF;
@@ -73,7 +84,7 @@ int main()
 	RNG rng;
 
 	std::vector<TM_base*> tms;
-	
+	/*
 	tm_8 _tm_8(&rng);
 	tms.push_back(&_tm_8);
 	
@@ -97,9 +108,9 @@ int main()
 	tm_avx_8 _tm_avx_8(&rng);
 	tms.push_back(&_tm_avx_8);
 	tm_avx_8_in_cpu _tm_avx_8_in_cpu(&rng);
-	tms.push_back(&_tm_avx_8_in_cpu);
+	tms.push_back(&_tm_avx_8_in_cpu);*/
 	tm_avx_8_in_cpu_shuffled _tm_avx_8_in_cpu_shuffled(&rng);
-	tms.push_back(&_tm_avx_8_in_cpu_shuffled);
+	tms.push_back(&_tm_avx_8_in_cpu_shuffled);/*
 	tm_avx_in_cpu _tm_avx_in_cpu(&rng);
 	tms.push_back(&_tm_avx_in_cpu);
 	
@@ -111,7 +122,7 @@ int main()
 	
 	tm_avx512_8_in_cpu_shuffled _tm_avx512_8_in_cpu_shuffled(&rng);
 	tms.push_back(&_tm_avx512_8_in_cpu_shuffled);
-	
+	*/
 	for (std::vector<TM_base*>::iterator it = tms.begin(); it != tms.end(); ++it)
 	{
 		std::cout << (*it)->obj_name << std::endl;
@@ -119,12 +130,22 @@ int main()
 		
 		//run_load_fetch_tests(tester2);
 		//run_alg_validity_tests(tester2);
-		run_expansion_validity_tests(tester2);
+		//run_expansion_validity_tests(tester2);
 		//run_full_validity_tests(tester2);
 		
 		//run_speed_tests2(tester2, 10000000);
 		//run_full_speed_test(tester2, 10000000);
+		run_checksum_tests(tester2);
 	}
 	
+	
+	/*
+	uint8 result_data[400000];
+	uint32 result_size;
+	//_tm_avx_8_in_cpu_shuffled.run_bruteforce_data(0x2CA5B42D, 0x01E190D8, schedule_entries, 0x04000000, &report_progress, result_data, 400000, &result_size);
+	_tm_avx_8_in_cpu_shuffled.run_bruteforce_data(0x2CA5B42D, 0xf73a2612, schedule_entries, 0x04000000, &report_progress, result_data, 400000, &result_size);
+	
+	printf("%i", result_size);
+	*/
 	return 0;
 }

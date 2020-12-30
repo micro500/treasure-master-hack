@@ -106,6 +106,64 @@ void run_alg_validity_tests(tm_tester tester)
 	}
 }
 
+void run_checksum_tests(tm_tester tester)
+{
+	uint8 test_case[128 + 128 + 3 + 2];
+
+	FILE* pFile;
+
+	pFile = fopen("../common/TM_checksum_test_cases.txt", "r+");
+	if (pFile == NULL)
+	{
+		printf("File error\n");
+		return;
+	}
+
+	bool all_tests_passed = true;
+	for (int j = 0; j < 200512; j++)
+	{
+		for (int i = 0; i < 1 + 128 + 2 + 2; i++)
+		{
+			int val;
+			fscanf(pFile, "%i,", &val);
+			test_case[i] = val;
+		}
+
+		uint8 world = test_case[0];
+		uint8 test_data[128];
+		for (int i = 0; i < 128; i++)
+		{
+			test_data[i] = test_case[1 + i];
+		}
+
+		uint16 checksum = (test_case[1 + 128 + 1] << 8) | test_case[1 + 128];
+		uint16 checksum_value = (test_case[1 + 128 + 3] << 8) | test_case[1 + 128 + 2];
+		//if (world != 1) continue;
+
+		uint16 result_checksum = tester.calculate_checksum(test_data, world);
+		uint16 result_checksum_value = tester.fetch_checksum_value(test_data, world);
+
+		if (result_checksum != checksum)
+		{
+			printf("Checksum test %i (world %i): --FAIL: Checksum--\n", j, test_case[0]);
+			all_tests_passed = false;
+		}
+
+		if (result_checksum_value != checksum_value)
+		{
+			printf("Checksum test %i (world %i): --FAIL: Checksum Value--\n", j, test_case[0]);
+			all_tests_passed = false;
+		}
+	}
+	fclose(pFile);
+
+	if (all_tests_passed)
+	{
+		printf("Checksum tests passed.\n");
+	}
+}
+
+
 void run_expansion_validity_tests(tm_tester tester)
 {
 	uint8 test_case[8 + 128];
