@@ -290,6 +290,91 @@ void run_full_validity_tests(tm_tester tester)
 	}
 }
 
+void run_result_tests(tm_tester tester)
+{
+	uint8 test_case[16];
+	int map_list[26] = { 0x00, 0x02, 0x05, 0x04, 0x03, 0x1D, 0x1C, 0x1E, 0x1B, 0x07, 0x08, 0x06, 0x09, 0x0C, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x0E, 0x0F, 0x10, 0x12, 0x11 };
+
+	FILE* pFile;
+
+	pFile = fopen("../common/TM_result_test_cases.txt", "rb");
+	if (pFile == NULL)
+	{
+		printf("File error\n");
+		return;
+	}
+
+	uint8 case_result_data[400000];
+	uint8 result_data[400000];
+	bool all_tests_passed = true;
+	for (int j = 0; j < 20; j++)
+	{
+		fread(test_case, 1, 16, pFile);
+
+		uint32 key = (test_case[3] << 24) | (test_case[2] << 16) | (test_case[1] << 8) | test_case[0];
+		uint32 data = (test_case[7] << 24) | (test_case[6] << 16) | (test_case[5] << 8) | test_case[4];
+		uint32 amount_to_run = (test_case[11] << 24) | (test_case[10] << 16) | (test_case[9] << 8) | test_case[8];
+		uint32 case_result_size = (test_case[15] << 24) | (test_case[14] << 16) | (test_case[13] << 8) | test_case[12];
+
+		int bytes_read = fread(case_result_data, 1, case_result_size, pFile);
+		if (bytes_read != case_result_size)
+		{
+			printf("File read error. Got bytes: %i Expected: %i\n", bytes_read, case_result_size);
+			return;
+		}
+
+		key_schedule_data schedule_data;
+		schedule_data.as_uint8[0] = (key >> 24) & 0xFF;
+		schedule_data.as_uint8[1] = (key >> 16) & 0xFF;
+		schedule_data.as_uint8[2] = (key >> 8) & 0xFF;
+		schedule_data.as_uint8[3] = key & 0xFF;
+
+		key_schedule_entry schedule_entries[27];
+
+		int schedule_counter = 0;
+		for (int i = 0; i < 26; i++)
+		{
+			schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i], &schedule_data);
+
+			if (map_list[i] == 0x22)
+			{
+				schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i], &schedule_data, 4);
+			}
+		}
+
+		uint32 result_size;
+		tester.run_results_process(key, data, schedule_entries, amount_to_run, result_data, 400000, &result_size);
+
+		if (result_size != case_result_size)
+		{
+			printf("Result test %i --FAIL-- Result size mismatch. Got: %i Expected: %i\n", j, result_size, case_result_size);
+			continue;
+		}
+
+		int matching = 1;
+		for (int i = 0; i < result_size; i++)
+		{
+			if (result_data[i] != case_result_data[i])
+			{
+				matching = 0;
+				break;
+			}
+		}
+
+		if (matching == 0)
+		{
+			printf("Result test %i: --FAIL-- Result data mismatch\n", j);
+			all_tests_passed = false;
+		}
+	}
+	fclose(pFile);
+
+	if (all_tests_passed)
+	{
+		printf("Result tests passed.\n");
+	}
+}
+
 void run_speed_tests2(tm_tester tester, int iterations)
 {
 	using std::chrono::duration_cast;

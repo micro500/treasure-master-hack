@@ -15,6 +15,7 @@ public:
 	void run_full_process(uint32 key, uint32 data, key_schedule_entry* schedule_entries, uint8* result_data);
 	void run_iterations(uint8 * test_case, uint16 * rng_seed, int algorithm, int iterations);
 	void run_full_process(uint32 key, uint32 data);
+	void run_results_process(uint32 key, uint32 data, key_schedule_entry* schedule_entries, uint32 amount_to_run, uint8* result_data, uint32 result_max_size, uint32* result_size);
 
 private:
 	TM_base * UUT;

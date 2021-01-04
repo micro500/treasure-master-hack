@@ -135,7 +135,9 @@ int main()
 		
 		//run_speed_tests2(tester2, 10000000);
 		//run_full_speed_test(tester2, 10000000);
-		run_checksum_tests(tester2);
+		//run_checksum_tests(tester2);
+		
+		run_result_tests(tester2);
 	}
 	
 	

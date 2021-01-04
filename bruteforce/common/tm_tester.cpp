@@ -81,3 +81,10 @@ void tm_tester::run_full_process(uint32 key, uint32 data)
 	UUT->expand(key, data);
 	UUT->run_all_maps(schedule_entries);
 }
+
+void dummy(double) {}
+
+void tm_tester::run_results_process(uint32 key, uint32 data, key_schedule_entry* schedule_entries, uint32 amount_to_run, uint8* result_data, uint32 result_max_size, uint32* result_size)
+{
+	UUT->run_bruteforce_data(key, data, schedule_entries, amount_to_run, dummy, result_data, result_max_size, result_size);
+}

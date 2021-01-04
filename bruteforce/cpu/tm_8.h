@@ -20,15 +20,20 @@ public:
 
 	virtual void run_all_maps(key_schedule_entry* schedule_entries);
 
-	uint16 generate_stats(uint32 key, uint32 data, key_schedule_entry* schedule_entries, bool use_hashing);
+	virtual void decrypt_carnival_world();
+	virtual void decrypt_other_world();
+	virtual uint16 calculate_carnival_world_checksum();
+	virtual uint16 calculate_other_world_checksum();
+	virtual uint16 fetch_carnival_world_checksum_value();
+	virtual uint16 fetch_other_world_checksum_value();
 
-	void decrypt_data(uint8* data_in, uint8* data_to_decrypt, uint8* data_out, int length);
-	bool check_checksum(uint8* data, int length);
+	void run_bruteforce_data(uint32 key, uint32 start_data, key_schedule_entry* schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size);
 
 private:
 	void initialize();
 
 	void add_alg(uint8* addition_values, const uint16 rng_seed);
+	void xor_alg(uint8* working_data, uint8* xor_values);
 	void alg_0(const uint16 rng_seed);
 	void alg_1(const uint16 rng_seed);
 	void alg_2(const uint16 rng_seed);
@@ -37,6 +42,19 @@ private:
 	void alg_5(const uint16 rng_seed);
 	void alg_6(const uint16 rng_seed);
 	void alg_7();
+
+	uint16 calculate_masked_checksum(uint8* working_data, uint8* mask);
+	uint16 fetch_checksum_value(uint8* working_data, int code_length);
+
+	uint16 _calculate_carnival_world_checksum(uint8* working_data);
+	uint16 _calculate_other_world_checksum(uint8* working_data);
+	bool check_carnival_world_checksum(uint8* working_data);
+	bool check_other_world_checksum(uint8* working_data);
+	uint16 _fetch_carnival_world_checksum_value(uint8* working_data);
+	uint16 _fetch_other_world_checksum_value(uint8* working_data);
+
+	void _decrypt_carnival_world(uint8* working_data);
+	void _decrypt_other_world(uint8* working_data);
 
 	uint8 working_code_data[128 * 2];
 
