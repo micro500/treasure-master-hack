@@ -319,7 +319,7 @@ void run_result_tests(tm_tester tester)
 		int bytes_read = fread(case_result_data, 1, case_result_size, pFile);
 		if (bytes_read != case_result_size)
 		{
-			printf("File read error. Got bytes: %i Expected: %i\n", bytes_read, case_result_size);
+			printf("File read error. Got: %i Expected: %i\n", bytes_read, case_result_size);
 			return;
 		}
 

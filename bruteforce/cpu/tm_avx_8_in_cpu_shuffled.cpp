@@ -786,27 +786,29 @@ void tm_avx_8_in_cpu_shuffled::run_bruteforce_data(uint32 key, uint32 start_data
  			result_data[output_pos + 4] = check_machine_code(unshuffled_data, CARNIVAL_WORLD);
 			output_pos += 5;
 		}
-
-		working_code0_xor = working_code0;
-		working_code1_xor = working_code1;
-		working_code2_xor = working_code2;
-		working_code3_xor = working_code3;
-		
-		_decrypt_other_world(working_code0_xor, working_code1_xor, working_code2_xor, working_code3_xor);
-
-		if (check_other_world_checksum(working_code0_xor, working_code1_xor, working_code2_xor, working_code3_xor))
+		else
 		{
-			_mm256_store_si256((__m256i*)(working_code_data), working_code0_xor);
-			_mm256_store_si256((__m256i*)(working_code_data + 32), working_code1_xor);
-			_mm256_store_si256((__m256i*)(working_code_data + 64), working_code2_xor);
-			_mm256_store_si256((__m256i*)(working_code_data + 96), working_code3_xor);
-			*((uint32*)(&result_data[output_pos])) = i;
+			working_code0_xor = working_code0;
+			working_code1_xor = working_code1;
+			working_code2_xor = working_code2;
+			working_code3_xor = working_code3;
 
-			uint8 unshuffled_data[128];
-			unshuffle_mem(working_code_data, unshuffled_data, 256, false);
+			_decrypt_other_world(working_code0_xor, working_code1_xor, working_code2_xor, working_code3_xor);
 
-			result_data[output_pos + 4] = check_machine_code(unshuffled_data, OTHER_WORLD);
-			output_pos += 5;
+			if (check_other_world_checksum(working_code0_xor, working_code1_xor, working_code2_xor, working_code3_xor))
+			{
+				_mm256_store_si256((__m256i*)(working_code_data), working_code0_xor);
+				_mm256_store_si256((__m256i*)(working_code_data + 32), working_code1_xor);
+				_mm256_store_si256((__m256i*)(working_code_data + 64), working_code2_xor);
+				_mm256_store_si256((__m256i*)(working_code_data + 96), working_code3_xor);
+				*((uint32*)(&result_data[output_pos])) = i;
+
+				uint8 unshuffled_data[128];
+				unshuffle_mem(working_code_data, unshuffled_data, 256, false);
+
+				result_data[output_pos + 4] = check_machine_code(unshuffled_data, OTHER_WORLD);
+				output_pos += 5;
+			}
 		}
 		
 		report_progress((float)(i + 1) / amount_to_run);

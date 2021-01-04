@@ -286,19 +286,21 @@ void tm_8::run_bruteforce_data(uint32 key, uint32 start_data, key_schedule_entry
 			result_data[output_pos + 4] = check_machine_code(decrypted_data, CARNIVAL_WORLD);
 			output_pos += 5;
 		}
-
-		for (int i = 0; i < 128; i++)
+		else
 		{
-			decrypted_data[i] = working_code_data[i];
-		}
-		_decrypt_other_world(decrypted_data);
+			for (int i = 0; i < 128; i++)
+			{
+				decrypted_data[i] = working_code_data[i];
+			}
+			_decrypt_other_world(decrypted_data);
 
-		if (check_other_world_checksum(decrypted_data))
-		{
-			*((uint32*)(&result_data[output_pos])) = i;
+			if (check_other_world_checksum(decrypted_data))
+			{
+				*((uint32*)(&result_data[output_pos])) = i;
 
-			result_data[output_pos + 4] = check_machine_code(decrypted_data, OTHER_WORLD);
-			output_pos += 5;
+				result_data[output_pos + 4] = check_machine_code(decrypted_data, OTHER_WORLD);
+				output_pos += 5;
+			}
 		}
 
 		report_progress((float)(i + 1) / amount_to_run);
