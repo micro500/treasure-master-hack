@@ -134,10 +134,11 @@ int main()
 		//run_full_validity_tests(tester2);
 		
 		//run_speed_tests2(tester2, 10000000);
-		//run_full_speed_test(tester2, 10000000);
+		//run_full_speed_test(tester2, 0x01000000);
+		run_result_speed_test(tester2, 0x00100000);
 		//run_checksum_tests(tester2);
 		
-		run_result_tests(tester2);
+		//run_result_tests(tester2);
 	}
 	
 	
