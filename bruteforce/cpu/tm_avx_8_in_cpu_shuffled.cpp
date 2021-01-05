@@ -464,7 +464,7 @@ __forceinline void tm_avx_8_in_cpu_shuffled::mid_sum(__m128i& sum, __m256i& work
 	sum = _mm_add_epi16(sum, temp1_hi_hi);
 }
 
-void tm_avx_8_in_cpu_shuffled::run_one_map(key_schedule_entry schedule_entry)
+void tm_avx_8_in_cpu_shuffled::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -493,7 +493,7 @@ void tm_avx_8_in_cpu_shuffled::run_one_map(key_schedule_entry schedule_entry)
 	}
 }
 
-void tm_avx_8_in_cpu_shuffled::run_all_maps(key_schedule_entry* schedule_entries)
+void tm_avx_8_in_cpu_shuffled::run_all_maps(const key_schedule& schedule_entries)
 {
 	__m256i working_code0 = _mm256_load_si256((__m256i*)(working_code_data));
 	__m256i working_code1 = _mm256_load_si256((__m256i*)(working_code_data + 32));
@@ -518,11 +518,11 @@ void tm_avx_8_in_cpu_shuffled::run_all_maps(key_schedule_entry* schedule_entries
 	_mm256_store_si256((__m256i*)(working_code_data + 96), working_code3);
 }
 
-void tm_avx_8_in_cpu_shuffled::_run_all_maps(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, key_schedule_entry* schedule_entries, __m256i& mask_FF, __m256i& mask_FE, __m256i& mask_7F, __m256i& mask_80, __m256i& mask_01, __m256i& mask_top_01, __m256i& mask_top_80)
+void tm_avx_8_in_cpu_shuffled::_run_all_maps(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, const key_schedule& schedule_entries, __m256i& mask_FF, __m256i& mask_FE, __m256i& mask_7F, __m256i& mask_80, __m256i& mask_01, __m256i& mask_top_01, __m256i& mask_top_80)
 {
-	for (int schedule_counter = 0; schedule_counter < 27; schedule_counter++)
+	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
 	{
-		key_schedule_entry schedule_entry = schedule_entries[schedule_counter];
+		key_schedule::key_schedule_entry schedule_entry = *it;
 
 		uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 		uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -735,7 +735,7 @@ __forceinline uint16 tm_avx_8_in_cpu_shuffled::_fetch_other_world_checksum_value
 	return fetch_checksum_value(working_code0, working_code1, OTHER_WORLD_CODE_LENGTH - 2);
 }
 
-void tm_avx_8_in_cpu_shuffled::run_bruteforce_data(uint32 key, uint32 start_data, key_schedule_entry* schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size)
+void tm_avx_8_in_cpu_shuffled::run_bruteforce_data(uint32 key, uint32 start_data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size)
 {
 	__m256i working_code0;
 	__m256i working_code1;

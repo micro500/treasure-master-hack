@@ -220,7 +220,6 @@ void run_expansion_validity_tests(tm_tester tester)
 void run_full_validity_tests(tm_tester tester)
 {
 	uint8 test_case[8 + 128];
-	int map_list[26] = { 0x00, 0x02, 0x05, 0x04, 0x03, 0x1D, 0x1C, 0x1E, 0x1B, 0x07, 0x08, 0x06, 0x09, 0x0C, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x0E, 0x0F, 0x10, 0x12, 0x11 };
 
 	FILE* pFile;
 
@@ -245,26 +244,9 @@ void run_full_validity_tests(tm_tester tester)
 		uint32 key = (test_case[0] << 24) | (test_case[1] << 16) | (test_case[2] << 8) | test_case[3];
 		uint32 data = (test_case[4] << 24) | (test_case[5] << 16) | (test_case[6] << 8) | test_case[7];
 
-		key_schedule_data schedule_data;
-		schedule_data.as_uint8[0] = (key >> 24) & 0xFF;
-		schedule_data.as_uint8[1] = (key >> 16) & 0xFF;
-		schedule_data.as_uint8[2] = (key >> 8) & 0xFF;
-		schedule_data.as_uint8[3] = key & 0xFF;
+		key_schedule schedule_data(key, key_schedule::ALL_MAPS);
 
-		key_schedule_entry schedule_entries[27];
-
-		int schedule_counter = 0;
-		for (int i = 0; i < 26; i++)
-		{
-			schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i], &schedule_data);
-
-			if (map_list[i] == 0x22)
-			{
-				schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i], &schedule_data, 4);
-			}
-		}
-
-		tester.run_full_process(key, data, schedule_entries, result_data);
+		tester.run_full_process(key, data, schedule_data, result_data);
 
 		int matching = 1;
 		for (int i = 0; i < 128; i++)
@@ -293,7 +275,6 @@ void run_full_validity_tests(tm_tester tester)
 void run_result_tests(tm_tester tester)
 {
 	uint8 test_case[16];
-	int map_list[26] = { 0x00, 0x02, 0x05, 0x04, 0x03, 0x1D, 0x1C, 0x1E, 0x1B, 0x07, 0x08, 0x06, 0x09, 0x0C, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x0E, 0x0F, 0x10, 0x12, 0x11 };
 
 	FILE* pFile;
 
@@ -323,27 +304,10 @@ void run_result_tests(tm_tester tester)
 			return;
 		}
 
-		key_schedule_data schedule_data;
-		schedule_data.as_uint8[0] = (key >> 24) & 0xFF;
-		schedule_data.as_uint8[1] = (key >> 16) & 0xFF;
-		schedule_data.as_uint8[2] = (key >> 8) & 0xFF;
-		schedule_data.as_uint8[3] = key & 0xFF;
-
-		key_schedule_entry schedule_entries[27];
-
-		int schedule_counter = 0;
-		for (int i = 0; i < 26; i++)
-		{
-			schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i], &schedule_data);
-
-			if (map_list[i] == 0x22)
-			{
-				schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i], &schedule_data, 4);
-			}
-		}
+		key_schedule schedule_data(key, key_schedule::ALL_MAPS);
 
 		uint32 result_size;
-		tester.run_results_process(key, data, schedule_entries, amount_to_run, result_data, 400000, &result_size);
+		tester.run_results_process(key, data, schedule_data, amount_to_run, result_data, 400000, &result_size);
 
 		if (result_size != case_result_size)
 		{
@@ -408,11 +372,12 @@ void run_full_speed_test(tm_tester tester, int iterations)
 	typedef std::chrono::high_resolution_clock clock;
 
 	uint32 key = 0x2CA5B42D;
+	key_schedule schedule_data(key, key_schedule::ALL_MAPS);
 
 	auto start = clock::now();
 	for (int i = 0; i < iterations; i++)
 	{
-		tester.run_full_process(key, i);
+		tester.run_full_process(key, i, schedule_data);
 	}
 	auto end = clock::now();
 	std::cout << duration_cast<microseconds>(end - start).count() << "\n";
@@ -424,35 +389,16 @@ void run_result_speed_test(tm_tester tester, int iterations)
 	using std::chrono::microseconds;
 	typedef std::chrono::high_resolution_clock clock;
 
-	int map_list[26] = { 0x00, 0x02, 0x05, 0x04, 0x03, 0x1D, 0x1C, 0x1E, 0x1B, 0x07, 0x08, 0x06, 0x09, 0x0C, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x0E, 0x0F, 0x10, 0x12, 0x11 };
-
 	uint8 result_data[400000];
 	uint32 result_size;
 
 	uint32 key = 0x2CA5B42D;
 	uint32 data = 0x00000000;
 
-	key_schedule_data schedule_data;
-	schedule_data.as_uint8[0] = (key >> 24) & 0xFF;
-	schedule_data.as_uint8[1] = (key >> 16) & 0xFF;
-	schedule_data.as_uint8[2] = (key >> 8) & 0xFF;
-	schedule_data.as_uint8[3] = key & 0xFF;
-
-	key_schedule_entry schedule_entries[27];
-
-	int schedule_counter = 0;
-	for (int i = 0; i < 26; i++)
-	{
-		schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i], &schedule_data);
-
-		if (map_list[i] == 0x22)
-		{
-			schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i], &schedule_data, 4);
-		}
-	}
+	key_schedule schedule_data(key, key_schedule::ALL_MAPS);
 
 	auto start = clock::now();
-	tester.run_results_process(key, data, schedule_entries, iterations, result_data, 400000, &result_size);
+	tester.run_results_process(key, data, schedule_data, iterations, result_data, 400000, &result_size);
 
 	auto end = clock::now();
 	std::cout << duration_cast<microseconds>(end - start).count() << "\n";

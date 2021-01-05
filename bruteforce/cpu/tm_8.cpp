@@ -220,7 +220,7 @@ __forceinline void tm_8::xor_alg(uint8* working_data, uint8* xor_values)
 	}
 }
 
-void tm_8::run_one_map(key_schedule_entry schedule_entry)
+void tm_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -249,15 +249,15 @@ void tm_8::run_one_map(key_schedule_entry schedule_entry)
 	}
 }
 
-void tm_8::run_all_maps(key_schedule_entry* schedule_entries)
+void tm_8::run_all_maps(const key_schedule& schedule_entries)
 {
-	for (int schedule_counter = 0; schedule_counter < 27; schedule_counter++)
+	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
 	{
-		run_one_map(schedule_entries[schedule_counter]);
+		run_one_map(*it);
 	}
 }
 
-void tm_8::run_bruteforce_data(uint32 key, uint32 start_data, key_schedule_entry* schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size)
+void tm_8::run_bruteforce_data(uint32 key, uint32 start_data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size)
 {
 	uint32 output_pos = 0;
 	for (uint32 i = 0; i < amount_to_run; i++)

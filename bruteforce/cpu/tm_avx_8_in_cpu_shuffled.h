@@ -37,11 +37,11 @@ public:
 
 	virtual void run_alg(int algorithm_id, uint16* rng_seed, int iterations);
 
-	virtual void run_one_map(key_schedule_entry schedule_entry);
+	virtual void run_one_map(const key_schedule::key_schedule_entry& schedule_entry);
 
-	virtual void run_all_maps(key_schedule_entry* schedule_entries);
+	virtual void run_all_maps(const key_schedule& schedule_entries);
 
-	void run_bruteforce_data(uint32 key, uint32 data, key_schedule_entry* schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size);
+	void run_bruteforce_data(uint32 key, uint32 data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size);
 
 private:
 	void initialize();
@@ -58,7 +58,7 @@ private:
 	
 	void _expand_code(uint32 key, uint32 data, __m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3);
 	
-	void _run_all_maps(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, key_schedule_entry* schedule_entries, __m256i& mask_FF, __m256i& mask_FE, __m256i& mask_7F, __m256i& mask_80, __m256i& mask_01, __m256i& mask_top_01, __m256i& mask_top_80);
+	void _run_all_maps(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, const key_schedule& schedule_entries, __m256i& mask_FF, __m256i& mask_FE, __m256i& mask_7F, __m256i& mask_80, __m256i& mask_01, __m256i& mask_top_01, __m256i& mask_top_80);
 
 	void _decrypt_carnival_world(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3);
 	void _decrypt_other_world(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3);

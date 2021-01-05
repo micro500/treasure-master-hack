@@ -218,7 +218,7 @@ __forceinline void tm_64_8::add_alg(uint64* addition_values_hi, uint64* addition
 	}
 }
 
-void tm_64_8::run_one_map(key_schedule_entry schedule_entry)
+void tm_64_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -247,11 +247,11 @@ void tm_64_8::run_one_map(key_schedule_entry schedule_entry)
 	}
 }
 
-void tm_64_8::run_all_maps(key_schedule_entry* schedule_entries)
+void tm_64_8::run_all_maps(const key_schedule& schedule_entries)
 {
-	for (int schedule_counter = 0; schedule_counter < 27; schedule_counter++)
+	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
 	{
-		run_one_map(schedule_entries[schedule_counter]);
+		run_one_map(*it);
 	}
 }
 

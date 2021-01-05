@@ -319,7 +319,7 @@ __forceinline void tm_sse2_8_shuffled::add_alg(__m128i& working_code0, __m128i& 
 	working_code7 = _mm_add_epi8(working_code7, _mm_load_si128((__m128i*)(rng_start + 112)));
 }
 
-void tm_sse2_8_shuffled::run_one_map(key_schedule_entry schedule_entry)
+void tm_sse2_8_shuffled::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -348,7 +348,7 @@ void tm_sse2_8_shuffled::run_one_map(key_schedule_entry schedule_entry)
 	}
 }
 
-void tm_sse2_8_shuffled::run_all_maps(key_schedule_entry* schedule_entries)
+void tm_sse2_8_shuffled::run_all_maps(const key_schedule& schedule_entries)
 {
 	__m128i working_code0 = _mm_loadu_si128((__m128i*)(working_code_data));
 	__m128i working_code1 = _mm_loadu_si128((__m128i*)(working_code_data + 16));
@@ -367,10 +367,12 @@ void tm_sse2_8_shuffled::run_all_maps(key_schedule_entry* schedule_entries)
 	__m128i mask_top_01 = _mm_set_epi8(0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	__m128i mask_top_80 = _mm_set_epi8(0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
-	for (int schedule_counter = 0; schedule_counter < 27; schedule_counter++)
+	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
 	{
-		uint16 rng_seed = (schedule_entries[schedule_counter].rng1 << 8) | schedule_entries[schedule_counter].rng2;
-		uint16 nibble_selector = schedule_entries[schedule_counter].nibble_selector;
+		key_schedule::key_schedule_entry schedule_entry = *it;
+
+		uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
+		uint16 nibble_selector = schedule_entry.nibble_selector;
 
 		// Next, the working code is processed with the same steps 16 times:
 		for (int i = 0; i < 16; i++)

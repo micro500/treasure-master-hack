@@ -16,9 +16,9 @@ public:
 
 	virtual void run_alg(int algorithm_id, uint16* rng_seed, int iterations);
 
-	virtual void run_one_map(key_schedule_entry schedule_entry);
+	virtual void run_one_map(const key_schedule::key_schedule_entry& schedule_entry);
 
-	virtual void run_all_maps(key_schedule_entry* schedule_entries);
+	virtual void run_all_maps(const key_schedule& schedule_entries);
 
 private:
 	void initialize();

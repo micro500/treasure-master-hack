@@ -18,12 +18,7 @@ void TM_base::print_working_code()
 	printf("\n");
 }
 
-void TM_base::run_bruteforce_data(uint32 key, uint32 data, key_schedule_entry* schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size) {}
-
-uint16 TM_base::generate_stats(uint32 key, uint32 data, key_schedule_entry* schedule_entries, bool use_hashing)
-{
-	return 0;
-}
+void TM_base::run_bruteforce_data(uint32 key, uint32 data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size) {}
 
 uint8 TM_base::check_machine_code(uint8* data, int world)
 {

@@ -350,7 +350,7 @@ __forceinline void tm_avx_8::add_alg(const uint8* addition_values_lo, const uint
 	}
 }
 
-void tm_avx_8::run_one_map(key_schedule_entry schedule_entry)
+void tm_avx_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -379,75 +379,11 @@ void tm_avx_8::run_one_map(key_schedule_entry schedule_entry)
 	}
 }
 
-void tm_avx_8::run_all_maps(key_schedule_entry* schedule_entries)
+void tm_avx_8::run_all_maps(const key_schedule& schedule_entries)
 {
-	for (int schedule_counter = 0; schedule_counter < 27; schedule_counter++)
+	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
 	{
-		key_schedule_entry schedule_entry = schedule_entries[schedule_counter];
-
-		uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
-		uint16 nibble_selector = schedule_entry.nibble_selector;
-
-		// Next, the working code is processed with the same steps 16 times:
-		for (int i = 0; i < 16; i++)
-		{
-			// Get the highest bit of the nibble selector to use as a flag
-			unsigned char nibble = (nibble_selector >> 15) & 0x01;
-			// Shift the nibble selector up one bit
-			nibble_selector = nibble_selector << 1;
-
-			// If the flag is a 1, get the high nibble of the current byte
-			// Otherwise use the low nibble
-			unsigned char current_byte = (uint8)((uint8*)working_code_data)[i];
-
-			if (nibble == 1)
-			{
-				current_byte = current_byte >> 4;
-			}
-
-			// Mask off only 3 bits
-			unsigned char algorithm_id = (current_byte >> 1) & 0x07;
-
-			if (algorithm_id == 0)
-			{
-				alg_0(&rng_seed);
-				rng_seed = rng->seed_forward_128[rng_seed];
-			}
-			else if (algorithm_id == 1)
-			{
-				alg_1(&rng_seed);
-				rng_seed = rng->seed_forward_128[rng_seed];
-			}
-			else if (algorithm_id == 2)
-			{
-				alg_2(&rng_seed);
-				rng_seed = rng->seed_forward_1[rng_seed];
-			}
-			else if (algorithm_id == 3)
-			{
-				alg_3(&rng_seed);
-				rng_seed = rng->seed_forward_128[rng_seed];
-			}
-			else if (algorithm_id == 4)
-			{
-				alg_4(&rng_seed);
-				rng_seed = rng->seed_forward_128[rng_seed];
-			}
-			else if (algorithm_id == 5)
-			{
-				alg_5(&rng_seed);
-				rng_seed = rng->seed_forward_1[rng_seed];
-			}
-			else if (algorithm_id == 6)
-			{
-				alg_6(&rng_seed);
-				rng_seed = rng->seed_forward_128[rng_seed];
-			}
-			else if (algorithm_id == 7)
-			{
-				alg_7();
-			}
-		}
+		run_one_map(*it);
 	}
 }
 

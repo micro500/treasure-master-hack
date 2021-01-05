@@ -1,33 +1,52 @@
 #ifndef KEY_SCHEDULE_H
 #define KEY_SCHEDULE_H
 #include "data_sizes.h"
+#include <vector>
 
-typedef struct 
+class key_schedule
 {
-	uint8 rng1;
-	uint8 rng2;
-	uint16 nibble_selector;
-} key_schedule_entry;
+public:
+	enum map_list_type
+	{
+		ALL_MAPS,
+		SKIP_CAR
+	};
 
-typedef union
-{
-	uint8 as_uint8[4];
-	uint16 as_uint16[2];
-	uint32 as_uint32;
-} key_schedule_data;
+	key_schedule(uint32 key, key_schedule::map_list_type map_list_option);
+	key_schedule(uint32 key, std::vector<uint8> map_list);
 
-key_schedule_entry generate_schedule_entry(uint8 map, key_schedule_data *current_schedule_data, uint8 algorithm);
-key_schedule_entry generate_schedule_entry(uint8 map, key_schedule_data *current_schedule_data);
+	void init(uint32 key, std::vector<uint8> map_list);
 
-void key_schedule_algorithm(uint8 map, key_schedule_data *current_schedule_data, uint8 algorithm);
+	typedef struct
+	{
+		uint8 rng1;
+		uint8 rng2;
+		uint16 nibble_selector;
+	} key_schedule_entry;
 
-void key_schedule_algorithm_0(uint8 map, key_schedule_data *current_schedule_data);
-void key_schedule_algorithm_1(uint8 map, key_schedule_data *current_schedule_data);
-void key_schedule_algorithm_2(uint8 map, key_schedule_data *current_schedule_data);
-void key_schedule_algorithm_3(uint8 map, key_schedule_data *current_schedule_data);
-void key_schedule_algorithm_4(uint8 map, key_schedule_data *current_schedule_data);
-void key_schedule_algorithm_5(uint8 map, key_schedule_data *current_schedule_data);
-void key_schedule_algorithm_6(uint8 map, key_schedule_data *current_schedule_data);
-void key_schedule_algorithm_7(uint8 map, key_schedule_data *current_schedule_data);
+	typedef union
+	{
+		uint8 as_uint8[4];
+		uint16 as_uint16[2];
+		uint32 as_uint32;
+	} key_schedule_data;
+
+	std::vector<key_schedule_entry> entries;
+
+private:
+	key_schedule_data schedule_data;
+
+	key_schedule_entry generate_schedule_entry(uint8 map);
+	key_schedule_entry generate_schedule_entry(uint8 map, uint8 algorithm);
+
+	void algorithm_0(uint8 map);
+	void algorithm_1(uint8 map);
+	void algorithm_2(uint8 map);
+	void algorithm_3(uint8 map);
+	void algorithm_4(uint8 map);
+	void algorithm_5(uint8 map);
+	void algorithm_6(uint8 map);
+	void algorithm_7(uint8 map);
+};
 
 #endif //KEY_SCHEDULE_H

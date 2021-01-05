@@ -2,7 +2,7 @@
 #include "tm_tester.h"
 #include "tm_base.h"
 
-tm_tester::tm_tester(TM_base* obj, key_schedule_entry* entries) : UUT(obj), schedule_entries(entries)
+tm_tester::tm_tester(TM_base* obj) : UUT(obj)
 {
 
 }
@@ -29,7 +29,7 @@ void tm_tester::run_expansion(uint32 key, uint32 data, uint8 * result_data)
 	UUT->fetch_data(result_data);
 }
 
-void tm_tester::run_full_process(uint32 key, uint32 data, key_schedule_entry * entries, uint8* result_data)
+void tm_tester::run_full_process(uint32 key, uint32 data, const key_schedule& entries, uint8* result_data)
 {
 	UUT->expand(key, data);
 	UUT->run_all_maps(entries);
@@ -76,15 +76,15 @@ uint16 tm_tester::fetch_checksum_value(uint8* test_case, int world)
 	}
 }
 
-void tm_tester::run_full_process(uint32 key, uint32 data)
+void tm_tester::run_full_process(uint32 key, uint32 data, const key_schedule& entries)
 {
 	UUT->expand(key, data);
-	UUT->run_all_maps(schedule_entries);
+	UUT->run_all_maps(entries);
 }
 
 void dummy(double) {}
 
-void tm_tester::run_results_process(uint32 key, uint32 data, key_schedule_entry* schedule_entries, uint32 amount_to_run, uint8* result_data, uint32 result_max_size, uint32* result_size)
+void tm_tester::run_results_process(uint32 key, uint32 data, const key_schedule& schedule_entries, uint32 amount_to_run, uint8* result_data, uint32 result_max_size, uint32* result_size)
 {
 	UUT->run_bruteforce_data(key, data, schedule_entries, amount_to_run, dummy, result_data, result_max_size, result_size);
 }

@@ -16,9 +16,9 @@ public:
 
 	virtual void run_alg(int algorithm_id, uint16 * rng_seed, int iterations);
 
-	virtual void run_one_map(key_schedule_entry schedule_entry);
+	virtual void run_one_map(const key_schedule::key_schedule_entry& schedule_entry);
 
-	virtual void run_all_maps(key_schedule_entry* schedule_entries);
+	virtual void run_all_maps(const key_schedule& schedule_entries);
 
 	virtual void decrypt_carnival_world();
 	virtual void decrypt_other_world();
@@ -27,7 +27,7 @@ public:
 	virtual uint16 fetch_carnival_world_checksum_value();
 	virtual uint16 fetch_other_world_checksum_value();
 
-	void run_bruteforce_data(uint32 key, uint32 start_data, key_schedule_entry* schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size);
+	void run_bruteforce_data(uint32 key, uint32 start_data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size);
 
 private:
 	void initialize();

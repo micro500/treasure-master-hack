@@ -49,13 +49,11 @@ public:
 
 	virtual void run_alg(int algorithm_id, uint16 * rng_seed, int iterations) = 0;
 
-	virtual void run_one_map(key_schedule_entry schedule_entry) = 0;
+	virtual void run_one_map(const key_schedule::key_schedule_entry& schedule_entry) = 0;
 
-	virtual void run_all_maps(key_schedule_entry* schedule_entries) = 0;
+	virtual void run_all_maps(const key_schedule& schedule_entries) = 0;
 
-	virtual void run_bruteforce_data(uint32 key, uint32 data, key_schedule_entry* schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size);
-
-	virtual uint16 generate_stats(uint32 key, uint32 data, key_schedule_entry* schedule_entries, bool use_hashing);
+	virtual void run_bruteforce_data(uint32 key, uint32 data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size);
 
 	void print_working_code();
 	uint8 check_machine_code(uint8* data, int world);

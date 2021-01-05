@@ -568,7 +568,7 @@ __forceinline void tm_avx_8_in_cpu::add_alg(__m256i& working_code0, __m256i& wor
 
 }
 
-void tm_avx_8_in_cpu::run_one_map(key_schedule_entry schedule_entry)
+void tm_avx_8_in_cpu::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -599,7 +599,7 @@ void tm_avx_8_in_cpu::run_one_map(key_schedule_entry schedule_entry)
 
 
 
-void tm_avx_8_in_cpu::run_all_maps(key_schedule_entry* schedule_entries)
+void tm_avx_8_in_cpu::run_all_maps(const key_schedule& schedule_entries)
 {
 	__m256i working_code0 = _mm256_load_si256((__m256i*)(working_code_data));
 	__m256i working_code1 = _mm256_load_si256((__m256i*)(working_code_data + 32));
@@ -626,9 +626,9 @@ void tm_avx_8_in_cpu::run_all_maps(key_schedule_entry* schedule_entries)
 	__m256i mask_00FE = _mm256_set_epi16(0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE);
 	__m256i mask_0001 = _mm256_set_epi16(0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001);
 
-	for (int schedule_counter = 0; schedule_counter < 27; schedule_counter++)
+	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
 	{
-		key_schedule_entry schedule_entry = schedule_entries[schedule_counter];
+		key_schedule::key_schedule_entry schedule_entry = *it;
 
 		uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 		uint16 nibble_selector = schedule_entry.nibble_selector;

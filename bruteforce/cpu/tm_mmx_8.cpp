@@ -328,7 +328,7 @@ __forceinline void tm_mmx_8::add_alg(uint16* rng_seed, uint8* rng_start)
 }
 
 
-void tm_mmx_8::run_one_map(key_schedule_entry schedule_entry)
+void tm_mmx_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -357,7 +357,7 @@ void tm_mmx_8::run_one_map(key_schedule_entry schedule_entry)
 	}
 }
 
-void tm_mmx_8::run_all_maps(key_schedule_entry* schedule_entries)
+void tm_mmx_8::run_all_maps(const key_schedule& schedule_entries)
 {
 	__m64 mask_FF = _mm_set1_pi8(0xFF);
 	__m64 mask_FE = _mm_set1_pi8(0xFE);
@@ -376,9 +376,9 @@ void tm_mmx_8::run_all_maps(key_schedule_entry* schedule_entries)
 	__m64 mask_top_01 = _mm_set_pi8(0x01, 0, 0, 0, 0, 0, 0, 0);
 	__m64 mask_top_80 = _mm_set_pi8(0x80, 0, 0, 0, 0, 0, 0, 0);
 
-	for (int schedule_counter = 0; schedule_counter < 27; schedule_counter++)
+	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
 	{
-		key_schedule_entry schedule_entry = schedule_entries[schedule_counter];
+		key_schedule::key_schedule_entry schedule_entry = *it;
 
 		uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 		uint16 nibble_selector = schedule_entry.nibble_selector;
