@@ -10,19 +10,19 @@
 //#include <zmmintrin.h> //AVX512
 
 #include "data_sizes.h"
-#include "tm_avx_in_cpu.h"
+#include "tm_avx_r256_16.h"
 
 #if defined(__GNUC__)
 #define _mm256_set_m128i(vh, vl) \
         _mm256_castpd_si256(_mm256_insertf128_pd(_mm256_castsi256_pd(_mm256_castsi128_si256(vl)), _mm_castsi128_pd(vh), 1))
 #endif
 
-tm_avx_in_cpu::tm_avx_in_cpu(RNG *rng_obj) : TM_base(rng_obj)
+tm_avx_r256_16::tm_avx_r256_16(RNG *rng_obj) : TM_base(rng_obj)
 {
 	initialize();
 }
 
-__forceinline void tm_avx_in_cpu::initialize()
+__forceinline void tm_avx_r256_16::initialize()
 {
 	if (!initialized)
 	{
@@ -40,10 +40,10 @@ __forceinline void tm_avx_in_cpu::initialize()
 
 		initialized = true;
 	}
-	obj_name = "tm_avx_in_cpu";
+	obj_name = "tm_avx_r256_16";
 }
 
-void tm_avx_in_cpu::expand(uint32 key, uint32 data)
+void tm_avx_r256_16::expand(uint32 key, uint32 data)
 {
 	uint16* x = (uint16*)working_code_data;
 	for (int i = 0; i < 128; i += 8)
@@ -68,7 +68,7 @@ void tm_avx_in_cpu::expand(uint32 key, uint32 data)
 }
 
 
-void tm_avx_in_cpu::load_data(uint8* new_data)
+void tm_avx_r256_16::load_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -76,7 +76,7 @@ void tm_avx_in_cpu::load_data(uint8* new_data)
 	}
 }
 
-void tm_avx_in_cpu::fetch_data(uint8* new_data)
+void tm_avx_r256_16::fetch_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -85,7 +85,7 @@ void tm_avx_in_cpu::fetch_data(uint8* new_data)
 }
 
 
-void tm_avx_in_cpu::run_alg(int algorithm_id, uint16 * rng_seed, int iterations)
+void tm_avx_r256_16::run_alg(int algorithm_id, uint16 * rng_seed, int iterations)
 {
 	// get working code from memory
 	__m256i working_code0 = _mm256_load_si256((__m256i *)(working_code_data));
@@ -187,7 +187,7 @@ void tm_avx_in_cpu::run_alg(int algorithm_id, uint16 * rng_seed, int iterations)
 	_mm256_store_si256((__m256i *)(working_code_data + 224), working_code7);
 }
 
-__forceinline void tm_avx_in_cpu::alg_0(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_FF)
+__forceinline void tm_avx_r256_16::alg_0(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_FF)
 {
 	uint8 * rng_start = ((uint8*)rng->alg0_values_16) + ((*rng_seed) * 128 * 2);
 
@@ -265,7 +265,7 @@ __forceinline void tm_avx_in_cpu::alg_0(__m256i& working_code0, __m256i& working
 
 }
 
-__forceinline void tm_avx_in_cpu::alg_1(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_FF)
+__forceinline void tm_avx_r256_16::alg_1(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_FF)
 {
 	uint8 * rng_start = ((uint8*)rng->regular_rng_values_16) + ((*rng_seed) * 128 * 2);
 
@@ -318,7 +318,7 @@ __forceinline void tm_avx_in_cpu::alg_1(__m256i& working_code0, __m256i& working
 	working_code7 = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(working_code7), _mm256_castsi256_pd(mask_FF)));
 }
 
-__forceinline void tm_avx_in_cpu::alg_2(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_top_01, __m256i& mask_alg2, __m256i& mask_007F, __m256i& mask_FE00, __m256i& mask_0080)
+__forceinline void tm_avx_r256_16::alg_2(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_top_01, __m256i& mask_alg2, __m256i& mask_007F, __m256i& mask_FE00, __m256i& mask_0080)
 {
 	__m256i carry = _mm256_load_si256((__m256i *)(rng->alg2_values_256_16 + ((*rng_seed) * 32)));
 
@@ -514,7 +514,7 @@ __forceinline void tm_avx_in_cpu::alg_2(__m256i& working_code0, __m256i& working
 	working_code0 = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(working_code0), _mm256_castsi256_pd(carry)));
 }
 
-__forceinline void tm_avx_in_cpu::alg_3(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed)
+__forceinline void tm_avx_r256_16::alg_3(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed)
 {
 	uint8 * rng_start = ((uint8*)rng->regular_rng_values_16) + ((*rng_seed) * 128 * 2);
 
@@ -543,7 +543,7 @@ __forceinline void tm_avx_in_cpu::alg_3(__m256i& working_code0, __m256i& working
 	working_code7 = _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(working_code7), _mm256_castsi256_pd(rng_val)));
 }
 
-__forceinline void tm_avx_in_cpu::alg_4(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_FF)
+__forceinline void tm_avx_r256_16::alg_4(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_FF)
 {
 	uint8 * rng_start = ((uint8*)rng->regular_rng_values_16) + ((*rng_seed) * 128 * 2);
 
@@ -596,7 +596,7 @@ __forceinline void tm_avx_in_cpu::alg_4(__m256i& working_code0, __m256i& working
 	working_code7 = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(working_code7), _mm256_castsi256_pd(mask_FF)));
 }
 
-__forceinline void tm_avx_in_cpu::alg_5(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_top_80, __m256i& mask_alg5, __m256i& mask_7F00, __m256i& mask_00FE, __m256i& mask_0001)
+__forceinline void tm_avx_r256_16::alg_5(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_top_80, __m256i& mask_alg5, __m256i& mask_7F00, __m256i& mask_00FE, __m256i& mask_0001)
 {
 	__m256i carry = _mm256_load_si256((__m256i *)(rng->alg5_values_256_16 + ((*rng_seed) * 32)));
 
@@ -793,7 +793,7 @@ __forceinline void tm_avx_in_cpu::alg_5(__m256i& working_code0, __m256i& working
 
 }
 
-__forceinline void tm_avx_in_cpu::alg_6(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_FF)
+__forceinline void tm_avx_r256_16::alg_6(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_FF)
 {
 	uint8 * rng_start = ((uint8*)rng->alg6_values_16) + ((*rng_seed) * 128 * 2);
 
@@ -870,7 +870,7 @@ __forceinline void tm_avx_in_cpu::alg_6(__m256i& working_code0, __m256i& working
 	working_code7 = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(working_code7), _mm256_castsi256_pd(mask_FF)));
 }
 
-__forceinline void tm_avx_in_cpu::alg_7(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, __m256i& mask_FF)
+__forceinline void tm_avx_r256_16::alg_7(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, __m256i& mask_FF)
 {
 	working_code0 = _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(working_code0), _mm256_castsi256_pd(mask_FF)));
 	working_code1 = _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(working_code1), _mm256_castsi256_pd(mask_FF)));
@@ -882,7 +882,7 @@ __forceinline void tm_avx_in_cpu::alg_7(__m256i& working_code0, __m256i& working
 	working_code7 = _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(working_code7), _mm256_castsi256_pd(mask_FF)));
 }
 
-void tm_avx_in_cpu::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
+void tm_avx_r256_16::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -913,7 +913,7 @@ void tm_avx_in_cpu::run_one_map(const key_schedule::key_schedule_entry& schedule
 
 
 
-void tm_avx_in_cpu::run_all_maps(const key_schedule& schedule_entries)
+void tm_avx_r256_16::run_all_maps(const key_schedule& schedule_entries)
 {
 	// get working code from memory
 	__m256i working_code0 = _mm256_load_si256((__m256i*)(working_code_data));
@@ -1023,4 +1023,4 @@ void tm_avx_in_cpu::run_all_maps(const key_schedule& schedule_entries)
 	_mm256_store_si256((__m256i*)(working_code_data + 224), working_code7);
 }
 
-bool tm_avx_in_cpu::initialized = false;
+bool tm_avx_r256_16::initialized = false;

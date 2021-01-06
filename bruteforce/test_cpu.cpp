@@ -1,20 +1,20 @@
 #include "tm_base.h"
 #include "tm_8.h"
-#include "tm_mmx_8.h"
+#include "tm_mmx_m64_8.h"
 #include "tm_32_8.h"
 #include "tm_32_16.h"
 #include "tm_64_8.h"
 #include "tm_64_16.h"
-#include "tm_128_8.h"
-#include "tm_sse2_8_shuffled.h"
-#include "tm_128_16.h"
-#include "tm_avx_in_cpu.h"
-#include "tm_avx_8.h"
-#include "tm_avx_8_in_cpu.h"
-#include "tm_avx_8_in_cpu_shuffled.h"
-#include "tm_avx_16.h"
-#include "tm_avx2_8_in_cpu_shuffled.h"
-#include "tm_avx512_8_in_cpu_shuffled.h"
+#include "tm_sse2_m128_8.h"
+#include "tm_sse2_m128s_8.h"
+#include "tm_sse2_m128_16.h"
+#include "tm_avx_r256_16.h"
+#include "tm_avx_m256_8.h"
+#include "tm_avx_r256_8.h"
+#include "tm_avx_r256s_8.h"
+#include "tm_avx_m256_16.h"
+#include "tm_avx2_r256s_8.h"
+#include "tm_avx512_r512s_8.h"
 #include "rng_obj.h"
 #include "tester2.h"
 #include "tm_tester.h"
@@ -70,30 +70,30 @@ int main()
 	tm_64_16 _tm_64_16(&rng);
 	tms.push_back(&_tm_64_16);
 
-	tm_128_8 _tm_128_8(&rng);
-	tms.push_back(&_tm_128_8);
-	tm_128_16 _tm_128_16(&rng);
-	tms.push_back(&_tm_128_16);
-	tm_sse2_8_shuffled _tm_sse2_8_shuffled(&rng);
-	tms.push_back(&_tm_sse2_8_shuffled);
+	tm_sse2_m128_8 _tm_sse2_m128_8(&rng);
+	tms.push_back(&_tm_sse2_m128_8);
+	tm_sse2_m128_16 _tm_sse2_m128_16(&rng);
+	tms.push_back(&_tm_sse2_m128_16);
+	tm_sse2_m128s_8 _tm_sse2_m128s_8(&rng);
+	tms.push_back(&_tm_sse2_m128s_8);
 	
-	tm_avx_8 _tm_avx_8(&rng);
-	tms.push_back(&_tm_avx_8);
-	tm_avx_8_in_cpu _tm_avx_8_in_cpu(&rng);
-	tms.push_back(&_tm_avx_8_in_cpu);*/
-	tm_avx_8_in_cpu_shuffled _tm_avx_8_in_cpu_shuffled(&rng);
-	tms.push_back(&_tm_avx_8_in_cpu_shuffled);/*
-	tm_avx_in_cpu _tm_avx_in_cpu(&rng);
-	tms.push_back(&_tm_avx_in_cpu);
+	tm_avx_m256_8 _tm_avx_m256_8(&rng);
+	tms.push_back(&_tm_avx_m256_8);
+	tm_avx_r256_8 _tm_avx_r256_8(&rng);
+	tms.push_back(&_tm_avx_r256_8);*/
+	tm_avx_r256s_8 _tm_avx_r256s_8(&rng);
+	tms.push_back(&_tm_avx_r256s_8);/*
+	tm_avx_r256_16 _tm_avx_r256_16(&rng);
+	tms.push_back(&_tm_avx_r256_16);
 	
-	tm_avx_16 _tm_avx_16(&rng);
-	tms.push_back(&_tm_avx_16);
+	tm_avx_m256_16 _tm_avx_m256_16(&rng);
+	tms.push_back(&_tm_avx_m256_16);
 	
-	tm_avx2_8_in_cpu_shuffled _tm_avx2_8_in_cpu_shuffled(&rng);
-	tms.push_back(&_tm_avx2_8_in_cpu_shuffled);
+	tm_avx2_r256s_8 _tm_avx2_r256s_8(&rng);
+	tms.push_back(&_tm_avx2_r256s_8);
 	
-	tm_avx512_8_in_cpu_shuffled _tm_avx512_8_in_cpu_shuffled(&rng);
-	tms.push_back(&_tm_avx512_8_in_cpu_shuffled);
+	tm_avx512_r512s_8 _tm_avx512_r512s_8(&rng);
+	tms.push_back(&_tm_avx512_r512s_8);
 	*/
 	for (std::vector<TM_base*>::iterator it = tms.begin(); it != tms.end(); ++it)
 	{

@@ -1,5 +1,5 @@
-#ifndef TM_AVX_8_IN_CPU_SHUFFLED_H
-#define TM_AVX_8_IN_CPU_SHUFFLED_H
+#ifndef TM_AVX_R256S_8_H
+#define TM_AVX_R256S_8_H
 #include <mmintrin.h>  //MMX
 #include <xmmintrin.h> //SSE
 #include <emmintrin.h> //SSE2
@@ -16,10 +16,10 @@
 #include "rng_obj.h"
 #include "tm_base.h"
 
-class tm_avx_8_in_cpu_shuffled : public TM_base
+class tm_avx_r256s_8 : public TM_base
 {
 public:
-	tm_avx_8_in_cpu_shuffled(RNG* rng);
+	tm_avx_r256s_8(RNG* rng);
 
 	virtual void load_data(uint8* new_data);
 	void fetch_data(uint8* new_data);
@@ -86,4 +86,4 @@ private:
 
 	static bool initialized;
 };
-#endif // TM_AVX_8_IN_CPU_SHUFFLED_H
+#endif // TM_AVX_R256S_8_H

@@ -10,19 +10,19 @@
 //#include <zmmintrin.h> //AVX512
 
 #include "data_sizes.h"
-#include "tm_avx_16.h"
+#include "tm_avx_m256_16.h"
 
 #if defined(__GNUC__)
 #define _mm256_set_m128i(vh, vl) \
         _mm256_castpd_si256(_mm256_insertf128_pd(_mm256_castsi256_pd(_mm256_castsi128_si256(vl)), _mm_castsi128_pd(vh), 1))
 #endif
 
-tm_avx_16::tm_avx_16(RNG* rng_obj) : TM_base(rng_obj)
+tm_avx_m256_16::tm_avx_m256_16(RNG* rng_obj) : TM_base(rng_obj)
 {
 	initialize();
 }
 
-__forceinline void tm_avx_16::initialize()
+__forceinline void tm_avx_m256_16::initialize()
 {
 	if (!initialized)
 	{
@@ -41,10 +41,10 @@ __forceinline void tm_avx_16::initialize()
 
 		initialized = true;
 	}
-	obj_name = "tm_avx_16";
+	obj_name = "tm_avx_m256_16";
 }
 
-void tm_avx_16::expand(uint32 key, uint32 data)
+void tm_avx_m256_16::expand(uint32 key, uint32 data)
 {
 	uint16* x = (uint16*)working_code_data;
 	for (int i = 0; i < 128; i += 8)
@@ -69,7 +69,7 @@ void tm_avx_16::expand(uint32 key, uint32 data)
 }
 
 
-void tm_avx_16::load_data(uint8* new_data)
+void tm_avx_m256_16::load_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -77,7 +77,7 @@ void tm_avx_16::load_data(uint8* new_data)
 	}
 }
 
-void tm_avx_16::fetch_data(uint8* new_data)
+void tm_avx_m256_16::fetch_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -85,7 +85,7 @@ void tm_avx_16::fetch_data(uint8* new_data)
 	}
 }
 
-void tm_avx_16::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
+void tm_avx_m256_16::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
 {
 	if (algorithm_id == 0)
 	{
@@ -152,7 +152,7 @@ void tm_avx_16::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
 	}
 }
 
-__forceinline void tm_avx_16::alg_0(uint16* rng_seed)
+__forceinline void tm_avx_m256_16::alg_0(uint16* rng_seed)
 {
 	for (int i = 0; i < 8; i++)
 	{
@@ -175,12 +175,12 @@ __forceinline void tm_avx_16::alg_0(uint16* rng_seed)
 	}
 }
 
-__forceinline void tm_avx_16::alg_1(uint16* rng_seed)
+__forceinline void tm_avx_m256_16::alg_1(uint16* rng_seed)
 {
 	add_alg((uint8*)rng->regular_rng_values_16, rng_seed);
 }
 
-__forceinline void tm_avx_16::alg_2(uint16* rng_seed)
+__forceinline void tm_avx_m256_16::alg_2(uint16* rng_seed)
 {
 	__m256i carry = _mm256_load_si256((__m256i*)(rng->alg2_values_256_16 + (*rng_seed * 32)));
 	for (int i = 7; i >= 0; i--)
@@ -224,7 +224,7 @@ __forceinline void tm_avx_16::alg_2(uint16* rng_seed)
 	}
 }
 
-__forceinline void tm_avx_16::alg_3(uint16* rng_seed)
+__forceinline void tm_avx_m256_16::alg_3(uint16* rng_seed)
 {
 	uint8* rng_start = (uint8*)rng->regular_rng_values_16 + (*rng_seed * 128 * 2);
 	for (int i = 0; i < 8; i++)
@@ -237,12 +237,12 @@ __forceinline void tm_avx_16::alg_3(uint16* rng_seed)
 	}
 }
 
-__forceinline void tm_avx_16::alg_4(uint16* rng_seed)
+__forceinline void tm_avx_m256_16::alg_4(uint16* rng_seed)
 {
 	add_alg((uint8*)rng->alg4_values_16, rng_seed);
 }
 
-__forceinline void tm_avx_16::alg_5(uint16* rng_seed)
+__forceinline void tm_avx_m256_16::alg_5(uint16* rng_seed)
 {
 	__m256i carry = _mm256_load_si256((__m256i*)(rng->alg5_values_256_16 + (*rng_seed * 32)));
 	for (int i = 7; i >= 0; i--)
@@ -286,7 +286,7 @@ __forceinline void tm_avx_16::alg_5(uint16* rng_seed)
 	}
 }
 
-__forceinline void tm_avx_16::alg_6(uint16* rng_seed)
+__forceinline void tm_avx_m256_16::alg_6(uint16* rng_seed)
 {
 	for (int i = 0; i < 8; i++)
 	{
@@ -309,7 +309,7 @@ __forceinline void tm_avx_16::alg_6(uint16* rng_seed)
 	}
 }
 
-__forceinline void tm_avx_16::alg_7()
+__forceinline void tm_avx_m256_16::alg_7()
 {
 	for (int i = 0; i < 8; i++)
 	{
@@ -320,7 +320,7 @@ __forceinline void tm_avx_16::alg_7()
 	}
 }
 
-__forceinline void tm_avx_16::add_alg(const uint8* addition_values, uint16* rng_seed)
+__forceinline void tm_avx_m256_16::add_alg(const uint8* addition_values, uint16* rng_seed)
 {
 	for (int i = 0; i < 8; i++)
 	{
@@ -344,7 +344,7 @@ __forceinline void tm_avx_16::add_alg(const uint8* addition_values, uint16* rng_
 }
 
 
-void tm_avx_16::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
+void tm_avx_m256_16::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -373,7 +373,7 @@ void tm_avx_16::run_one_map(const key_schedule::key_schedule_entry& schedule_ent
 	}
 }
 
-void tm_avx_16::run_all_maps(const key_schedule& schedule_entries)
+void tm_avx_m256_16::run_all_maps(const key_schedule& schedule_entries)
 {
 	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
 	{
@@ -445,4 +445,4 @@ void tm_avx_16::run_all_maps(const key_schedule& schedule_entries)
 	}
 }
 
-bool tm_avx_16::initialized = false;
+bool tm_avx_m256_16::initialized = false;

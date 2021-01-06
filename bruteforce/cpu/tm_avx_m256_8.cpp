@@ -10,19 +10,19 @@
 //#include <zmmintrin.h> //AVX512
 
 #include "data_sizes.h"
-#include "tm_avx_8.h"
+#include "tm_avx_m256_8.h"
 
 #if defined(__GNUC__)
 #define _mm256_set_m128i(vh, vl) \
         _mm256_castpd_si256(_mm256_insertf128_pd(_mm256_castsi256_pd(_mm256_castsi128_si256(vl)), _mm_castsi128_pd(vh), 1))
 #endif
 
-tm_avx_8::tm_avx_8(RNG* rng_obj) : TM_base(rng_obj)
+tm_avx_m256_8::tm_avx_m256_8(RNG* rng_obj) : TM_base(rng_obj)
 {
 	initialize();
 }
 
-__forceinline void tm_avx_8::initialize()
+__forceinline void tm_avx_m256_8::initialize()
 {
 	if (!initialized)
 	{
@@ -44,10 +44,10 @@ __forceinline void tm_avx_8::initialize()
 
 		initialized = true;
 	}
-	obj_name = "tm_avx_8";
+	obj_name = "tm_avx_m256_8";
 }
 
-void tm_avx_8::expand(uint32 key, uint32 data)
+void tm_avx_m256_8::expand(uint32 key, uint32 data)
 {
 	uint8* x = (uint8*)working_code_data;
 	for (int i = 0; i < 128; i += 8)
@@ -72,7 +72,7 @@ void tm_avx_8::expand(uint32 key, uint32 data)
 }
 
 
-void tm_avx_8::load_data(uint8* new_data)
+void tm_avx_m256_8::load_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -80,7 +80,7 @@ void tm_avx_8::load_data(uint8* new_data)
 	}
 }
 
-void tm_avx_8::fetch_data(uint8* new_data)
+void tm_avx_m256_8::fetch_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -88,7 +88,7 @@ void tm_avx_8::fetch_data(uint8* new_data)
 	}
 }
 
-void tm_avx_8::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
+void tm_avx_m256_8::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
 {
 	if (algorithm_id == 0)
 	{
@@ -155,7 +155,7 @@ void tm_avx_8::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
 	}
 }
 
-__forceinline void tm_avx_8::alg_0(uint16 *rng_seed)
+__forceinline void tm_avx_m256_8::alg_0(uint16 *rng_seed)
 {
 	__m256i mask_FE = _mm256_set1_epi16(0xFEFE);
 
@@ -178,12 +178,12 @@ __forceinline void tm_avx_8::alg_0(uint16 *rng_seed)
 	}
 }
 
-__forceinline void tm_avx_8::alg_1(uint16* rng_seed)
+__forceinline void tm_avx_m256_8::alg_1(uint16* rng_seed)
 {
 	add_alg(rng->regular_rng_values_8_lo, rng->regular_rng_values_8_hi, rng_seed);
 }
 
-__forceinline void tm_avx_8::alg_2(uint16* rng_seed)
+__forceinline void tm_avx_m256_8::alg_2(uint16* rng_seed)
 {
 	__m256i carry = _mm256_load_si256((__m256i*)(rng->alg2_values_256_8 + (*rng_seed * 32)));
 	for (int i = 3; i >= 0; i--)
@@ -226,7 +226,7 @@ __forceinline void tm_avx_8::alg_2(uint16* rng_seed)
 	}
 }
 
-__forceinline void tm_avx_8::alg_3(uint16* rng_seed)
+__forceinline void tm_avx_m256_8::alg_3(uint16* rng_seed)
 {
 	const uint8* rng_start = rng->regular_rng_values_8 + (*rng_seed * 128);
 	for (int i = 0; i < 4; i++)
@@ -239,12 +239,12 @@ __forceinline void tm_avx_8::alg_3(uint16* rng_seed)
 	}
 }
 
-__forceinline void tm_avx_8::alg_4(uint16* rng_seed)
+__forceinline void tm_avx_m256_8::alg_4(uint16* rng_seed)
 {
 	add_alg(rng->alg4_values_8_lo, rng->alg4_values_8_hi, rng_seed);
 }
 
-__forceinline void tm_avx_8::alg_5(uint16* rng_seed)
+__forceinline void tm_avx_m256_8::alg_5(uint16* rng_seed)
 {
 	__m256i carry = _mm256_load_si256((__m256i*)(rng->alg5_values_256_8 + (*rng_seed * 32)));
 	for (int i = 3; i >= 0; i--)
@@ -288,7 +288,7 @@ __forceinline void tm_avx_8::alg_5(uint16* rng_seed)
 	}
 }
 
-__forceinline void tm_avx_8::alg_6(uint16* rng_seed)
+__forceinline void tm_avx_m256_8::alg_6(uint16* rng_seed)
 {
 	__m256i mask_7F = _mm256_set1_epi16(0x7F7F);
 	for (int i = 0; i < 4; i++)
@@ -310,7 +310,7 @@ __forceinline void tm_avx_8::alg_6(uint16* rng_seed)
 	}
 }
 
-__forceinline void tm_avx_8::alg_7()
+__forceinline void tm_avx_m256_8::alg_7()
 {
 	__m256i mask = _mm256_set1_epi16(0xFFFF);
 
@@ -321,7 +321,7 @@ __forceinline void tm_avx_8::alg_7()
 
 }
 
-__forceinline void tm_avx_8::add_alg(const uint8* addition_values_lo, const uint8* addition_values_hi, uint16 * rng_seed)
+__forceinline void tm_avx_m256_8::add_alg(const uint8* addition_values_lo, const uint8* addition_values_hi, uint16 * rng_seed)
 {
 	__m128i mask_lo = _mm_set_epi8(0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0);
 	__m128i mask_hi = _mm_set_epi8(0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF);
@@ -350,7 +350,7 @@ __forceinline void tm_avx_8::add_alg(const uint8* addition_values_lo, const uint
 	}
 }
 
-void tm_avx_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
+void tm_avx_m256_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -379,7 +379,7 @@ void tm_avx_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entr
 	}
 }
 
-void tm_avx_8::run_all_maps(const key_schedule& schedule_entries)
+void tm_avx_m256_8::run_all_maps(const key_schedule& schedule_entries)
 {
 	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
 	{
@@ -387,4 +387,4 @@ void tm_avx_8::run_all_maps(const key_schedule& schedule_entries)
 	}
 }
 
-bool tm_avx_8::initialized = false;
+bool tm_avx_m256_8::initialized = false;

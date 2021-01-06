@@ -1,6 +1,6 @@
 #ifndef _WIN64
-#ifndef TM_MMX_8_H
-#define TM_MMX_8_H
+#ifndef TM_MMX_M64_8_H
+#define TM_MMX_M64_8_H
 #include <mmintrin.h>  //MMX
 
 #include "data_sizes.h"
@@ -8,10 +8,10 @@
 #include "rng_obj.h"
 #include "tm_base.h"
 
-class tm_mmx_8 : public TM_base
+class tm_mmx_m64_8 : public TM_base
 {
 public:
-	tm_mmx_8(RNG* rng);
+	tm_mmx_m64_8(RNG* rng);
 
 	virtual void load_data(uint8* new_data);
 	void fetch_data(uint8* new_data);
@@ -41,5 +41,5 @@ private:
 	ALIGNED(32) uint8 working_code_data[128];
 	static bool initialized;
 };
-#endif // TM_MMX_8_H
+#endif // TM_MMX_M64_8_H
 #endif

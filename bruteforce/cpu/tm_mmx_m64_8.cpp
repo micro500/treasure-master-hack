@@ -3,14 +3,14 @@
 #include <mmintrin.h>  //MMX
 
 #include "data_sizes.h"
-#include "tm_mmx_8.h"
+#include "tm_mmx_m64_8.h"
 
-tm_mmx_8::tm_mmx_8(RNG* rng_obj) : TM_base(rng_obj)
+tm_mmx_m64_8::tm_mmx_m64_8(RNG* rng_obj) : TM_base(rng_obj)
 {
 	initialize();
 }
 
-__forceinline void tm_mmx_8::initialize()
+__forceinline void tm_mmx_m64_8::initialize()
 {
 	if (!initialized)
 	{
@@ -30,10 +30,10 @@ __forceinline void tm_mmx_8::initialize()
 
 		initialized = true;
 	}
-	obj_name = "tm_mmx_8";
+	obj_name = "tm_mmx_m64_8";
 }
 
-void tm_mmx_8::expand(uint32 key, uint32 data)
+void tm_mmx_m64_8::expand(uint32 key, uint32 data)
 {
 	uint8* x = (uint8*)working_code_data;
 	for (int i = 0; i < 128; i += 8)
@@ -56,7 +56,7 @@ void tm_mmx_8::expand(uint32 key, uint32 data)
 	}
 }
 
-void tm_mmx_8::load_data(uint8* new_data)
+void tm_mmx_m64_8::load_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -65,7 +65,7 @@ void tm_mmx_8::load_data(uint8* new_data)
 
 }
 
-void tm_mmx_8::fetch_data(uint8* new_data)
+void tm_mmx_m64_8::fetch_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -73,7 +73,7 @@ void tm_mmx_8::fetch_data(uint8* new_data)
 	}
 }
 
-void tm_mmx_8::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
+void tm_mmx_m64_8::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
 {
 	__m64 mask_FF = _mm_set1_pi8(0xFF);
 	__m64 mask_FE = _mm_set1_pi8(0xFE);
@@ -156,7 +156,7 @@ void tm_mmx_8::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
 	}
 }
 
-__forceinline void tm_mmx_8::alg_0(uint16* rng_seed, __m64& mask_FE)
+__forceinline void tm_mmx_m64_8::alg_0(uint16* rng_seed, __m64& mask_FE)
 {
 	uint8* rng_start = rng->alg0_values_8 + ((*rng_seed) * 128);
 
@@ -173,7 +173,7 @@ __forceinline void tm_mmx_8::alg_0(uint16* rng_seed, __m64& mask_FE)
 }
 
 
-__forceinline void tm_mmx_8::alg_2(uint16* rng_seed, __m64& mask_hi, __m64& mask_lo, __m64& mask_007F, __m64& mask_0080, __m64& mask_FE00, __m64& mask_0100, __m64& mask_top_01)
+__forceinline void tm_mmx_m64_8::alg_2(uint16* rng_seed, __m64& mask_hi, __m64& mask_lo, __m64& mask_007F, __m64& mask_0080, __m64& mask_FE00, __m64& mask_0100, __m64& mask_top_01)
 {
 	__m64 carry = *(__m64*)(rng->alg2_values_64_8 + *rng_seed * 8);
 	for (int i = 15; i >= 0; i--)
@@ -202,7 +202,7 @@ __forceinline void tm_mmx_8::alg_2(uint16* rng_seed, __m64& mask_hi, __m64& mask
 }
 
 
-__forceinline void tm_mmx_8::alg_3(uint16* rng_seed)
+__forceinline void tm_mmx_m64_8::alg_3(uint16* rng_seed)
 {
 	uint8* rng_start = rng->regular_rng_values_8 + ((*rng_seed) * 128);
 
@@ -264,7 +264,7 @@ __forceinline void tm_mmx_8::alg_5(__m256i& working_code0, __m256i& working_code
 }
 */
 
-__forceinline void tm_mmx_8::alg_5(uint16* rng_seed, __m64& mask_hi, __m64& mask_lo, __m64& mask_00FE, __m64& mask_0001, __m64& mask_7F00, __m64& mask_8000, __m64& mask_top_80)
+__forceinline void tm_mmx_m64_8::alg_5(uint16* rng_seed, __m64& mask_hi, __m64& mask_lo, __m64& mask_00FE, __m64& mask_0001, __m64& mask_7F00, __m64& mask_8000, __m64& mask_top_80)
 {
 	__m64 carry = *(__m64*)(rng->alg5_values_64_8 + *rng_seed * 8);
 	for (int i = 15; i >= 0; i--)
@@ -293,7 +293,7 @@ __forceinline void tm_mmx_8::alg_5(uint16* rng_seed, __m64& mask_hi, __m64& mask
 }
 
 
-__forceinline void tm_mmx_8::alg_6(uint16* rng_seed, __m64& mask_7F)
+__forceinline void tm_mmx_m64_8::alg_6(uint16* rng_seed, __m64& mask_7F)
 {
 	uint8* rng_start = rng->alg6_values_8 + ((*rng_seed) * 128);
 
@@ -309,7 +309,7 @@ __forceinline void tm_mmx_8::alg_6(uint16* rng_seed, __m64& mask_7F)
 	}
 }
 
-__forceinline void tm_mmx_8::alg_7(__m64& mask_FF)
+__forceinline void tm_mmx_m64_8::alg_7(__m64& mask_FF)
 {
 	for (int i = 0; i < 16; i++)
 	{
@@ -317,7 +317,7 @@ __forceinline void tm_mmx_8::alg_7(__m64& mask_FF)
 	}
 }
 
-__forceinline void tm_mmx_8::add_alg(uint16* rng_seed, uint8* rng_start)
+__forceinline void tm_mmx_m64_8::add_alg(uint16* rng_seed, uint8* rng_start)
 {
 	rng_start = rng_start + ((*rng_seed) * 128);
 
@@ -328,7 +328,7 @@ __forceinline void tm_mmx_8::add_alg(uint16* rng_seed, uint8* rng_start)
 }
 
 
-void tm_mmx_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
+void tm_mmx_m64_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -357,7 +357,7 @@ void tm_mmx_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entr
 	}
 }
 
-void tm_mmx_8::run_all_maps(const key_schedule& schedule_entries)
+void tm_mmx_m64_8::run_all_maps(const key_schedule& schedule_entries)
 {
 	__m64 mask_FF = _mm_set1_pi8(0xFF);
 	__m64 mask_FE = _mm_set1_pi8(0xFE);
@@ -473,5 +473,5 @@ void tm_mmx_8::run_all_maps(const key_schedule& schedule_entries)
 	}
 }
 
-bool tm_mmx_8::initialized = false;
+bool tm_mmx_m64_8::initialized = false;
 #endif

@@ -1,5 +1,5 @@
-#ifndef TM_AVX_IN_CPU_H
-#define TM_AVX_IN_CPU_H
+#ifndef TM_AVX_R256_16_H
+#define TM_AVX_R256_16_H
 #include <mmintrin.h>  //MMX
 #include <xmmintrin.h> //SSE
 #include <emmintrin.h> //SSE2
@@ -16,10 +16,10 @@
 #include "rng_obj.h"
 #include "tm_base.h"
 
-class tm_avx_in_cpu : public TM_base
+class tm_avx_r256_16 : public TM_base
 {
 public:
-	tm_avx_in_cpu(RNG *rng);
+	tm_avx_r256_16(RNG *rng);
 
 	virtual void load_data(uint8* new_data);
 	void fetch_data(uint8* new_data);
@@ -47,4 +47,4 @@ private:
 
 	static bool initialized;
 };
-#endif // TM_AVX_IN_CPU_H
+#endif // TM_AVX_R256_16_H

@@ -7,14 +7,14 @@
 #include <nmmintrin.h> //SSE4.2
 
 #include "data_sizes.h"
-#include "tm_128_16.h"
+#include "tm_sse2_m128_16.h"
 
-tm_128_16::tm_128_16(RNG *rng_obj) : TM_base(rng_obj)
+tm_sse2_m128_16::tm_sse2_m128_16(RNG *rng_obj) : TM_base(rng_obj)
 {
 	initialize();
 }
 
-__forceinline void tm_128_16::initialize()
+__forceinline void tm_sse2_m128_16::initialize()
 {
 	if (!initialized)
 	{
@@ -33,10 +33,10 @@ __forceinline void tm_128_16::initialize()
 
 		initialized = true;
 	}
-	obj_name = "tm_128_16";
+	obj_name = "tm_sse2_m128_16";
 }
 
-void tm_128_16::expand(uint32 key, uint32 data)
+void tm_sse2_m128_16::expand(uint32 key, uint32 data)
 {
 	uint16* x = (uint16*)working_code_data;
 	for (int i = 0; i < 128; i += 8)
@@ -60,7 +60,7 @@ void tm_128_16::expand(uint32 key, uint32 data)
 	}
 }
 
-void tm_128_16::load_data(uint8* new_data)
+void tm_sse2_m128_16::load_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -68,7 +68,7 @@ void tm_128_16::load_data(uint8* new_data)
 	}
 }
 
-void tm_128_16::fetch_data(uint8* new_data)
+void tm_sse2_m128_16::fetch_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -76,7 +76,7 @@ void tm_128_16::fetch_data(uint8* new_data)
 	}
 }
 
-void tm_128_16::run_alg(int algorithm_id, uint16 * rng_seed, int iterations)
+void tm_sse2_m128_16::run_alg(int algorithm_id, uint16 * rng_seed, int iterations)
 {
 	if (algorithm_id == 0)
 	{
@@ -144,7 +144,7 @@ void tm_128_16::run_alg(int algorithm_id, uint16 * rng_seed, int iterations)
 }
 
 
-void tm_128_16::alg_0(const uint16 rng_seed)
+void tm_sse2_m128_16::alg_0(const uint16 rng_seed)
 {
 	for (int i = 0; i < 16; i++)
 	{
@@ -160,12 +160,12 @@ void tm_128_16::alg_0(const uint16 rng_seed)
 	}
 }
 
-void tm_128_16::alg_1(const uint16 rng_seed)
+void tm_sse2_m128_16::alg_1(const uint16 rng_seed)
 {
 	add_alg(((uint8*)rng->regular_rng_values_16), rng_seed);
 }
 
-void tm_128_16::alg_2(const uint16 rng_seed)
+void tm_sse2_m128_16::alg_2(const uint16 rng_seed)
 {
 	__m128i carry = _mm_loadu_si128((__m128i *)(((uint8*)rng->alg2_values_128_16) + (rng_seed * 16)));
 	for (int i = 15; i >= 0; i--)
@@ -197,7 +197,7 @@ void tm_128_16::alg_2(const uint16 rng_seed)
 	}
 }
 
-void tm_128_16::alg_3(const uint16 rng_seed)
+void tm_sse2_m128_16::alg_3(const uint16 rng_seed)
 {
 	for (int i = 0; i < 16; i++)
 	{
@@ -209,12 +209,12 @@ void tm_128_16::alg_3(const uint16 rng_seed)
 	}
 }
 
-void tm_128_16::alg_4(const uint16 rng_seed)
+void tm_sse2_m128_16::alg_4(const uint16 rng_seed)
 {
 	add_alg(((uint8*)rng->alg4_values_16), rng_seed);
 }
 
-void tm_128_16::alg_5(const uint16 rng_seed)
+void tm_sse2_m128_16::alg_5(const uint16 rng_seed)
 {
 	__m128i carry = _mm_loadu_si128((__m128i *)(((uint8*)rng->alg5_values_128_16) + (rng_seed * 16)));
 	for (int i = 15; i >= 0; i--)
@@ -245,7 +245,7 @@ void tm_128_16::alg_5(const uint16 rng_seed)
 }
 
 
-void tm_128_16::alg_6(const uint16 rng_seed)
+void tm_sse2_m128_16::alg_6(const uint16 rng_seed)
 {
 	for (int i = 0; i < 16; i++)
 	{
@@ -262,7 +262,7 @@ void tm_128_16::alg_6(const uint16 rng_seed)
 }
 
 
-void tm_128_16::alg_7()
+void tm_sse2_m128_16::alg_7()
 {
 	__m128i mask = _mm_set1_epi16(0x00FF);
 	for (int i = 0; i < 16; i++)
@@ -274,7 +274,7 @@ void tm_128_16::alg_7()
 	}
 }
 
-void tm_128_16::add_alg(uint8* addition_values, const uint16 rng_seed)
+void tm_sse2_m128_16::add_alg(uint8* addition_values, const uint16 rng_seed)
 {
 	for (int i = 0; i < 16; i++)
 	{
@@ -288,7 +288,7 @@ void tm_128_16::add_alg(uint8* addition_values, const uint16 rng_seed)
 	}
 }
 
-void tm_128_16::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
+void tm_sse2_m128_16::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -317,7 +317,7 @@ void tm_128_16::run_one_map(const key_schedule::key_schedule_entry& schedule_ent
 	}
 }
 
-void tm_128_16::run_all_maps(const key_schedule& schedule_entries)
+void tm_sse2_m128_16::run_all_maps(const key_schedule& schedule_entries)
 {
 	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
 	{
@@ -326,4 +326,4 @@ void tm_128_16::run_all_maps(const key_schedule& schedule_entries)
 }
 
 
-bool tm_128_16::initialized = false;
+bool tm_sse2_m128_16::initialized = false;

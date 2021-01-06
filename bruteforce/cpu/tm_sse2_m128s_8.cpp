@@ -3,19 +3,19 @@
 #include <emmintrin.h> //SSE2
 
 #include "data_sizes.h"
-#include "tm_sse2_8_shuffled.h"
+#include "tm_sse2_m128s_8.h"
 
 int shuffle_128(int addr)
 {
 	return (addr / 32) * 32 + (addr % 2) * 16 + ((addr / 2) % 16);
 }
 
-tm_sse2_8_shuffled::tm_sse2_8_shuffled(RNG* rng_obj) : TM_base(rng_obj)
+tm_sse2_m128s_8::tm_sse2_m128s_8(RNG* rng_obj) : TM_base(rng_obj)
 {
 	initialize();
 }
 
-__forceinline void tm_sse2_8_shuffled::initialize()
+__forceinline void tm_sse2_m128s_8::initialize()
 {
 	if (!initialized)
 	{
@@ -37,10 +37,10 @@ __forceinline void tm_sse2_8_shuffled::initialize()
 
 		initialized = true;
 	}
-	obj_name = "tm_sse2_8_shuffled";
+	obj_name = "tm_sse2_m128s_8";
 }
 
-void tm_sse2_8_shuffled::expand(uint32 key, uint32 data)
+void tm_sse2_m128s_8::expand(uint32 key, uint32 data)
 {
 	uint8* x = (uint8*)working_code_data;
 	for (int i = 0; i < 128; i += 8)
@@ -63,7 +63,7 @@ void tm_sse2_8_shuffled::expand(uint32 key, uint32 data)
 	}
 }
 
-void tm_sse2_8_shuffled::load_data(uint8* new_data)
+void tm_sse2_m128s_8::load_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -71,7 +71,7 @@ void tm_sse2_8_shuffled::load_data(uint8* new_data)
 	}
 }
 
-void tm_sse2_8_shuffled::fetch_data(uint8* new_data)
+void tm_sse2_m128s_8::fetch_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -79,7 +79,7 @@ void tm_sse2_8_shuffled::fetch_data(uint8* new_data)
 	}
 }
 
-void tm_sse2_8_shuffled::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
+void tm_sse2_m128s_8::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
 {
 	__m128i working_code0 = _mm_loadu_si128((__m128i*)(working_code_data));
 	__m128i working_code1 = _mm_loadu_si128((__m128i*)(working_code_data + 16));
@@ -173,7 +173,7 @@ void tm_sse2_8_shuffled::run_alg(int algorithm_id, uint16* rng_seed, int iterati
 }
 
 
-__forceinline void tm_sse2_8_shuffled::alg_0(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint16* rng_seed, __m128i& mask_FE)
+__forceinline void tm_sse2_m128s_8::alg_0(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint16* rng_seed, __m128i& mask_FE)
 {
 	uint8* rng_start = rng->alg0_values_128_8_shuffled + (*rng_seed * 128);
 	working_code0 = _mm_or_si128(_mm_and_si128(_mm_slli_epi16(working_code0, 1), mask_FE), _mm_loadu_si128((__m128i*)(rng_start)));
@@ -186,7 +186,7 @@ __forceinline void tm_sse2_8_shuffled::alg_0(__m128i& working_code0, __m128i& wo
 	working_code7 = _mm_or_si128(_mm_and_si128(_mm_slli_epi16(working_code7, 1), mask_FE), _mm_loadu_si128((__m128i*)(rng_start + 112)));
 }
 
-__forceinline void tm_sse2_8_shuffled::alg_2_sub(__m128i& working_a, __m128i& working_b, __m128i& carry, __m128i& mask_top_01, __m128i& mask_80, __m128i& mask_7F, __m128i& mask_FE, __m128i& mask_01)
+__forceinline void tm_sse2_m128s_8::alg_2_sub(__m128i& working_a, __m128i& working_b, __m128i& carry, __m128i& mask_top_01, __m128i& mask_80, __m128i& mask_7F, __m128i& mask_FE, __m128i& mask_01)
 {
 	// bitwise right shift
 	__m128i temp1 = _mm_srli_epi16(working_a, 1);
@@ -217,7 +217,7 @@ __forceinline void tm_sse2_8_shuffled::alg_2_sub(__m128i& working_a, __m128i& wo
 	carry = next_carry;
 }
 
-__forceinline void tm_sse2_8_shuffled::alg_2(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint16* rng_seed, __m128i& mask_top_01, __m128i& mask_80, __m128i& mask_7F, __m128i& mask_FE, __m128i& mask_01)
+__forceinline void tm_sse2_m128s_8::alg_2(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint16* rng_seed, __m128i& mask_top_01, __m128i& mask_80, __m128i& mask_7F, __m128i& mask_FE, __m128i& mask_01)
 {
 	__m128i carry = _mm_loadu_si128((__m128i*)(rng->alg2_values_128_8 + (*rng_seed * 16)));
 
@@ -227,7 +227,7 @@ __forceinline void tm_sse2_8_shuffled::alg_2(__m128i& working_code0, __m128i& wo
 	alg_2_sub(working_code0, working_code1, carry, mask_top_01, mask_80, mask_7F, mask_FE, mask_01);
 }
 
-__forceinline void tm_sse2_8_shuffled::alg_3(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint16 * rng_seed)
+__forceinline void tm_sse2_m128s_8::alg_3(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint16 * rng_seed)
 {
 	uint8* rng_start = rng->regular_rng_values_128_8_shuffled + ((*rng_seed) * 128);
 	working_code0 = _mm_xor_si128(working_code0, _mm_load_si128((__m128i*)rng_start));
@@ -240,7 +240,7 @@ __forceinline void tm_sse2_8_shuffled::alg_3(__m128i& working_code0, __m128i& wo
 	working_code7 = _mm_xor_si128(working_code7, _mm_load_si128((__m128i*)(rng_start + 112)));
 }
 
-__forceinline void tm_sse2_8_shuffled::alg_5_sub(__m128i& working_a, __m128i& working_b, __m128i& carry, __m128i& mask_top_80, __m128i& mask_80, __m128i& mask_7F, __m128i& mask_FE, __m128i& mask_01)
+__forceinline void tm_sse2_m128s_8::alg_5_sub(__m128i& working_a, __m128i& working_b, __m128i& carry, __m128i& mask_top_80, __m128i& mask_80, __m128i& mask_7F, __m128i& mask_FE, __m128i& mask_01)
 {
 	// bitwise left shift
 	__m128i temp1 = _mm_slli_epi16(working_a, 1);
@@ -271,7 +271,7 @@ __forceinline void tm_sse2_8_shuffled::alg_5_sub(__m128i& working_a, __m128i& wo
 	carry = next_carry;
 }
 
-__forceinline void tm_sse2_8_shuffled::alg_5(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint16* rng_seed, __m128i& mask_top_80, __m128i& mask_80, __m128i& mask_7F, __m128i& mask_FE, __m128i& mask_01)
+__forceinline void tm_sse2_m128s_8::alg_5(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint16* rng_seed, __m128i& mask_top_80, __m128i& mask_80, __m128i& mask_7F, __m128i& mask_FE, __m128i& mask_01)
 {
 	__m128i carry = _mm_loadu_si128((__m128i*)(rng->alg5_values_128_8 + (*rng_seed * 16)));
 
@@ -281,7 +281,7 @@ __forceinline void tm_sse2_8_shuffled::alg_5(__m128i& working_code0, __m128i& wo
 	alg_5_sub(working_code0, working_code1, carry, mask_top_80, mask_80, mask_7F, mask_FE, mask_01);
 }
 
-__forceinline void tm_sse2_8_shuffled::alg_6(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint16* rng_seed, __m128i& mask_7F)
+__forceinline void tm_sse2_m128s_8::alg_6(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint16* rng_seed, __m128i& mask_7F)
 {
 	uint8* rng_start = rng->alg6_values_128_8_shuffled + (*rng_seed * 128);
 	working_code0 = _mm_or_si128(_mm_and_si128(_mm_srli_epi16(working_code0, 1), mask_7F), _mm_loadu_si128((__m128i*)(rng_start)));
@@ -294,7 +294,7 @@ __forceinline void tm_sse2_8_shuffled::alg_6(__m128i& working_code0, __m128i& wo
 	working_code7 = _mm_or_si128(_mm_and_si128(_mm_srli_epi16(working_code7, 1), mask_7F), _mm_loadu_si128((__m128i*)(rng_start + 112)));
 }
 
-__forceinline void tm_sse2_8_shuffled::alg_7(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, __m128i& mask_FF)
+__forceinline void tm_sse2_m128s_8::alg_7(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, __m128i& mask_FF)
 {
 	working_code0 = _mm_xor_si128(working_code0, mask_FF);
 	working_code1 = _mm_xor_si128(working_code1, mask_FF);
@@ -306,7 +306,7 @@ __forceinline void tm_sse2_8_shuffled::alg_7(__m128i& working_code0, __m128i& wo
 	working_code7 = _mm_xor_si128(working_code7, mask_FF);
 }
 
-__forceinline void tm_sse2_8_shuffled::add_alg(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint8* rng_start, uint16* rng_seed)
+__forceinline void tm_sse2_m128s_8::add_alg(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint8* rng_start, uint16* rng_seed)
 {
 	rng_start = rng_start + ((*rng_seed) * 128);
 	working_code0 = _mm_add_epi8(working_code0, _mm_load_si128((__m128i*)rng_start));
@@ -319,7 +319,7 @@ __forceinline void tm_sse2_8_shuffled::add_alg(__m128i& working_code0, __m128i& 
 	working_code7 = _mm_add_epi8(working_code7, _mm_load_si128((__m128i*)(rng_start + 112)));
 }
 
-void tm_sse2_8_shuffled::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
+void tm_sse2_m128s_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -348,7 +348,7 @@ void tm_sse2_8_shuffled::run_one_map(const key_schedule::key_schedule_entry& sch
 	}
 }
 
-void tm_sse2_8_shuffled::run_all_maps(const key_schedule& schedule_entries)
+void tm_sse2_m128s_8::run_all_maps(const key_schedule& schedule_entries)
 {
 	__m128i working_code0 = _mm_loadu_si128((__m128i*)(working_code_data));
 	__m128i working_code1 = _mm_loadu_si128((__m128i*)(working_code_data + 16));
@@ -450,4 +450,4 @@ void tm_sse2_8_shuffled::run_all_maps(const key_schedule& schedule_entries)
 }
 
 
-bool tm_sse2_8_shuffled::initialized = false;
+bool tm_sse2_m128s_8::initialized = false;

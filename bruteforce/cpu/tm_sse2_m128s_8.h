@@ -1,5 +1,5 @@
-#ifndef TM_SSE2_8_SHUFFELD_H
-#define TM_SSE2_8_SHUFFELD_H
+#ifndef TM_SSE2_M128S_8_H
+#define TM_SSE2_M128S_8_H
 #include <mmintrin.h>  //MMX
 #include <xmmintrin.h> //SSE
 #include <emmintrin.h> //SSE2
@@ -9,10 +9,10 @@
 #include "rng_obj.h"
 #include "tm_base.h"
 
-class tm_sse2_8_shuffled : public TM_base
+class tm_sse2_m128s_8 : public TM_base
 {
 public:
-	tm_sse2_8_shuffled(RNG* rng);
+	tm_sse2_m128s_8(RNG* rng);
 
 	virtual void load_data(uint8* new_data);
 	void fetch_data(uint8* new_data);
@@ -43,4 +43,4 @@ private:
 
 	static bool initialized;
 };
-#endif // TM_SSE2_8_SHUFFELD_H
+#endif // TM_SSE2_M128S_8_H

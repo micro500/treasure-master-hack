@@ -11,19 +11,19 @@
 //#include <zmmintrin.h> //AVX512
 
 #include "data_sizes.h"
-#include "tm_avx2_8_in_cpu_shuffled.h"
+#include "tm_avx2_r256s_8.h"
 
 #if defined(__GNUC__)
 #define _mm256_set_m128i(vh, vl) \
         _mm256_castpd_si256(_mm256_insertf128_pd(_mm256_castsi256_pd(_mm256_castsi128_si256(vl)), _mm_castsi128_pd(vh), 1))
 #endif
 
-tm_avx2_8_in_cpu_shuffled::tm_avx2_8_in_cpu_shuffled(RNG* rng_obj) : TM_base(rng_obj)
+tm_avx2_r256s_8::tm_avx2_r256s_8(RNG* rng_obj) : TM_base(rng_obj)
 {
 	initialize();
 }
 
-__forceinline void tm_avx2_8_in_cpu_shuffled::initialize()
+__forceinline void tm_avx2_r256s_8::initialize()
 {
 	if (!initialized)
 	{
@@ -43,15 +43,15 @@ __forceinline void tm_avx2_8_in_cpu_shuffled::initialize()
 
 		initialized = true;
 	}
-	obj_name = "tm_avx2_8_in_cpu_shuffled";
+	obj_name = "tm_avx2_r256s_8";
 }
 
-int tm_avx2_8_in_cpu_shuffled::shuffle(int addr)
+int tm_avx2_r256s_8::shuffle(int addr)
 {
 	return (addr / 64) * 64 + (addr % 2) * 32 + ((addr / 2) % 32);
 }
 
-void tm_avx2_8_in_cpu_shuffled::expand(uint32 key, uint32 data)
+void tm_avx2_r256s_8::expand(uint32 key, uint32 data)
 {
 	uint8* x = (uint8*)working_code_data;
 	for (int i = 0; i < 128; i += 8)
@@ -75,7 +75,7 @@ void tm_avx2_8_in_cpu_shuffled::expand(uint32 key, uint32 data)
 	}
 }
 
-void tm_avx2_8_in_cpu_shuffled::load_data(uint8* new_data)
+void tm_avx2_r256s_8::load_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -84,7 +84,7 @@ void tm_avx2_8_in_cpu_shuffled::load_data(uint8* new_data)
 
 }
 
-void tm_avx2_8_in_cpu_shuffled::fetch_data(uint8* new_data)
+void tm_avx2_r256s_8::fetch_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -92,7 +92,7 @@ void tm_avx2_8_in_cpu_shuffled::fetch_data(uint8* new_data)
 	}
 }
 
-__forceinline void tm_avx2_8_in_cpu_shuffled::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
+__forceinline void tm_avx2_r256s_8::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
 {
 	__m256i working_code0 = _mm256_load_si256((__m256i*)(working_code_data));
 	__m256i working_code1 = _mm256_load_si256((__m256i*)(working_code_data + 32));
@@ -177,7 +177,7 @@ __forceinline void tm_avx2_8_in_cpu_shuffled::run_alg(int algorithm_id, uint16* 
 	_mm256_store_si256((__m256i*)(working_code_data + 96), working_code3);
 }
 
-__forceinline void tm_avx2_8_in_cpu_shuffled::alg_0(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, uint16* rng_seed, __m256i& mask_FE)
+__forceinline void tm_avx2_r256s_8::alg_0(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, uint16* rng_seed, __m256i& mask_FE)
 {
 	uint8* rng_start = rng->alg0_values_256_8_shuffled + ((*rng_seed) * 128);
 
@@ -202,7 +202,7 @@ __forceinline void tm_avx2_8_in_cpu_shuffled::alg_0(__m256i& working_code0, __m2
 	working_code3 = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(working_code3), _mm256_castsi256_pd(rng_val)));
 }
 
-__forceinline void tm_avx2_8_in_cpu_shuffled::alg_2_sub(__m256i& working_a, __m256i& working_b, __m256i& carry, __m256i& mask_top_01, __m256i& mask_80, __m256i& mask_7F, __m256i& mask_FE, __m256i& mask_01)
+__forceinline void tm_avx2_r256s_8::alg_2_sub(__m256i& working_a, __m256i& working_b, __m256i& carry, __m256i& mask_top_01, __m256i& mask_80, __m256i& mask_7F, __m256i& mask_FE, __m256i& mask_01)
 {
 	// Shift bytes right 1 bit
 	__m256i cur_val1_most = _mm256_and_si256(_mm256_srli_epi16(working_a, 1), mask_7F);
@@ -229,7 +229,7 @@ __forceinline void tm_avx2_8_in_cpu_shuffled::alg_2_sub(__m256i& working_a, __m2
 	carry = next_carry;
 }
 
-__forceinline void tm_avx2_8_in_cpu_shuffled::alg_2(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, uint16* rng_seed, __m256i& mask_top_01, __m256i& mask_80, __m256i& mask_7F, __m256i& mask_FE, __m256i& mask_01)
+__forceinline void tm_avx2_r256s_8::alg_2(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, uint16* rng_seed, __m256i& mask_top_01, __m256i& mask_80, __m256i& mask_7F, __m256i& mask_FE, __m256i& mask_01)
 {
 	__m256i carry = _mm256_load_si256((__m256i*)(rng->alg2_values_256_8 + ((*rng_seed) * 32)));
 
@@ -237,7 +237,7 @@ __forceinline void tm_avx2_8_in_cpu_shuffled::alg_2(__m256i& working_code0, __m2
 	alg_2_sub(working_code0, working_code1, carry, mask_top_01, mask_80, mask_7F, mask_FE, mask_01);
 }
 
-__forceinline void tm_avx2_8_in_cpu_shuffled::alg_3(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, uint16* rng_seed)
+__forceinline void tm_avx2_r256s_8::alg_3(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, uint16* rng_seed)
 {
 	uint8* rng_start = rng->regular_rng_values_256_8_shuffled + ((*rng_seed) * 128);
 
@@ -254,7 +254,7 @@ __forceinline void tm_avx2_8_in_cpu_shuffled::alg_3(__m256i& working_code0, __m2
 	working_code3 = _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(working_code3), _mm256_castsi256_pd(rng_val)));
 }
 
-__forceinline void tm_avx2_8_in_cpu_shuffled::alg_5_sub(__m256i& working_a, __m256i& working_b, __m256i& carry, __m256i& mask_top_80, __m256i& mask_80, __m256i& mask_7F, __m256i& mask_FE, __m256i& mask_01)
+__forceinline void tm_avx2_r256s_8::alg_5_sub(__m256i& working_a, __m256i& working_b, __m256i& carry, __m256i& mask_top_80, __m256i& mask_80, __m256i& mask_7F, __m256i& mask_FE, __m256i& mask_01)
 {
 	// Shift bytes right 1 bit
 	__m256i cur_val1_most = _mm256_and_si256(_mm256_slli_epi16(working_a, 1), mask_FE);
@@ -281,7 +281,7 @@ __forceinline void tm_avx2_8_in_cpu_shuffled::alg_5_sub(__m256i& working_a, __m2
 	carry = next_carry;
 }
 
-__forceinline void tm_avx2_8_in_cpu_shuffled::alg_5(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, uint16* rng_seed, __m256i& mask_top_80, __m256i& mask_80, __m256i& mask_7F, __m256i& mask_FE, __m256i& mask_01)
+__forceinline void tm_avx2_r256s_8::alg_5(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, uint16* rng_seed, __m256i& mask_top_80, __m256i& mask_80, __m256i& mask_7F, __m256i& mask_FE, __m256i& mask_01)
 {
 	__m256i carry = _mm256_load_si256((__m256i*)(rng->alg5_values_256_8 + ((*rng_seed) * 32)));
 
@@ -289,7 +289,7 @@ __forceinline void tm_avx2_8_in_cpu_shuffled::alg_5(__m256i& working_code0, __m2
 	alg_5_sub(working_code0, working_code1, carry, mask_top_80, mask_80, mask_7F, mask_FE, mask_01);
 }
 
-__forceinline void tm_avx2_8_in_cpu_shuffled::alg_6(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, uint16* rng_seed, __m256i& mask_7F)
+__forceinline void tm_avx2_r256s_8::alg_6(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, uint16* rng_seed, __m256i& mask_7F)
 {
 	uint8* rng_start = rng->alg6_values_256_8_shuffled + ((*rng_seed) * 128);
 
@@ -314,7 +314,7 @@ __forceinline void tm_avx2_8_in_cpu_shuffled::alg_6(__m256i& working_code0, __m2
 	working_code3 = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(working_code3), _mm256_castsi256_pd(rng_val)));
 }
 
-__forceinline void tm_avx2_8_in_cpu_shuffled::alg_7(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& mask_FF)
+__forceinline void tm_avx2_r256s_8::alg_7(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& mask_FF)
 {
 	working_code0 = _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(working_code0), _mm256_castsi256_pd(mask_FF)));
 	working_code1 = _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(working_code1), _mm256_castsi256_pd(mask_FF)));
@@ -322,7 +322,7 @@ __forceinline void tm_avx2_8_in_cpu_shuffled::alg_7(__m256i& working_code0, __m2
 	working_code3 = _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(working_code3), _mm256_castsi256_pd(mask_FF)));
 }
 
-__forceinline void tm_avx2_8_in_cpu_shuffled::add_alg(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, uint16* rng_seed, uint8* rng_start)
+__forceinline void tm_avx2_r256s_8::add_alg(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, uint16* rng_seed, uint8* rng_start)
 {
 	rng_start = rng_start + ((*rng_seed) * 128);
 
@@ -340,7 +340,7 @@ __forceinline void tm_avx2_8_in_cpu_shuffled::add_alg(__m256i& working_code0, __
 }
 
 
-void tm_avx2_8_in_cpu_shuffled::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
+void tm_avx2_r256s_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -369,7 +369,7 @@ void tm_avx2_8_in_cpu_shuffled::run_one_map(const key_schedule::key_schedule_ent
 	}
 }
 
-void tm_avx2_8_in_cpu_shuffled::run_all_maps(const key_schedule& schedule_entries)
+void tm_avx2_r256s_8::run_all_maps(const key_schedule& schedule_entries)
 {
 	__m256i working_code0 = _mm256_load_si256((__m256i*)(working_code_data));
 	__m256i working_code1 = _mm256_load_si256((__m256i*)(working_code_data + 32));
@@ -491,4 +491,4 @@ void tm_avx2_8_in_cpu_shuffled::run_all_maps(const key_schedule& schedule_entrie
 	_mm256_store_si256((__m256i*)(working_code_data + 96), working_code3);
 }
 
-bool tm_avx2_8_in_cpu_shuffled::initialized = false;
+bool tm_avx2_r256s_8::initialized = false;

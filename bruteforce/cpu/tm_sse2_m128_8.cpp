@@ -7,14 +7,14 @@
 #include <nmmintrin.h> //SSE4.2
 
 #include "data_sizes.h"
-#include "tm_128_8.h"
+#include "tm_sse2_m128_8.h"
 
-tm_128_8::tm_128_8(RNG* rng_obj) : TM_base(rng_obj)
+tm_sse2_m128_8::tm_sse2_m128_8(RNG* rng_obj) : TM_base(rng_obj)
 {
 	initialize();
 }
 
-__forceinline void tm_128_8::initialize()
+__forceinline void tm_sse2_m128_8::initialize()
 {
 	if (!initialized)
 	{
@@ -37,10 +37,10 @@ __forceinline void tm_128_8::initialize()
 
 		initialized = true;
 	}
-	obj_name = "tm_128_8";
+	obj_name = "tm_sse2_m128_8";
 }
 
-void tm_128_8::expand(uint32 key, uint32 data)
+void tm_sse2_m128_8::expand(uint32 key, uint32 data)
 {
 	uint8* x = (uint8*)working_code_data;
 	for (int i = 0; i < 128; i += 8)
@@ -64,7 +64,7 @@ void tm_128_8::expand(uint32 key, uint32 data)
 	}
 }
 
-void tm_128_8::load_data(uint8* new_data)
+void tm_sse2_m128_8::load_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -72,7 +72,7 @@ void tm_128_8::load_data(uint8* new_data)
 	}
 }
 
-void tm_128_8::fetch_data(uint8* new_data)
+void tm_sse2_m128_8::fetch_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -80,7 +80,7 @@ void tm_128_8::fetch_data(uint8* new_data)
 	}
 }
 
-void tm_128_8::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
+void tm_sse2_m128_8::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
 {
 	if (algorithm_id == 0)
 	{
@@ -148,7 +148,7 @@ void tm_128_8::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
 }
 
 
-__forceinline void tm_128_8::alg_0(const uint16 rng_seed)
+__forceinline void tm_sse2_m128_8::alg_0(const uint16 rng_seed)
 {
 	__m128i mask_FE = _mm_set1_epi16(0xFEFE);
 	for (int i = 0; i < 8; i++)
@@ -163,12 +163,12 @@ __forceinline void tm_128_8::alg_0(const uint16 rng_seed)
 	}
 }
 
-__forceinline void tm_128_8::alg_1(const uint16 rng_seed)
+__forceinline void tm_sse2_m128_8::alg_1(const uint16 rng_seed)
 {
 	add_alg(rng->regular_rng_values_8_lo, rng->regular_rng_values_8_hi, rng_seed);
 }
 
-__forceinline void tm_128_8::alg_2(const uint16 rng_seed)
+__forceinline void tm_sse2_m128_8::alg_2(const uint16 rng_seed)
 {
 	__m128i carry = _mm_loadu_si128((__m128i*)(rng->alg2_values_128_8 + (rng_seed * 16)));
 	for (int i = 7; i >= 0; i--)
@@ -200,7 +200,7 @@ __forceinline void tm_128_8::alg_2(const uint16 rng_seed)
 	}
 }
 
-__forceinline void tm_128_8::alg_3(const uint16 rng_seed)
+__forceinline void tm_sse2_m128_8::alg_3(const uint16 rng_seed)
 {
 	for (int i = 0; i < 8; i++)
 	{
@@ -212,12 +212,12 @@ __forceinline void tm_128_8::alg_3(const uint16 rng_seed)
 	}
 }
 
-__forceinline void tm_128_8::alg_4(const uint16 rng_seed)
+__forceinline void tm_sse2_m128_8::alg_4(const uint16 rng_seed)
 {
 	add_alg(rng->alg4_values_8_lo, rng->alg4_values_8_hi, rng_seed);
 }
 
-__forceinline void tm_128_8::alg_5(const uint16 rng_seed)
+__forceinline void tm_sse2_m128_8::alg_5(const uint16 rng_seed)
 {
 	__m128i carry = _mm_loadu_si128((__m128i*)(rng->alg5_values_128_8 + (rng_seed * 16)));
 	for (int i = 7; i >= 0; i--)
@@ -247,7 +247,7 @@ __forceinline void tm_128_8::alg_5(const uint16 rng_seed)
 	}
 }
 
-__forceinline void tm_128_8::alg_6(const uint16 rng_seed)
+__forceinline void tm_sse2_m128_8::alg_6(const uint16 rng_seed)
 {
 	__m128i mask_7F = _mm_set1_epi16(0x7F7F);
 	for (int i = 0; i < 8; i++)
@@ -262,7 +262,7 @@ __forceinline void tm_128_8::alg_6(const uint16 rng_seed)
 	}
 }
 
-__forceinline void tm_128_8::alg_7()
+__forceinline void tm_sse2_m128_8::alg_7()
 {
 	__m128i mask = _mm_set1_epi16(0xFFFF);
 	/*for (int i = 0; i < 8; i++)
@@ -284,7 +284,7 @@ __forceinline void tm_128_8::alg_7()
 	_mm_store_si128((__m128i*)(working_code_data + 112), _mm_xor_si128(_mm_loadu_si128((__m128i*)(working_code_data + 112)), mask));
 }
 
-__forceinline void tm_128_8::add_alg(uint8* addition_values_lo, uint8* addition_values_hi, const uint16 rng_seed)
+__forceinline void tm_sse2_m128_8::add_alg(uint8* addition_values_lo, uint8* addition_values_hi, const uint16 rng_seed)
 {
 	__m128i mask_lo = _mm_set_epi8(0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0);
 	__m128i mask_hi = _mm_set_epi8(0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF);
@@ -300,7 +300,7 @@ __forceinline void tm_128_8::add_alg(uint8* addition_values_lo, uint8* addition_
 	}
 }
 
-void tm_128_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
+void tm_sse2_m128_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
 	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
 	uint16 nibble_selector = schedule_entry.nibble_selector;
@@ -329,7 +329,7 @@ void tm_128_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entr
 	}
 }
 
-void tm_128_8::run_all_maps(const key_schedule& schedule_entries)
+void tm_sse2_m128_8::run_all_maps(const key_schedule& schedule_entries)
 {
 	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
 	{
@@ -338,4 +338,4 @@ void tm_128_8::run_all_maps(const key_schedule& schedule_entries)
 }
 
 
-bool tm_128_8::initialized = false;
+bool tm_sse2_m128_8::initialized = false;
