@@ -158,6 +158,7 @@
     <ClInclude Include="..\common\tester2.h" />
     <ClInclude Include="..\common\tm_base.h" />
     <ClInclude Include="..\common\tm_tester.h" />
+    <ClInclude Include="..\cpu\tm_avx_r128s_8.h" />
     <ClInclude Include="..\cpu\tm_sse2_m128_16.h" />
     <ClInclude Include="..\cpu\tm_sse2_m128_8.h" />
     <ClInclude Include="..\cpu\tm_32_16.h" />
@@ -181,6 +182,7 @@
     <ClCompile Include="..\common\rng_obj.cpp" />
     <ClCompile Include="..\common\tm_base.cpp" />
     <ClCompile Include="..\common\tm_tester.cpp" />
+    <ClCompile Include="..\cpu\tm_avx_r128s_8.cpp" />
     <ClCompile Include="..\cpu\tm_sse2_m128_16.cpp" />
     <ClCompile Include="..\cpu\tm_sse2_m128_8.cpp" />
     <ClCompile Include="..\cpu\tm_32_16.cpp" />

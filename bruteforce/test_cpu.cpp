@@ -10,6 +10,7 @@
 #include "tm_sse2_m128_16.h"
 #include "tm_avx_r256_16.h"
 #include "tm_avx_m256_8.h"
+#include "tm_avx_r128s_8.h"
 #include "tm_avx_r256_8.h"
 #include "tm_avx_r256s_8.h"
 #include "tm_avx_m256_16.h"
@@ -64,7 +65,7 @@ int main()
 	tms.push_back(&_tm_32_8);
 	tm_32_16 _tm_32_16(&rng);
 	tms.push_back(&_tm_32_16);
-
+	
 	tm_64_8 _tm_64_8(&rng);
 	tms.push_back(&_tm_64_8);
 	tm_64_16 _tm_64_16(&rng);
@@ -83,6 +84,9 @@ int main()
 	tms.push_back(&_tm_avx_r256_8);*/
 	tm_avx_r256s_8 _tm_avx_r256s_8(&rng);
 	tms.push_back(&_tm_avx_r256s_8);/*
+	tm_avx_r128s_8 _tm_avx_r128s_8(&rng);
+	tms.push_back(&_tm_avx_r128s_8);
+	
 	tm_avx_r256_16 _tm_avx_r256_16(&rng);
 	tms.push_back(&_tm_avx_r256_16);
 	
@@ -107,10 +111,10 @@ int main()
 		
 		//run_speed_tests2(tester2, 10000000);
 		//run_full_speed_test(tester2, 0x01000000);
-		run_result_speed_test(tester2, 0x00100000);
+		//run_result_speed_test(tester2, 0x00100000);
 		//run_checksum_tests(tester2);
 		
-		//run_result_tests(tester2);
+		run_result_tests(tester2);
 	}
 	
 	

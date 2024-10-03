@@ -193,6 +193,11 @@ void RNG::generate_expansion_values_8()
 	_generate_expansion_values(&expansion_values_8, false, -1, false);
 }
 
+void RNG::generate_expansion_values_128_8_shuffled()
+{
+	_generate_expansion_values(&expansion_values_128_8_shuffled, true, 128, false);
+}
+
 void RNG::generate_expansion_values_256_8_shuffled()
 {
 	_generate_expansion_values(&expansion_values_256_8_shuffled, true, 256, false);
@@ -556,6 +561,7 @@ uint8* RNG::regular_rng_values_256_8_shuffled_lo = nullptr;
 uint16* RNG:: regular_rng_values_16 = nullptr;
 
 uint8* RNG::expansion_values_8 = nullptr;
+uint8* RNG::expansion_values_128_8_shuffled = nullptr;
 uint8* RNG::expansion_values_256_8_shuffled = nullptr;
 
 uint16* RNG::seed_forward_1 = nullptr;
