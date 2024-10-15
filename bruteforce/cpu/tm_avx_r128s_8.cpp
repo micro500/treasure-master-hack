@@ -94,15 +94,14 @@ void tm_avx_r128s_8::expand(uint32 key, uint32 data)
 
 __forceinline void tm_avx_r128s_8::_expand_code(uint32 key, uint32 data, __m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7)
 {
-	__m128i lo = _mm_set_epi8((data >> 8) & 0xFF, (data >> 24) & 0xFF, (key >> 8) & 0xFF, (key >> 24) & 0xFF,
-		(data >> 8) & 0xFF, (data >> 24) & 0xFF, (key >> 8) & 0xFF, (key >> 24) & 0xFF,
-		(data >> 8) & 0xFF, (data >> 24) & 0xFF, (key >> 8) & 0xFF, (key >> 24) & 0xFF,
-		(data >> 8) & 0xFF, (data >> 24) & 0xFF, (key >> 8) & 0xFF, (key >> 24) & 0xFF);
+	uint64 x = ((uint64)key << 32) | data;
 
-	__m128i hi = _mm_set_epi8(data & 0xFF, (data >> 16) & 0xFF, key & 0xFF, (key >> 16) & 0xFF,
-		data & 0xFF, (data >> 16) & 0xFF, key & 0xFF, (key >> 16) & 0xFF,
-		data & 0xFF, (data >> 16) & 0xFF, key & 0xFF, (key >> 16) & 0xFF,
-		data & 0xFF, (data >> 16) & 0xFF, key & 0xFF, (key >> 16) & 0xFF);
+	__m128i a = _mm_cvtsi64_si128(x);
+	__m128i lo_mask = _mm_set_epi8(1, 3, 5, 7, 1, 3, 5, 7, 1, 3, 5, 7, 1, 3, 5, 7);
+	__m128i hi_mask = _mm_set_epi8(0, 2, 4, 6, 0, 2, 4, 6, 0, 2, 4, 6, 0, 2, 4, 6);
+
+	__m128i lo = _mm_shuffle_epi8(a, lo_mask);
+	__m128i hi = _mm_shuffle_epi8(a, hi_mask);
 
 	working_code0 = lo;
 	working_code1 = hi;
@@ -131,7 +130,7 @@ void tm_avx_r128s_8::fetch_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
-		new_data[i] = ((uint8*)working_code_data)[(i / 64) * 64 + (i % 2) * 32 + ((i / 2) % 32)];
+		new_data[i] = ((uint8*)working_code_data)[shuffle_8(i, 128)];
 	}
 }
 

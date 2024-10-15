@@ -44,6 +44,13 @@ private:
 	void alg_2_sub(__m256i& working_a, __m256i& working_b, __m256i& carry, __m256i& mask_top_01, __m256i& mask_80, __m256i& mask_7F, __m256i& mask_FE, __m256i& mask_01);
 	void alg_5_sub(__m256i& working_a, __m256i& working_b, __m256i& carry, __m256i& mask_top_80, __m256i& mask_80, __m256i& mask_7F, __m256i& mask_FE, __m256i& mask_01);
 
+	void _run_all_maps(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, const key_schedule& schedule_entries, __m256i& mask_FF, __m256i& mask_FE, __m256i& mask_7F, __m256i& mask_80, __m256i& mask_01, __m256i& mask_top_01, __m256i& mask_top_80);
+	
+	void _load_from_mem(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3);
+	void _store_to_mem(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3);
+
+	void _expand_code(uint32 key, uint32 data, __m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3);
+
 	int shuffle(int addr);
 
 	ALIGNED(32) uint8 working_code_data[128];

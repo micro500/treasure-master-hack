@@ -182,7 +182,9 @@
     <ClCompile Include="..\common\rng_obj.cpp" />
     <ClCompile Include="..\common\tm_base.cpp" />
     <ClCompile Include="..\common\tm_tester.cpp" />
-    <ClCompile Include="..\cpu\tm_avx_r128s_8.cpp" />
+    <ClCompile Include="..\cpu\tm_avx_r128s_8.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="..\cpu\tm_sse2_m128_16.cpp" />
     <ClCompile Include="..\cpu\tm_sse2_m128_8.cpp" />
     <ClCompile Include="..\cpu\tm_32_16.cpp" />
@@ -190,7 +192,9 @@
     <ClCompile Include="..\cpu\tm_64_16.cpp" />
     <ClCompile Include="..\cpu\tm_64_8.cpp" />
     <ClCompile Include="..\cpu\tm_8.cpp" />
-    <ClCompile Include="..\cpu\tm_avx2_r256s_8.cpp" />
+    <ClCompile Include="..\cpu\tm_avx2_r256s_8.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="..\cpu\tm_avx512_r512s_8.cpp" />
     <ClCompile Include="..\cpu\tm_avx_m256_16.cpp" />
     <ClCompile Include="..\cpu\tm_avx_m256_8.cpp" />

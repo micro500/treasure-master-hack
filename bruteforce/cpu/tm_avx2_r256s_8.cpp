@@ -27,7 +27,7 @@ __forceinline void tm_avx2_r256s_8::initialize()
 {
 	if (!initialized)
 	{
-		rng->generate_expansion_values_8();
+		rng->generate_expansion_values_256_8_shuffled();
 
 		rng->generate_seed_forward_1();
 		rng->generate_seed_forward_128();
@@ -46,6 +46,22 @@ __forceinline void tm_avx2_r256s_8::initialize()
 	obj_name = "tm_avx2_r256s_8";
 }
 
+__forceinline void tm_avx2_r256s_8::_store_to_mem(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3)
+{
+	_mm256_store_si256((__m256i*)(working_code_data), working_code0);
+	_mm256_store_si256((__m256i*)(working_code_data + 32), working_code1);
+	_mm256_store_si256((__m256i*)(working_code_data + 64), working_code2);
+	_mm256_store_si256((__m256i*)(working_code_data + 96), working_code3);
+}
+
+__forceinline void tm_avx2_r256s_8::_load_from_mem(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3)
+{
+	working_code0 = _mm256_load_si256((__m256i*)(working_code_data));
+	working_code1 = _mm256_load_si256((__m256i*)(working_code_data + 32));
+	working_code2 = _mm256_load_si256((__m256i*)(working_code_data + 64));
+	working_code3 = _mm256_load_si256((__m256i*)(working_code_data + 96));
+}
+
 int tm_avx2_r256s_8::shuffle(int addr)
 {
 	return (addr / 64) * 64 + (addr % 2) * 32 + ((addr / 2) % 32);
@@ -53,26 +69,40 @@ int tm_avx2_r256s_8::shuffle(int addr)
 
 void tm_avx2_r256s_8::expand(uint32 key, uint32 data)
 {
-	uint8* x = (uint8*)working_code_data;
-	for (int i = 0; i < 128; i += 8)
-	{
-		x[shuffle(i)] = (key >> 24) & 0xFF;
-		x[shuffle(i + 1)] = (key >> 16) & 0xFF;
-		x[shuffle(i + 2)] = (key >> 8) & 0xFF;
-		x[shuffle(i + 3)] = key & 0xFF;
+	__m256i working_code0;
+	__m256i working_code1;
+	__m256i working_code2;
+	__m256i working_code3;
 
-		x[shuffle(i + 4)] = (data >> 24) & 0xFF;
-		x[shuffle(i + 5)] = (data >> 16) & 0xFF;
-		x[shuffle(i + 6)] = (data >> 8) & 0xFF;
-		x[shuffle(i + 7)] = data & 0xFF;
-	}
+	_expand_code(key, data, working_code0, working_code1, working_code2, working_code3);
 
+	_store_to_mem(working_code0, working_code1, working_code2, working_code3);
+}
+
+__forceinline void tm_avx2_r256s_8::_expand_code(uint32 key, uint32 data, __m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3)
+{
+	uint64 x = ((uint64)key << 32) | data;
+
+	__m128i a = _mm_cvtsi64_si128(x);
+
+	__m128i lo_mask = _mm_set_epi8(1, 3, 5, 7, 1, 3, 5, 7, 1, 3, 5, 7, 1, 3, 5, 7);
+	__m128i hi_mask = _mm_set_epi8(0, 2, 4, 6, 0, 2, 4, 6, 0, 2, 4, 6, 0, 2, 4, 6);
+
+	__m128i lo_128 = _mm_shuffle_epi8(a, lo_mask);
+	__m128i hi_128 = _mm_shuffle_epi8(a, hi_mask);
+
+	__m256i lo = _mm256_setr_m128i(lo_128, lo_128);
+	__m256i hi = _mm256_setr_m128i(hi_128, hi_128);
+
+	working_code0 = lo;
+	working_code1 = hi;
+	working_code2 = lo;
+	working_code3 = hi;
+
+	uint8* rng_start = rng->expansion_values_256_8_shuffled;
 	uint16 rng_seed = (key >> 16) & 0xFFFF;
-	for (int i = 0; i < 128; i++)
-	{
-		x[shuffle(i)] += rng->expansion_values_8[rng_seed * 128 + i];
-		x[shuffle(i)] = x[shuffle(i)] & 0xFF;
-	}
+
+	add_alg(working_code0, working_code1, working_code2, working_code3, &rng_seed, rng_start);
 }
 
 void tm_avx2_r256s_8::load_data(uint8* new_data)
@@ -88,7 +118,7 @@ void tm_avx2_r256s_8::fetch_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
-		new_data[i] = ((uint8*)working_code_data)[(i / 64) * 64 + (i % 2) * 32 + ((i / 2) % 32)];
+		new_data[i] = ((uint8*)working_code_data)[shuffle_8(i, 256)];
 	}
 }
 
@@ -371,10 +401,11 @@ void tm_avx2_r256s_8::run_one_map(const key_schedule::key_schedule_entry& schedu
 
 void tm_avx2_r256s_8::run_all_maps(const key_schedule& schedule_entries)
 {
-	__m256i working_code0 = _mm256_load_si256((__m256i*)(working_code_data));
-	__m256i working_code1 = _mm256_load_si256((__m256i*)(working_code_data + 32));
-	__m256i working_code2 = _mm256_load_si256((__m256i*)(working_code_data + 64));
-	__m256i working_code3 = _mm256_load_si256((__m256i*)(working_code_data + 96));
+	__m256i working_code0;
+	__m256i working_code1;
+	__m256i working_code2;
+	__m256i working_code3;
+	_load_from_mem(working_code0, working_code1, working_code2, working_code3);
 
 	__m256i mask_FF = _mm256_set1_epi16(0xFFFF);
 	__m256i mask_FE = _mm256_set1_epi16(0xFEFE);
@@ -385,6 +416,13 @@ void tm_avx2_r256s_8::run_all_maps(const key_schedule& schedule_entries)
 	__m256i mask_top_01 = _mm256_set_epi16(0x0100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	__m256i mask_top_80 = _mm256_set_epi16(0x8000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
+	_run_all_maps(working_code0, working_code1, working_code2, working_code3, schedule_entries, mask_FF, mask_FE, mask_7F, mask_80, mask_01, mask_top_01, mask_top_80);
+
+	_store_to_mem(working_code0, working_code1, working_code2, working_code3);
+}
+
+__forceinline void tm_avx2_r256s_8::_run_all_maps(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, const key_schedule& schedule_entries, __m256i& mask_FF, __m256i& mask_FE, __m256i& mask_7F, __m256i& mask_80, __m256i& mask_01, __m256i& mask_top_01, __m256i& mask_top_80)
+{
 	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
 	{
 		key_schedule::key_schedule_entry schedule_entry = *it;
@@ -405,7 +443,7 @@ void tm_avx2_r256s_8::run_all_maps(const key_schedule& schedule_entries)
 
 			// If the flag is a 1, get the high nibble of the current byte
 			// Otherwise use the low nibble
-			unsigned char current_byte = (uint8)((uint8*)working_code_data)[shuffle(i)];
+			unsigned char current_byte = (uint8)((uint8*)working_code_data)[shuffle_8(i, 256)];
 
 			if (nibble == 1)
 			{
@@ -414,18 +452,6 @@ void tm_avx2_r256s_8::run_all_maps(const key_schedule& schedule_entries)
 
 			// Mask off only 3 bits
 			unsigned char algorithm_id = (current_byte >> 1) & 0x07;
-			/*
-			printf("%i ", algorithm_id);
-			printf("%04X ", rng_seed);
-
-			// store back to memory
-			_mm256_store_si256((__m256i*)(working_code_data), working_code0);
-			_mm256_store_si256((__m256i*)(working_code_data + 32), working_code1);
-			_mm256_store_si256((__m256i*)(working_code_data + 64), working_code2);
-			_mm256_store_si256((__m256i*)(working_code_data + 96), working_code3);
-
-			print_working_code();
-			*/
 
 			if (algorithm_id == 0)
 			{
@@ -469,26 +495,7 @@ void tm_avx2_r256s_8::run_all_maps(const key_schedule& schedule_entries)
 				alg_7(working_code0, working_code1, working_code2, working_code3, mask_FF);
 			}
 		}
-		/*
-		printf("\n");
-		if (schedule_counter == 6)
-		{
-			// store back to memory
-			_mm256_store_si256((__m256i*)(working_code_data), working_code0);
-			_mm256_store_si256((__m256i*)(working_code_data + 32), working_code1);
-			_mm256_store_si256((__m256i*)(working_code_data + 64), working_code2);
-			_mm256_store_si256((__m256i*)(working_code_data + 96), working_code3);
-
-			print_working_code();
-		}
-		*/
 	}
-
-	// store back to memory
-	_mm256_store_si256((__m256i*)(working_code_data), working_code0);
-	_mm256_store_si256((__m256i*)(working_code_data + 32), working_code1);
-	_mm256_store_si256((__m256i*)(working_code_data + 64), working_code2);
-	_mm256_store_si256((__m256i*)(working_code_data + 96), working_code3);
 }
 
 bool tm_avx2_r256s_8::initialized = false;
