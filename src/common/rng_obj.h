@@ -11,6 +11,8 @@ public:
 	void generate_rng_table();
 	uint8 run_rng(uint16 * rng_seed);
 
+	void generate_seed_forward();
+
 	void generate_seed_forward_1();
 	void generate_seed_forward_128();
 
@@ -84,8 +86,12 @@ public:
 	void generate_alg6_values_512_8_shuffled();
 	void generate_alg6_values_16();
 
+	void _generate_alg06_values(uint8** rng_values, bool shuffle, int bits, bool packing_16);
+	void generate_alg06_values_8();
+
 
 	static uint16* rng_table;
+	static uint16* seed_forward;
 	static uint16* seed_forward_1;
 	static uint16* seed_forward_128;
 
@@ -146,6 +152,8 @@ public:
 	static uint8* alg6_values_256_8_shuffled;
 	static uint8* alg6_values_512_8_shuffled;
 	static uint16* alg6_values_16;
+
+	static uint8* alg06_values_8;
 };
 
 #endif // RNG_OBJ_H

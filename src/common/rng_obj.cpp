@@ -523,6 +523,38 @@ void RNG::generate_alg6_values_16()
 	_generate_alg6_values((uint8**)&alg6_values_16, false, -1, true);
 }
 
+void RNG::_generate_alg06_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)
+{
+	if (*rng_values == nullptr)
+	{
+		*rng_values = packing_alloc(0x10000 * 128, packing_16);
+
+		uint16 rng_seed;
+		for (int i = 0; i < 0x10000; i++)
+		{
+			rng_seed = i;
+			for (int j = 0; j < 128; j++)
+			{
+				int offset = (127 - j);
+				if (shuffle)
+				{
+					offset = shuffle_8(offset, bits);
+				}
+
+				uint8 rng_res = run_rng(&rng_seed);
+
+				uint8 alg0_val = (rng_res >> 7) & 0x01;
+				uint8 alg6_val = rng_res & 0x80;
+				packing_store(*rng_values, i * 128 + offset, alg0_val | alg6_val, packing_16);
+			}
+		}
+	}
+}
+
+void RNG::generate_alg06_values_8()
+{
+	_generate_alg06_values((uint8**)&alg06_values_8, false, -1, false);
+}
 
 void RNG::generate_seed_forward_1()
 {
@@ -548,6 +580,25 @@ void RNG::generate_seed_forward_128()
 	}
 }
 
+void RNG::generate_seed_forward()
+{
+	if (seed_forward == nullptr)
+	{
+		seed_forward = new uint16[256 * 256 * 2048];
+		uint16 rng_seed;
+		for (int i = 0x6f0f; i < 0x10000; i++)
+		{
+			uint16* cur_seed_ptr = &(seed_forward[i * 2048]);
+			rng_seed = i;
+			for (int j = 0; j < 2048; j++)
+			{
+				cur_seed_ptr[j] = rng_seed;
+				rng_seed = rng_table[rng_seed];
+			}
+		}
+	}
+}
+
 uint16* RNG::rng_table = nullptr;
 
 uint8* RNG::regular_rng_values_8 = nullptr;
@@ -564,6 +615,7 @@ uint8* RNG::expansion_values_8 = nullptr;
 uint8* RNG::expansion_values_128_8_shuffled = nullptr;
 uint8* RNG::expansion_values_256_8_shuffled = nullptr;
 
+uint16* RNG::seed_forward = nullptr;
 uint16* RNG::seed_forward_1 = nullptr;
 uint16* RNG::seed_forward_128 = nullptr;
 
@@ -611,3 +663,5 @@ uint8* RNG::alg6_values_128_8_shuffled = nullptr;
 uint8* RNG::alg6_values_256_8_shuffled = nullptr;
 uint8* RNG::alg6_values_512_8_shuffled = nullptr;
 uint16* RNG::alg6_values_16 = nullptr;
+
+uint8* RNG::alg06_values_8 = nullptr;
