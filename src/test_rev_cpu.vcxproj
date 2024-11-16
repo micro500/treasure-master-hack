@@ -137,6 +137,7 @@
     <ClCompile Include="common\rng_obj.cpp" />
     <ClCompile Include="common\tm_rev_base.cpp" />
     <ClCompile Include="reverse\cpu\tm_rev_8.cpp" />
+    <ClCompile Include="reverse\cpu\tm_rev_avx_r128s_8.cpp" />
     <ClCompile Include="reverse\cpu\tm_rev_avx_r128_8.cpp" />
     <ClCompile Include="reverse\process_code_reverse3\main.cpp" />
     <ClCompile Include="reverse\test\test_rev_cpu.cpp" />
@@ -146,6 +147,7 @@
     <ClInclude Include="common\rng_obj.h" />
     <ClInclude Include="common\tm_rev_base.h" />
     <ClInclude Include="reverse\cpu\tm_rev_8.h" />
+    <ClInclude Include="reverse\cpu\tm_rev_avx_r128s_8.h" />
     <ClInclude Include="reverse\cpu\tm_rev_avx_r128_8.h" />
     <ClInclude Include="reverse\process_code_reverse3\rev_stats.h" />
   </ItemGroup>

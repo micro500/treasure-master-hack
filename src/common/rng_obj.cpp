@@ -567,6 +567,11 @@ void RNG::generate_alg06_values_8()
 	_generate_alg06_values((uint8**)&alg06_values_8, false, -1, false);
 }
 
+void RNG::generate_alg06_values_128_8_shuffled()
+{
+	_generate_alg06_values((uint8**)&alg06_values_128_8_shuffled, true, 128, false);
+}
+
 void RNG::generate_seed_forward_1()
 {
 	seed_forward_1 = new uint16[256 * 256];
@@ -676,3 +681,4 @@ uint8* RNG::alg6_values_512_8_shuffled = nullptr;
 uint16* RNG::alg6_values_16 = nullptr;
 
 uint8* RNG::alg06_values_8 = nullptr;
+uint8* RNG::alg06_values_128_8_shuffled = nullptr;

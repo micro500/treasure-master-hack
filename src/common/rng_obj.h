@@ -88,6 +88,7 @@ public:
 
 	void _generate_alg06_values(uint8** rng_values, bool shuffle, int bits, bool packing_16);
 	void generate_alg06_values_8();
+	void generate_alg06_values_128_8_shuffled();
 
 
 	static uint16* rng_table;
@@ -154,6 +155,7 @@ public:
 	static uint16* alg6_values_16;
 
 	static uint8* alg06_values_8;
+	static uint8* alg06_values_128_8_shuffled;
 };
 
 #endif // RNG_OBJ_H
