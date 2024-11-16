@@ -28,7 +28,7 @@ public:
 
 	void _load_from_mem();
 
-//private:
+private:
 	void initialize();
 
 	void add_alg(uint8_t* addition_values, const uint16_t rng_seed);

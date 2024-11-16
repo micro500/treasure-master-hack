@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <iostream>
-#include "data_sizes.h"
 #include "tm_rev_8.h"
 
 tm_rev_8::tm_rev_8(RNG* rng_obj) : TM_rev_base(rng_obj)
@@ -124,15 +123,16 @@ rev_stats tm_rev_8::run_reverse_process()
 	return check_alg06();
 }
 
-__forceinline void tm_rev_8::add_alg(uint8* addition_values, const uint16 rng_seed)
+__forceinline void tm_rev_8::add_alg(uint8_t* addition_values, const uint16_t rng_seed)
 {
 	for (int i = 0; i < 128; i++)
 	{
 		working_code_data[i] = working_code_data[i] + addition_values[(rng_seed * 128) + i];
+		trust_mask[i] = trust_mask[i] & ((trust_mask[i] ^ 0xff) - 1);
 	}
 }
 
-__forceinline void tm_rev_8::xor_alg(uint8* working_data, uint8* xor_values)
+__forceinline void tm_rev_8::xor_alg(uint8_t* working_data, uint8_t* xor_values)
 {
 	for (int i = 0; i < 128; i++)
 	{

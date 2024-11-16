@@ -1,5 +1,6 @@
 #include "tm_rev_base.h"
 #include "tm_rev_8.h"
+#include "tm_rev_avx_r128_8.h"
 #include "rng_obj.h"
 #include "rev_stats.h"
 #include <iostream>
@@ -51,31 +52,6 @@ void attack(std::vector<int> reverse_path, int depth_limit, TM_rev_base &tm)
 			if (res.alg0_mismatch_bits == 0 || res.alg0_mismatch_bits == res.alg0_available_bits || res.alg6_mismatch_bits == 0 || res.alg6_mismatch_bits == res.alg6_available_bits)
 			{
 				std::cout << seed << "   " << res.alg0_mismatch_bits << " / " << res.alg0_available_bits << "   " << res.alg6_mismatch_bits << " / " << res.alg6_available_bits << std::endl;
-
-				/*
-				if (alg0_res.mismatch_bits == 0)
-				{
-					tm.reverse_algorithm(0, tm.rng_table);
-					tm.print_code();
-				}
-				else if (alg0_res.mismatch_bits == alg0_res.available_bits)
-				{
-					tm.reverse_algorithm(7, tm.rng_table);
-					tm.reverse_algorithm(0, tm.rng_table);
-					tm.print_code();
-				}
-				else if (alg6_res.mismatch_bits == 0)
-				{
-					tm.reverse_algorithm(6, tm.rng_table);
-					tm.print_code();
-				}
-				else if (alg6_res.mismatch_bits == alg6_res.available_bits)
-				{
-					tm.reverse_algorithm(7, tm.rng_table);
-					tm.reverse_algorithm(6, tm.rng_table);
-					tm.print_code();
-				}
-				*/
 			}
 		}
 
@@ -106,14 +82,10 @@ int main()
 {
 	RNG rng;
 
-	tm_rev_8 _tm(&rng);
+	//tm_rev_8 _tm(&rng);
+	tm_rev_avx_r128_8 _tm(&rng);
 
-	std::vector<int> reverse_path = { 2, 3, 7, 2, 3, 7, 4, 3 };
-	/*reverse_path.push_back(2);
-	reverse_path.push_back(3);
-
-	reverse_path.push_back(2);
-	reverse_path.push_back(3);*/
+	std::vector<int> reverse_path = { };//2, 3, 7, 2, 3, 7, 4, 3 };
 
 	uint8_t carnival_machine_code_trust[128];
 
@@ -151,7 +123,7 @@ int main()
 	rev_stats x = _tm.check_alg06();
 	*/
 
-	attack(reverse_path, 6, _tm);
+	attack(reverse_path, 9, _tm);
 
 	return 0;
 }

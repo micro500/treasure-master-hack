@@ -1,6 +1,6 @@
 #include "tm_rev_base.h"
 
-TM_rev_base::TM_rev_base(RNG* rng_obj) : rng(rng_obj)
+TM_rev_base::TM_rev_base(RNG* rng_obj) : rng(rng_obj), alg_rng_seed_diff{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, rev_alg_list{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, rev_alg_list_length(0)
 {
 }
 

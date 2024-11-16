@@ -532,20 +532,31 @@ void RNG::_generate_alg06_values(uint8** rng_values, bool shuffle, int bits, boo
 		uint16 rng_seed;
 		for (int i = 0; i < 0x10000; i++)
 		{
+			for (int j = 0; j < 128; j++)
+			{
+				packing_store(*rng_values, i * 128 + j, 0, packing_16);
+			}
 			rng_seed = i;
 			for (int j = 0; j < 128; j++)
 			{
-				int offset = (127 - j);
-				if (shuffle)
-				{
-					offset = shuffle_8(offset, bits);
-				}
-
 				uint8 rng_res = run_rng(&rng_seed);
 
 				uint8 alg0_val = (rng_res >> 7) & 0x01;
 				uint8 alg6_val = rng_res & 0x80;
-				packing_store(*rng_values, i * 128 + offset, alg0_val | alg6_val, packing_16);
+
+				int alg0_offset = (127 - j);
+				int alg6_offset = j;
+				if (shuffle)
+				{
+					alg0_offset = shuffle_8(alg0_offset, bits);
+					alg6_offset = shuffle_8(alg6_offset, bits);
+				}
+
+				uint8 old_val = packing_load(*rng_values, i * 128 + alg0_offset, packing_16);
+				packing_store(*rng_values, i * 128 + alg0_offset, old_val | alg0_val, packing_16);
+
+				old_val = packing_load(*rng_values, i * 128 + alg6_offset, packing_16);
+				packing_store(*rng_values, i * 128 + alg6_offset, old_val | alg6_val, packing_16);
 			}
 		}
 	}
@@ -586,7 +597,7 @@ void RNG::generate_seed_forward()
 	{
 		seed_forward = new uint16[256 * 256 * 2048];
 		uint16 rng_seed;
-		for (int i = 0x6f0f; i < 0x10000; i++)
+		for (int i = 0; i < 0x10000; i++)
 		{
 			uint16* cur_seed_ptr = &(seed_forward[i * 2048]);
 			rng_seed = i;
