@@ -496,6 +496,8 @@ void working_code::process_working(std::vector<tree_node*>* schedule_entry, int 
 
 		std::vector<tree_node*>* alg_flags = get_alg_flags(nibble_selector, i);
 
+		all_alg_flags->push_back(alg_flags);
+
 		alg06_node = m->new_node(_OR, (*alg_flags)[0], alg06_node);
 		alg06_node = m->new_node(_OR, (*alg_flags)[6], alg06_node);
 

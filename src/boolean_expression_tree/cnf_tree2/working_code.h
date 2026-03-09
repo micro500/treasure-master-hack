@@ -48,6 +48,8 @@ public:
 	std::vector<tree_node*>* alg5();
 	std::vector<tree_node*>* alg6();
 	std::vector<tree_node*>* alg7();
+
+	std::vector<std::vector<tree_node*>*>* all_alg_flags;
 };
 
 std::vector<tree_node*>* decrypt_memory2(std::vector<tree_node*>* bitfield, uint8* encrypted_memory, uint8 memory_length);

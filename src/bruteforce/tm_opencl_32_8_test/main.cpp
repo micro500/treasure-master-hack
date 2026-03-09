@@ -9,9 +9,61 @@
 
 #define MAX_SOURCE_SIZE (0x100000)
 
+template <typename T>
+T* get_platform_param(cl_platform_id platform_id, cl_platform_info param_name)
+{
+	cl_int ret;
+
+	size_t ret_size;
+
+	ret = clGetPlatformInfo(
+		platform_id,
+		param_name,
+		NULL,
+		NULL,
+		&ret_size);
+
+	T* val_ret = new T[ret_size];
+
+	ret = clGetPlatformInfo(
+		platform_id,
+		param_name,
+		ret_size,
+		val_ret,
+		&ret_size);
+
+	return val_ret;
+}
+
+template <typename T>
+T* get_device_param(cl_device_id device_id, cl_device_info param_name)
+{
+	cl_int ret;
+
+	size_t ret_size;
+
+	ret = clGetDeviceInfo(
+		device_id,
+		param_name,
+		NULL,
+		NULL,
+		&ret_size);
+
+	T* val_ret = new T[ret_size];
+
+	ret = clGetDeviceInfo(
+		device_id,
+		param_name,
+		ret_size,
+		val_ret,
+		&ret_size);
+
+	return val_ret;
+}
+
 int main()
 {
-	int codes_at_once = 2097152;
+	int codes_at_once = 0x1000000;
 
 	uint8 IV[4]; // = { 0x2C,0xA5,0xB4,0x2D };
 	//int key = 0xC038194D;
@@ -92,10 +144,11 @@ int main()
  
 	cl_int status = clGetPlatformIDs(0, NULL, &ret_num_platforms);
  
+	printf("Platforms found: %i\n", ret_num_platforms);
 	platforms = new cl_platform_id[ret_num_platforms];
 	
 	// Get Platform and Device Info
-	ret = clGetPlatformIDs(1, platforms, &ret_num_platforms);
+	ret = clGetPlatformIDs(ret_num_platforms, platforms, &ret_num_platforms);
 	if (ret != CL_SUCCESS)
 	{
 		printf("Error in clGetPlatformIDs, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
@@ -104,13 +157,20 @@ int main()
 	
 	curPlatform = platforms[0];
 
-	ret = clGetDeviceIDs(curPlatform, CL_DEVICE_TYPE_DEFAULT, 0, NULL, &ret_num_devices);
+	char* plat_name = get_platform_param<char>(curPlatform, CL_PLATFORM_NAME);
+	char* plat_vendor = get_platform_param<char>(curPlatform, CL_PLATFORM_VENDOR);
+
+	printf("Platform: %s\n", plat_name);
+	printf("Platform vendor: %s\n", plat_vendor);
+
+	ret = clGetDeviceIDs(curPlatform, CL_DEVICE_TYPE_GPU, 0, NULL, &ret_num_devices);
 	if (ret != CL_SUCCESS)
 	{
 		printf("Error in clGetDeviceIDs, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
 		//Cleanup(EXIT_FAILURE);
 	}
 
+	printf("Devices found: %i\n", ret_num_devices);
 	devices = new cl_device_id[ret_num_devices];
 
 	ret = clGetDeviceIDs(curPlatform, CL_DEVICE_TYPE_DEFAULT, ret_num_devices, devices, nullptr);
@@ -121,6 +181,27 @@ int main()
 	}
 
 	device_id = devices[0];
+
+	char* dev_name = get_device_param<char>(device_id, CL_DEVICE_NAME);
+	cl_device_type* dev_type = get_device_param<cl_device_type>(device_id, CL_DEVICE_TYPE);
+	cl_uint* dev_compute_units = get_device_param<cl_uint>(device_id, CL_DEVICE_MAX_COMPUTE_UNITS);
+	cl_uint* dev_max_wu_dim = get_device_param<cl_uint>(device_id, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS);
+	size_t* dev_max_wu_sizes = get_device_param<size_t>(device_id, CL_DEVICE_MAX_WORK_ITEM_SIZES);
+	size_t* dev_max_wg_size = get_device_param<size_t>(device_id, CL_DEVICE_MAX_WORK_GROUP_SIZE);
+	
+
+	printf("Device: %s\n", dev_name);
+	printf("Device type: %l\n", *dev_type);
+	printf("Device compute units: %i\n", *dev_compute_units);
+	printf("Device workitem dims: %i\n", *dev_max_wu_dim);
+	printf("Device workitem sizes: ");
+	for (int i = 0; i < *dev_max_wu_dim; i++)
+	{
+		printf("%li ", dev_max_wu_sizes[i]);
+	}
+	printf("\n");
+	printf("Device workgroup size: %li\n", *dev_max_wg_size);
+
 
 	
 	// Create OpenCL context
@@ -186,6 +267,18 @@ int main()
 			printf("%s\n", log);
 		}
 	}
+
+	size_t binary_size;
+	clGetProgramInfo(program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &binary_size, NULL);
+
+	unsigned char* binary = (unsigned char*)malloc(binary_size);
+	clGetProgramInfo(program, CL_PROGRAM_BINARIES, binary_size, &binary, NULL);
+
+	// Save or inspect the binary
+	FILE* bin_file = fopen("kernel.ptx", "wb");
+	fwrite(binary, 1, binary_size, bin_file);
+	fclose(bin_file);
+	free(binary);
  
 	// Create OpenCL Kernel 
 	//kernel = clCreateKernel(program, "tm_process", &ret);

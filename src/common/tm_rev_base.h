@@ -22,8 +22,7 @@ public:
 	RNG* rng;
 	std::string obj_name;
 
-protected:
-	uint8_t rev_alg_list[16];
+	uint8_t rev_alg_list[16];	
 	uint8_t rev_alg_list_length;
 	uint16_t alg_rng_seed_diff[16];
 };

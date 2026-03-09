@@ -4,6 +4,8 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
+#include <sstream>
 
 int carnival_code_length = 0x72;
 uint8 carnival_code[0x72] = { 0xF4, 0xD7, 0xD1, 0x9E, 0x46, 0x4F, 0x90, 0xF0, 0xA1, 0x3C,
@@ -55,6 +57,142 @@ uint8_t carnival_working_code_final_map_step9_before_alg4[0x80] = { 0x4b, 0xa6, 
 
 uint8_t carnival_working_code_final_map_step10_before_alg7[0x80] = { 0x6c, 0xb1, 0xbf, 0x56, 0xb0, 0x97, 0x29, 0xc9, 0x62, 0x88, 0x4f, 0x90, 0x81, 0x12, 0xe3, 0x84, 0x83, 0x74, 0x52, 0x32, 0xa2, 0x2d, 0xac, 0xb1, 0xbb, 0x6d, 0xf6, 0x57, 0x0b, 0x10, 0xd3, 0xa9, 0x96, 0x34, 0x8d, 0xdb, 0xf7, 0x54, 0x5d, 0xc2, 0x96, 0xcc, 0x30, 0x40, 0x74, 0x4b, 0x79, 0xf4, 0xce, 0x7f, 0x37, 0xdb, 0x8b, 0xf5, 0x6d, 0xa8, 0xe9, 0xf3, 0x54, 0x83, 0x3d, 0x5c, 0xa6, 0x43, 0xe3, 0x4c, 0xc3, 0x30, 0xcf, 0x9e, 0x16, 0x65, 0x42, 0x30, 0xaf, 0xb0, 0x5c, 0x62, 0x8a, 0x19, 0x87, 0x26, 0xe9, 0x0c, 0x6b, 0x33, 0xc5, 0x3a, 0x10, 0x7c, 0xcc, 0xa2, 0xe4, 0xc8, 0x57, 0x25, 0x8c, 0xa9, 0x7e, 0x2f, 0x41, 0x37, 0x0f, 0xdf, 0xa2, 0x2a, 0x1d, 0x99, 0xee, 0xac, 0xd7, 0x6c, 0xa7, 0x2f, 0x71, 0xcb, 0x90, 0x68, 0xc1, 0x34, 0x54, 0x46, 0x95, 0x9f, 0xfa, 0xce, 0x4c, 0xcd };
 
+void process_path_file(std::ifstream &path_file, int file_entry_offset, uint8_t* working_code_data, uint8_t* trust_mask_data)
+{
+	path_file.seekg(file_entry_offset * 18);
+	char rng_seed_lo;
+	path_file.get(rng_seed_lo);
+	char rng_seed_hi;
+	path_file.get(rng_seed_hi);
+
+	uint16_t rng_seed = (rng_seed_hi << 8) | rng_seed_lo;
+	uint16_t rng_ = (rng_seed_lo << 8) | rng_seed_hi;
+
+	uint8_t path[16];
+	path_file.read((char*)path, 16);
+
+	std::ostringstream os;
+	os << "common/cnf_out/";
+	os << std::hex << std::uppercase << rng_seed << "_";
+
+	int path_length = 0;
+	for (int i = 0; i < 16; i++)
+	{
+		if (path[i] <= 0x07)
+		{
+			path_length++;
+			os << (int)path[i];
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	os << ".cnf";
+
+	tree_manager tm;
+
+	std::vector<tree_node*>* bitfield_rev_test = new std::vector<tree_node*>();
+	for (int i = 0; i < 1024; i++)
+	{
+		bitfield_rev_test->push_back(tm.get_prim_node(1 + i + 32));
+	}
+	std::vector<tree_node*>* key_sched_rev_test = new std::vector<tree_node*>();
+	for (int i = 0; i < 32; i++)
+	{
+		key_sched_rev_test->push_back(tm.get_prim_node(1 + i));
+	}
+
+	working_code in_progress_rev_test(bitfield_rev_test, &tm);
+
+	in_progress_rev_test.all_alg_flags = new std::vector<std::vector<tree_node*>*>();
+
+	in_progress_rev_test.process_working(key_sched_rev_test, 0, 16 - path_length);
+
+	tree_node* rng_known_node = tm.new_node_bit(1);
+	for (int bit_index = 0; bit_index < 16; bit_index++)
+	{
+		uint8 bit_val = (rng_ >> bit_index) & 0x01;
+		tree_node* next_node = (*in_progress_rev_test.rng_vals_init)[bit_index];
+
+		if (bit_val == 0x00)
+		{
+			next_node = tm.new_node(_NOT, next_node);
+		}
+		rng_known_node = tm.new_node(_AND, rng_known_node, next_node);
+	}
+
+	tree_node* working_node = tm.new_node_bit(1);
+
+	in_progress_rev_test.forced_alg_node = tm.new_node_bit(1);
+
+	for (int i = path_length - 1; i >= 0; i--)
+	{
+		in_progress_rev_test.process_forced_step(key_sched_rev_test, path[i], 15 - i);
+	}
+
+	
+	for (int i = 0; i < 16; i++)
+	{
+		for (int bit_index = 0; bit_index < 8; bit_index++)
+		{
+			uint8 bit_val = (working_code_data[i] >> bit_index) & 0x01;
+			uint8 trust_val = (trust_mask_data[i] >> bit_index) & 0x01;
+
+			if (trust_val == 1)
+			{
+				tree_node* next_node = (*in_progress_rev_test.bitfield)[i * 8 + bit_index];
+
+				if (bit_val == 0x00)
+				{
+					next_node = tm.new_node(_NOT, next_node);
+				}
+				working_node = tm.new_node(_AND, working_node, next_node);
+			}
+		}
+	}
+
+	working_node = tm.new_node(_AND, working_node, in_progress_rev_test.forced_alg_node);
+	tree_node* final_desired = tm.new_node(_AND, rng_known_node, working_node);
+	//tree_node* final_desired = tm.new_node(_AND, rng_known_node, tm.new_node_bit(1));
+
+
+	/*tree_node* return_alg_nodes = tm.new_node_bit(1);
+	int prim_offset = 1024 + 32 + 1;
+	for (auto x = in_progress_rev_test.all_alg_flags->begin(); x != in_progress_rev_test.all_alg_flags->end(); x++)
+	{
+		for (int alg_index = 0; alg_index < 8; alg_index++)
+		{
+			tree_node* p = tm.get_prim_node(prim_offset);
+
+			tree_node* alg_node = (**x)[alg_index];
+
+			return_alg_nodes = tm.new_node(_AND, return_alg_nodes, tm.new_node(_OR, tm.new_node(_AND, p, alg_node), tm.new_node(_AND, tm.new_node(_NOT, p), tm.new_node(_NOT, alg_node))));
+
+			prim_offset++;
+		}
+	}*/
+
+
+	//final_desired = return_alg_nodes;
+
+	//final_desired = tm.new_node(_AND, return_alg_nodes, final_desired);
+	//final_desired = tm.new_node(_AND, (*(*in_progress_rev_test.all_alg_flags)[0])[0], tm.new_node(_NOT, (*(*in_progress_rev_test.all_alg_flags)[0])[0]));
+
+	final_desired->simplify_tree();
+	if (final_desired->type == _PASS)
+	{
+		final_desired = final_desired->inputs[0];
+	}
+
+	//final_desired->get_cnf();
+	std::ofstream outfile;
+	outfile.open(os.str());
+
+	final_desired->cnf_to_file(outfile);
+	outfile.close();
+}
 void final_key_sched_test()
 {
 	tree_manager tm;
@@ -191,8 +329,25 @@ void full_map_rev()
 
 }
 
-void main()
+void main(int argc, char* argv[])
 {
+	std::string reverse_input_file = argv[1];
+	std::string path_input_file = argv[2];
+	std::string offset = argv[3];
+
+	// "../../common/carnival_code_reverse_input.bin"
+	std::ifstream datafile(reverse_input_file, std::ios::binary);
+	uint8_t working_code_data[128];
+	datafile.read((char*)working_code_data, 128);
+
+	uint8_t trust_mask_data[128];
+	datafile.read((char*)trust_mask_data, 128);
+
+	// "../../injected_paths.bin"
+	std::ifstream infile(path_input_file, std::ios::binary);
+	process_path_file(infile, std::stoi(offset), working_code_data, trust_mask_data);
+	return;
+
 	final_key_sched_test();
 	return;
 

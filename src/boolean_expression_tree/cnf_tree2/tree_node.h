@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include <string>
+#include <ostream>
 #include "data_sizes.h"
 //#include "tree_manager.h"
 
@@ -43,7 +45,8 @@ public:
 	void convert_to_val_pass(uint8 val);
 
 	void get_cnf();
-	void get_cnf_node();
+	void cnf_to_file(std::ofstream &outfile);
+	std::string get_cnf_node();
 
 	void simplify_tree();
 	void simplify_node();

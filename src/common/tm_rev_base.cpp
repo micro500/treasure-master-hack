@@ -10,23 +10,29 @@ void TM_rev_base::set_algorithm_list(std::vector<int>& algorithm_list)
 
 	uint16_t rng_count = 128;
 
-	for (int i = rev_alg_list_length - 1; i >= 0; i--)
+	for (int i = 15; i >= 0; i--)
 	{
-		alg_rng_seed_diff[i] = rng_count;
-		int alg = algorithm_list[i];
-		rev_alg_list[i] = alg;
+		int alg = -1;
 
-		switch (alg)
+		if (i < rev_alg_list_length)
 		{
-		case 1:
-		case 3:
-		case 4:
-			rng_count += 128;
-			break;
-		case 2:
-		case 5:
-			rng_count += 1;
-			break;
+			alg = algorithm_list[i];
+			alg_rng_seed_diff[i] = rng_count;
+
+			switch (alg)
+			{
+			case 1:
+			case 3:
+			case 4:
+				rng_count += 128;
+				break;
+			case 2:
+			case 5:
+				rng_count += 1;
+				break;
+			}
 		}
+
+		rev_alg_list[i] = alg;
 	}
 }

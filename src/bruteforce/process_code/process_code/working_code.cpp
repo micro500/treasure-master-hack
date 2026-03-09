@@ -24,9 +24,9 @@ working_code::working_code(uint8 value[8])
 
 void working_code::display_working_code()
 {
-	for (int i = 127; i >= 0; i--)
+	for (int i = 0; i < 128; i++)
 	{
-		printf("%02X",working_code_data.as_uint8[i]);
+		printf("%02X ",working_code_data.as_uint8[i]);
 		if (i % 16 == 0)
 		{
 			//printf("\n");
@@ -73,6 +73,7 @@ void working_code::process_working_code(uint8 map_number, key_schedule_entry sch
 		
 		// Run the selected algorithm
 		working_code_algorithm(algorithm_number, map_number);
+		display_working_code();
 	}
 
 	// The working code is then put back into the PPU

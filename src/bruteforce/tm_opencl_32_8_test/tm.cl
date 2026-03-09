@@ -320,11 +320,11 @@ __kernel void full_process(__global unsigned char* code_space, __global unsigned
 
 unsigned char generate_stats(__local unsigned int* working_code, __global unsigned char* encrypted_data, __global unsigned char* checksum_mask, int int_index, unsigned int length)
 {
-	__local int decrypted_data[32];
+	int decrypted_data[32];
 	decrypted_data[int_index] = working_code[int_index] ^ ((__global unsigned int*)encrypted_data)[int_index];
 	barrier(CLK_LOCAL_MEM_FENCE);
 
-	unsigned short checksum_total = (((__local unsigned char*) decrypted_data)[reverse_offset(length - 1)] << 8) | ((__local unsigned char*) decrypted_data)[reverse_offset(length - 2)];
+	unsigned short checksum_total = ((( unsigned char*) decrypted_data)[reverse_offset(length - 1)] << 8) | (( unsigned char*) decrypted_data)[reverse_offset(length - 2)];
 	unsigned short result = 0;
 
 	if (checksum_total <= (length - 2) * 0xFF)
@@ -332,7 +332,7 @@ unsigned char generate_stats(__local unsigned int* working_code, __global unsign
 		unsigned short sum = 0;
 		for (int i = 0; i < length - 2; i++)
 		{
-			sum += ((__local unsigned char*) decrypted_data)[reverse_offset(i)];
+			sum += (( unsigned char*) decrypted_data)[reverse_offset(i)];
 		}
 		if (sum == checksum_total)
 		{

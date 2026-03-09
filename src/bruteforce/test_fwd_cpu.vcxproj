@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{01591aed-826f-458f-bd7b-a39a524c0f47}</ProjectGuid>
-    <RootNamespace>testrevcpu</RootNamespace>
+    <ProjectGuid>{64aa9332-d537-4170-bbdb-f68f4e036619}</ProjectGuid>
+    <RootNamespace>testfwdcpu</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -70,13 +70,15 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>common/;reverse/cpu/;reverse/process_code_reverse3/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../common/;cpu/</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -89,9 +91,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>common/;reverse/cpu/;reverse/process_code_reverse3/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../common/;cpu/</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -104,9 +106,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>common/;reverse/cpu/;reverse/process_code_reverse3/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../common/;cpu/</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -119,11 +121,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>common/;reverse/cpu/;reverse/process_code_reverse3/</AdditionalIncludeDirectories>
-      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalIncludeDirectories>../common/;cpu/</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -133,23 +133,55 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="common\alignment2.cpp" />
-    <ClCompile Include="common\rng_obj.cpp" />
-    <ClCompile Include="common\tm_rev_base.cpp" />
-    <ClCompile Include="reverse\cpu\tm_rev_8.cpp" />
-    <ClCompile Include="reverse\cpu\tm_rev_avx_r128s_8.cpp" />
-    <ClCompile Include="reverse\cpu\tm_rev_avx_r128_8.cpp" />
-    <ClCompile Include="reverse\process_code_reverse3\main.cpp" />
-    <ClCompile Include="reverse\test\test_rev_cpu.cpp" />
+    <ClCompile Include="cpu\tm_32_16.cpp" />
+    <ClCompile Include="cpu\tm_32_8.cpp" />
+    <ClCompile Include="cpu\tm_64_16.cpp" />
+    <ClCompile Include="cpu\tm_64_8.cpp" />
+    <ClCompile Include="cpu\tm_8.cpp" />
+    <ClCompile Include="cpu\tm_avx2_r256s_8.cpp" />
+    <ClCompile Include="cpu\tm_avx512_r512s_8.cpp" />
+    <ClCompile Include="cpu\tm_avx_m256_16.cpp" />
+    <ClCompile Include="cpu\tm_avx_m256_8.cpp" />
+    <ClCompile Include="cpu\tm_avx_r128s_8.cpp" />
+    <ClCompile Include="cpu\tm_avx_r256s_8.cpp" />
+    <ClCompile Include="cpu\tm_avx_r256_16.cpp" />
+    <ClCompile Include="cpu\tm_avx_r256_8.cpp" />
+    <ClCompile Include="cpu\tm_mmx_m64_8.cpp" />
+    <ClCompile Include="cpu\tm_sse2_m128s_8.cpp" />
+    <ClCompile Include="cpu\tm_sse2_m128_16.cpp" />
+    <ClCompile Include="cpu\tm_sse2_m128_8.cpp" />
+    <ClCompile Include="test_cpu.cpp" />
+    <ClCompile Include="..\common\alignment2.cpp" />
+    <ClCompile Include="..\common\key_schedule.cpp" />
+    <ClCompile Include="..\common\rng_obj.cpp" />
+    <ClCompile Include="..\common\tm_base.cpp" />
+    <ClCompile Include="..\common\tm_tester.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common\alignment2.h" />
-    <ClInclude Include="common\rng_obj.h" />
-    <ClInclude Include="common\tm_rev_base.h" />
-    <ClInclude Include="reverse\cpu\tm_rev_8.h" />
-    <ClInclude Include="reverse\cpu\tm_rev_avx_r128s_8.h" />
-    <ClInclude Include="reverse\cpu\tm_rev_avx_r128_8.h" />
-    <ClInclude Include="reverse\process_code_reverse3\rev_stats.h" />
+    <ClInclude Include="cpu\tm_32_16.h" />
+    <ClInclude Include="cpu\tm_32_8.h" />
+    <ClInclude Include="cpu\tm_64_16.h" />
+    <ClInclude Include="cpu\tm_64_8.h" />
+    <ClInclude Include="cpu\tm_8.h" />
+    <ClInclude Include="cpu\tm_avx2_r256s_8.h" />
+    <ClInclude Include="cpu\tm_avx512_r512s_8.h" />
+    <ClInclude Include="cpu\tm_avx_m256_16.h" />
+    <ClInclude Include="cpu\tm_avx_m256_8.h" />
+    <ClInclude Include="cpu\tm_avx_r128s_8.h" />
+    <ClInclude Include="cpu\tm_avx_r256s_8.h" />
+    <ClInclude Include="cpu\tm_avx_r256_16.h" />
+    <ClInclude Include="cpu\tm_avx_r256_8.h" />
+    <ClInclude Include="cpu\tm_mmx_m64_8.h" />
+    <ClInclude Include="cpu\tm_sse2_m128s_8.h" />
+    <ClInclude Include="cpu\tm_sse2_m128_16.h" />
+    <ClInclude Include="cpu\tm_sse2_m128_8.h" />
+    <ClInclude Include="..\common\alignment2.h" />
+    <ClInclude Include="..\common\data_sizes.h" />
+    <ClInclude Include="..\common\key_schedule.h" />
+    <ClInclude Include="..\common\rng_obj.h" />
+    <ClInclude Include="..\common\tester2.h" />
+    <ClInclude Include="..\common\tm_base.h" />
+    <ClInclude Include="..\common\tm_tester.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

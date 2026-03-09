@@ -57,10 +57,10 @@ int main()
 	RNG rng;
 
 	std::vector<TM_base*> tms;
-	/*
+	
 	tm_8 _tm_8(&rng);
 	tms.push_back(&_tm_8);
-	
+	/*
 	tm_32_8 _tm_32_8(&rng);
 	tms.push_back(&_tm_32_8);
 	tm_32_16 _tm_32_16(&rng);
@@ -81,9 +81,9 @@ int main()
 	tm_avx_m256_8 _tm_avx_m256_8(&rng);
 	tms.push_back(&_tm_avx_m256_8);
 	tm_avx_r256_8 _tm_avx_r256_8(&rng);
-	tms.push_back(&_tm_avx_r256_8);*/
-	tm_avx_r256s_8 _tm_avx_r256s_8(&rng);
-	tms.push_back(&_tm_avx_r256s_8);/*
+	tms.push_back(&_tm_avx_r256_8);
+	//tm_avx_r256s_8 _tm_avx_r256s_8(&rng);
+	//tms.push_back(&_tm_avx_r256s_8);
 	tm_avx_r128s_8 _tm_avx_r128s_8(&rng);
 	tms.push_back(&_tm_avx_r128s_8);
 	
@@ -106,15 +106,15 @@ int main()
 		
 		//run_load_fetch_tests(tester2);
 		//run_alg_validity_tests(tester2);
-		//run_expansion_validity_tests(tester2);
+		run_expansion_validity_tests(tester2);
 		//run_full_validity_tests(tester2);
 		
 		//run_speed_tests2(tester2, 10000000);
-		//run_full_speed_test(tester2, 0x01000000);
+		//run_full_speed_test(tester2, 0x10000000);
 		//run_result_speed_test(tester2, 0x00100000);
 		//run_checksum_tests(tester2);
 		
-		run_result_tests(tester2);
+		//run_result_tests(tester2);
 	}
 	
 	

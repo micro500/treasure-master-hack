@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <fstream>
 
 tree_node_stack::tree_node_stack(class tree_node* node_in, int state, std::vector<tree_node*>::iterator it) : 
 	node(node_in), state(state), input_it(it) {}
@@ -30,17 +31,38 @@ void tree_node::get_cnf()
 		},
 		[](tree_node* n) -> void {
 			n->node_id = n->manager->get_next_node_counter();
-			n->get_cnf_node();
+			std::cout << n->get_cnf_node();
 		},
 		false
 	);
 }
 
-void tree_node::get_cnf_node()
+void tree_node::cnf_to_file(std::ofstream &outfile)
 {
+	clear_tree_node_ids(this);
+	manager->init_node_counter();
+
+	process_tree(this,
+		[](tree_node* n) -> bool {
+			return (n->type == _VAL) || (n->type == _PRIM) || (n->node_id != 0);
+		},
+		[&outfile](tree_node* n) -> void {
+			n->node_id = n->manager->get_next_node_counter();
+			outfile << n->get_cnf_node();
+		},
+		false
+	);
+
+	outfile << this->node_id << " 0\n";
+}
+
+std::string tree_node::get_cnf_node()
+{
+	std::ostringstream os;
+
 	if (inputs.size() > 2)
 	{
-		std::cout << "?!?" << std::endl;
+		os << "?!?" << std::endl;
 	}
 	if (type == _AND)
 	{
@@ -48,13 +70,9 @@ void tree_node::get_cnf_node()
 		uint64 b = inputs[1]->node_id;
 		uint64 c = this->node_id;
 
-		std::ostringstream os;
-
 		os << "-" << a << " -" << b << " " << c << " 0\n";
 		os << a << " -" << c << " 0\n";
 		os << b << " -" << c << " 0\n";
-
-		std::cout << os.str();
 	}
 	else if (type == _OR)
 	{
@@ -62,25 +80,17 @@ void tree_node::get_cnf_node()
 		uint64 b = inputs[1]->node_id;
 		uint64 c = this->node_id;
 
-		std::ostringstream os;
-
 		os << a << " " << b << " -" << c << " 0\n";
 		os << "-" << a << " " << c << " 0\n";
 		os << "-" << b << " " << c << " 0\n";
-
-		std::cout << os.str();
 	}
 	else if (this->type == _NOT)
 	{
 		uint64 a = inputs[0]->node_id;
 		uint64 c = this->node_id;
 
-		std::ostringstream os;
-
 		os << "-" << a << " -" << c << " 0\n";
 		os << a << " " << c << " 0\n";
-
-		std::cout << os.str();
 	}
 	else if (this->type == _XOR)
 	{
@@ -88,14 +98,10 @@ void tree_node::get_cnf_node()
 		uint64 b = inputs[1]->node_id;
 		uint64 c = this->node_id;
 
-		std::ostringstream os;
-
 		os << "-" << a << " -" << b << " -" << c << " 0\n";
 		os << a << " " << b << " -" << c << " 0\n";
 		os << a << " -" << b << " " << c << " 0\n";
 		os << "-" << a << " " << b << " " << c << " 0\n";
-
-		std::cout << os.str();
 	}
 	else if (type == _RNG_RES)
 	{
@@ -125,8 +131,10 @@ void tree_node::get_cnf_node()
 	}
 	else
 	{
-		std::cout << "??? " << type << std::endl;
+		os << "??? " << type << std::endl;
 	}
+
+	return os.str();
 }
 
 void tree_node::process_cnf(std::vector<std::vector<int>> &vars)

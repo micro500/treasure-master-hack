@@ -20,8 +20,68 @@
 #include "verify.h"
 #include "MurmurHash3_wrapper.h"
 
+void _test()
+{
+	int map_list[26] = { 0x00, 0x02, 0x05, 0x04, 0x03, 0x1D, 0x1C, 0x1E, 0x1B, 0x07, 0x08, 0x06, 0x09, 0x0C, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x0E, 0x0F, 0x10, 0x12, 0x11 };
+
+	generate_rng_table();
+
+	uint8 value[8];
+
+	value[0] = 0x2c;
+	value[1] = 0xa5;
+	value[2] = 0xb4;
+	value[3] = 0x2d;
+	value[4] = 0xf7;
+	value[5] = 0x3a;
+	value[6] = 0x26;
+	value[7] = 0x12;
+
+	key_schedule_data schedule_data;
+	schedule_data.as_uint8[0] = value[0];
+	schedule_data.as_uint8[1] = value[1];
+	schedule_data.as_uint8[2] = value[2];
+	schedule_data.as_uint8[3] = value[3];
+
+	key_schedule_entry schedule_entries[27];
+
+	int schedule_counter = 0;
+	for (int i = 0; i < 26; i++)
+	{
+		schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i], &schedule_data);
+
+		if (map_list[i] == 0x22)
+		{
+			schedule_entries[schedule_counter++] = generate_schedule_entry(map_list[i], &schedule_data, 4);
+		}
+	}
+
+	working_code in_progress2(value);
+	schedule_counter = 0;
+
+	for (int map_index = 0; map_index < 26; map_index++)
+	{
+		in_progress2.process_map_exit(map_list[map_index], schedule_entries[schedule_counter]);
+		if (map_list[map_index] == 0x22)
+		{
+			in_progress2.process_map_exit(map_list[map_index], schedule_entries[schedule_counter + 1]);
+		}
+
+		schedule_counter++;
+		if (map_list[map_index] == 0x22)
+		{
+			schedule_counter++;
+		}
+	}
+
+}
+
 int main(int argc, char **argv)
 {
+	_test();
+
+	return 0;
+
 	// Usage:
 	//  -k, --key "XXXXXXXX": supply 8 hex values to use as the key value, defaults to all 0's?
 	//  -d, --data "XXXXXXXX": supply 8 hex values to use as the starting data value, defaults to all 0's

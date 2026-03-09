@@ -170,7 +170,7 @@ void run_expansion_validity_tests(tm_tester tester)
 
 	FILE* pFile;
 
-	pFile = fopen("../common/TM_expansion_test_cases4.txt", "r+");
+	pFile = fopen("../../tm/TM_expansion_test_cases4.txt", "r+");
 	if (pFile == NULL)
 	{
 		printf("File error\n");

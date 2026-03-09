@@ -858,3 +858,105 @@ uint8 tm_avx_r128s_8::other_world_data_shuffled[128] =
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+
+
+
+
+
+void tm_avx_r128s_8::run_first_map(uint32_t key, uint32_t data, const key_schedule& schedule_entries)
+{
+	__m128i working_code0;
+	__m128i working_code1;
+	__m128i working_code2;
+	__m128i working_code3;
+	__m128i working_code4;
+	__m128i working_code5;
+	__m128i working_code6;
+	__m128i working_code7;
+
+	__m128i mask_FF = _mm_set1_epi16(0xFFFF);
+	__m128i mask_FE = _mm_set1_epi16(0xFEFE);
+	__m128i mask_7F = _mm_set1_epi16(0x7F7F);
+	__m128i mask_80 = _mm_set1_epi16(0x8080);
+	__m128i mask_01 = _mm_set1_epi16(0x0101);
+
+	__m128i mask_top_01 = _mm_set_epi16(0x0100, 0, 0, 0, 0, 0, 0, 0);
+	__m128i mask_top_80 = _mm_set_epi16(0x8000, 0, 0, 0, 0, 0, 0, 0);
+
+	_expand_code(key, data, working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7);
+
+	key_schedule::key_schedule_entry schedule_entry = *schedule_entries.entries.begin();
+
+
+	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
+	uint16 nibble_selector = schedule_entry.nibble_selector;
+
+	// Next, the working code is processed with the same steps 16 times:
+	for (int i = 0; i < 16; i++)
+	{
+		_mm_store_si128((__m128i*)(working_code_data), working_code0);
+		_mm_store_si128((__m128i*)(working_code_data + 16), working_code1);
+
+		// Get the highest bit of the nibble selector to use as a flag
+		unsigned char nibble = (nibble_selector >> 15) & 0x01;
+		// Shift the nibble selector up one bit
+		nibble_selector = nibble_selector << 1;
+
+		// If the flag is a 1, get the high nibble of the current byte
+		// Otherwise use the low nibble
+		unsigned char current_byte = (uint8)((uint8*)working_code_data)[shuffle_8(i, 128)];
+
+		if (nibble == 1)
+		{
+			current_byte = current_byte >> 4;
+		}
+
+		// Mask off only 3 bits
+		unsigned char algorithm_id = (current_byte >> 1) & 0x07;
+
+		if (algorithm_id == 0)
+		{
+			alg_0(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, &rng_seed, mask_FE);
+			rng_seed = rng->seed_forward_128[rng_seed];
+		}
+		else if (algorithm_id == 1 || algorithm_id == 4)
+		{
+			uint8* rng_start = rng->regular_rng_values_128_8_shuffled;
+
+			if (algorithm_id == 4)
+			{
+				rng_start = rng->alg4_values_128_8_shuffled;
+			}
+
+			add_alg(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, &rng_seed, rng_start);
+			rng_seed = rng->seed_forward_128[rng_seed];
+		}
+		else if (algorithm_id == 2)
+		{
+			alg_2(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, &rng_seed, mask_top_01, mask_80, mask_7F, mask_FE, mask_01);
+			rng_seed = rng->seed_forward_1[rng_seed];
+		}
+		else if (algorithm_id == 3)
+		{
+			alg_3(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, &rng_seed);
+			rng_seed = rng->seed_forward_128[rng_seed];
+		}
+		else if (algorithm_id == 5)
+		{
+			alg_5(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, &rng_seed, mask_top_80, mask_80, mask_7F, mask_FE, mask_01);
+			rng_seed = rng->seed_forward_1[rng_seed];
+		}
+		else if (algorithm_id == 6)
+		{
+			alg_6(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, &rng_seed, mask_7F);
+			rng_seed = rng->seed_forward_128[rng_seed];
+		}
+		else if (algorithm_id == 7)
+		{
+			alg_7(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, mask_FF);
+		}
+	}
+
+	_store_to_mem(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7);
+}

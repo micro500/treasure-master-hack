@@ -8,3 +8,9 @@
 **/TM_test_cases_OUT.txt
 **/.vs/
 **/x64/
+
+# Visual Studio auto-recovery files
+~AutoRecover.*
+
+# GPU compiled output
+*.ptx
