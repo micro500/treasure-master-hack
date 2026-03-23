@@ -1,6 +1,6 @@
 CC     = g++
 CC_C   = gcc
-CFLAGS = -I../common -I../cpu -I. -std=c++11 -O2 -m64 -mavx
+CFLAGS = -I../../common -I../cpu -I. -std=c++11 -O2 -m64 -mavx
 CFLAGS_C = -I. -O2 -m64
 
 all: tm_bruteforce
@@ -12,16 +12,16 @@ sha256.o:
 	$(CC_C) $(CFLAGS_C) -c sha256.c
 
 rng_obj.o:
-	$(CC) $(CFLAGS) -c ../common/rng_obj.cpp
+	$(CC) $(CFLAGS) -c ../../common/rng_obj.cpp
 
 key_schedule.o:
-	$(CC) $(CFLAGS) -c ../common/key_schedule.cpp
+	$(CC) $(CFLAGS) -c ../../common/key_schedule.cpp
 
 tm_base.o:
-	$(CC) $(CFLAGS) -c ../common/tm_base.cpp
+	$(CC) $(CFLAGS) -c ../../common/tm_base.cpp
 
 alignment2.o:
-	$(CC) $(CFLAGS) -c ../common/alignment2.cpp
+	$(CC) $(CFLAGS) -c ../../common/alignment2.cpp
 
 tm_avx_r128s_8.o:
 	$(CC) $(CFLAGS) -c ../cpu/tm_avx_r128s_8.cpp
