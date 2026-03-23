@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tm_opencl_old", "tm_opencl_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "classes_test", "classes_test\classes_test.vcxproj", "{FD0F8547-224D-4CDF-93DC-8A3377B7766C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "boinc_app", "boinc_app\boinc_app.vcxproj", "{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -116,6 +118,20 @@ Global
 		{FD0F8547-224D-4CDF-93DC-8A3377B7766C}.Test|Win32.Build.0 = Release|Win32
 		{FD0F8547-224D-4CDF-93DC-8A3377B7766C}.Test|x64.ActiveCfg = Release|x64
 		{FD0F8547-224D-4CDF-93DC-8A3377B7766C}.Test|x64.Build.0 = Release|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Debug|Mixed Platforms.Build.0 = Debug|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Debug|Win32.ActiveCfg = Debug|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Debug|x64.ActiveCfg = Debug|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Debug|x64.Build.0 = Debug|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Release|Mixed Platforms.ActiveCfg = Release|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Release|Mixed Platforms.Build.0 = Release|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Release|Win32.ActiveCfg = Release|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Release|x64.ActiveCfg = Release|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Release|x64.Build.0 = Release|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Test|Mixed Platforms.ActiveCfg = Release|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Test|Win32.ActiveCfg = Release|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Test|x64.ActiveCfg = Release|x64
+		{B2E4F7A8-3C1D-4E9B-A5F6-78901234BCDE}.Test|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

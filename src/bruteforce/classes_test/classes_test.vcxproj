@@ -90,7 +90,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../common/;../cpu</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../common/;../cpu</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -104,7 +104,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../common/;../cpu</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../common/;../cpu</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -120,7 +120,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../common/;../cpu</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../common/;../cpu</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,7 +139,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../common/;../cpu</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../common/;../cpu</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
@@ -152,12 +152,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\common\alignment2.h" />
-    <ClInclude Include="..\common\key_schedule.h" />
-    <ClInclude Include="..\common\rng_obj.h" />
-    <ClInclude Include="..\common\tester2.h" />
-    <ClInclude Include="..\common\tm_base.h" />
-    <ClInclude Include="..\common\tm_tester.h" />
+    <ClInclude Include="..\..\common\alignment2.h" />
+    <ClInclude Include="..\..\common\key_schedule.h" />
+    <ClInclude Include="..\..\common\rng_obj.h" />
+    <ClInclude Include="..\..\common\tester2.h" />
+    <ClInclude Include="..\..\common\tm_base.h" />
+    <ClInclude Include="..\..\common\tm_tester.h" />
     <ClInclude Include="..\cpu\tm_avx_r128s_8.h" />
     <ClInclude Include="..\cpu\tm_sse2_m128_16.h" />
     <ClInclude Include="..\cpu\tm_sse2_m128_8.h" />
@@ -177,11 +177,11 @@
     <ClInclude Include="..\cpu\tm_sse2_m128s_8.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\common\alignment2.cpp" />
-    <ClCompile Include="..\common\key_schedule.cpp" />
-    <ClCompile Include="..\common\rng_obj.cpp" />
-    <ClCompile Include="..\common\tm_base.cpp" />
-    <ClCompile Include="..\common\tm_tester.cpp" />
+    <ClCompile Include="..\..\common\alignment2.cpp" />
+    <ClCompile Include="..\..\common\key_schedule.cpp" />
+    <ClCompile Include="..\..\common\rng_obj.cpp" />
+    <ClCompile Include="..\..\common\tm_base.cpp" />
+    <ClCompile Include="..\..\common\tm_tester.cpp" />
     <ClCompile Include="..\cpu\tm_avx_r128s_8.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
     </ClCompile>

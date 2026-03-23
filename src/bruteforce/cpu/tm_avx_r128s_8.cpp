@@ -122,7 +122,7 @@ void tm_avx_r128s_8::load_data(uint8* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
-		((uint8*)working_code_data)[(i / 64) * 64 + (i % 2) * 32 + ((i / 2) % 32)] = new_data[i];
+		((uint8*)working_code_data)[shuffle_8(i, 128)] = new_data[i];
 	}
 }
 
@@ -346,7 +346,7 @@ __forceinline void tm_avx_r128s_8::alg_5(__m128i& working_code0, __m128i& workin
 
 __forceinline void tm_avx_r128s_8::alg_6(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint16* rng_seed, __m128i& mask_7F)
 {
-	uint8* rng_start = rng->alg0_values_128_8_shuffled + ((*rng_seed) * 128);
+	uint8* rng_start = rng->alg6_values_128_8_shuffled + ((*rng_seed) * 128);
 
 	alg_6_sub(working_code0, rng_start, mask_7F);
 	alg_6_sub(working_code1, rng_start + 16, mask_7F);
@@ -615,7 +615,7 @@ __forceinline uint16 tm_avx_r128s_8::masked_checksum(__m128i& working_code0, __m
 	sum_mask = _mm_load_si128((__m128i*)(mask + 96));
 	mid_sum(sum, working_code6, sum_mask, lo_mask);
 
-	sum_mask = _mm_load_si128((__m128i*)(mask + 12));
+	sum_mask = _mm_load_si128((__m128i*)(mask + 112));
 	mid_sum(sum, working_code7, sum_mask, lo_mask);
 
 	uint16 code_sum = _mm_extract_epi16(sum, 0) +
@@ -674,7 +674,7 @@ uint16 tm_avx_r128s_8::_calculate_other_world_checksum(__m128i& working_code0, _
 __forceinline uint16 tm_avx_r128s_8::fetch_checksum_value(__m128i& working_code0, __m128i& working_code1, uint8 code_length)
 {
 	_mm_store_si128((__m128i*)(working_code_data), working_code0);
-	_mm_store_si128((__m128i*)(working_code_data + 32), working_code1);
+	_mm_store_si128((__m128i*)(working_code_data + 16), working_code1);
 
 	unsigned char checksum_low = (uint8)((uint8*)working_code_data)[shuffle_8((127 - code_length), 128)];
 	unsigned char checksum_hi = (uint8)((uint8*)working_code_data)[shuffle_8((127 - (code_length + 1)), 128)];
@@ -758,7 +758,7 @@ void tm_avx_r128s_8::run_bruteforce_data(uint32 key, uint32 start_data, const ke
 		{
 			_store_to_mem(working_code0_xor, working_code1_xor, working_code2_xor, working_code3_xor, working_code4_xor, working_code5_xor, working_code6_xor, working_code7_xor);
 
-			*((uint32*)(&result_data[output_pos])) = i;
+			*((uint32*)(&result_data[output_pos])) = data;
 
 			uint8 unshuffled_data[128];
 			unshuffle_mem(working_code_data, unshuffled_data, 128, false);
@@ -782,7 +782,7 @@ void tm_avx_r128s_8::run_bruteforce_data(uint32 key, uint32 start_data, const ke
 			if (check_other_world_checksum(working_code0_xor, working_code1_xor, working_code2_xor, working_code3_xor, working_code4_xor, working_code5_xor, working_code6_xor, working_code7_xor))
 			{
 				_store_to_mem(working_code0_xor, working_code1_xor, working_code2_xor, working_code3_xor, working_code4_xor, working_code5_xor, working_code6_xor, working_code7_xor);
-				*((uint32*)(&result_data[output_pos])) = i;
+				*((uint32*)(&result_data[output_pos])) = data;
 
 				uint8 unshuffled_data[128];
 				unshuffle_mem(working_code_data, unshuffled_data, 128, false);
@@ -796,6 +796,149 @@ void tm_avx_r128s_8::run_bruteforce_data(uint32 key, uint32 start_data, const ke
 	}
 
 	*result_size = output_pos;
+}
+
+void tm_avx_r128s_8::run_bruteforce_boinc(uint32 key, uint32 start_data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size)
+{
+	__m128i working_code0;
+	__m128i working_code1;
+	__m128i working_code2;
+	__m128i working_code3;
+	__m128i working_code4;
+	__m128i working_code5;
+	__m128i working_code6;
+	__m128i working_code7;
+
+	__m128i mask_FF = _mm_set1_epi16(0xFFFF);
+	__m128i mask_FE = _mm_set1_epi16(0xFEFE);
+	__m128i mask_7F = _mm_set1_epi16(0x7F7F);
+	__m128i mask_80 = _mm_set1_epi16(0x8080);
+	__m128i mask_01 = _mm_set1_epi16(0x0101);
+
+	__m128i mask_top_01 = _mm_set_epi16(0x0100, 0, 0, 0, 0, 0, 0, 0);
+	__m128i mask_top_80 = _mm_set_epi16(0x8000, 0, 0, 0, 0, 0, 0, 0);
+
+	uint32 output_pos = 0;
+	for (uint32 i = 0; i < amount_to_run; i++)
+	{
+		if ((result_max_size - output_pos) < 5)
+		{
+			*result_size = result_max_size;
+			return;
+		}
+		uint32 data = start_data + i;
+
+		_expand_code(key, data, working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7);
+
+		_run_all_maps(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, schedule_entries, mask_FF, mask_FE, mask_7F, mask_80, mask_01, mask_top_01, mask_top_80);
+
+		__m128i working_code0_xor = working_code0;
+		__m128i working_code1_xor = working_code1;
+		__m128i working_code2_xor = working_code2;
+		__m128i working_code3_xor = working_code3;
+		__m128i working_code4_xor = working_code4;
+		__m128i working_code5_xor = working_code5;
+		__m128i working_code6_xor = working_code6;
+		__m128i working_code7_xor = working_code7;
+
+		_decrypt_carnival_world(working_code0_xor, working_code1_xor, working_code2_xor, working_code3_xor, working_code4_xor, working_code5_xor, working_code6_xor, working_code7_xor);
+
+		if (check_carnival_world_checksum(working_code0_xor, working_code1_xor, working_code2_xor, working_code3_xor, working_code4_xor, working_code5_xor, working_code6_xor, working_code7_xor))
+		{
+			_store_to_mem(working_code0_xor, working_code1_xor, working_code2_xor, working_code3_xor, working_code4_xor, working_code5_xor, working_code6_xor, working_code7_xor);
+
+			*((uint32*)(&result_data[output_pos])) = data;
+
+			uint8 unshuffled_data[128];
+			unshuffle_mem(working_code_data, unshuffled_data, 128, false);
+
+			result_data[output_pos + 4] = check_machine_code(unshuffled_data, CARNIVAL_WORLD);
+			output_pos += 5;
+		}
+		else
+		{
+			working_code0_xor = working_code0;
+			working_code1_xor = working_code1;
+			working_code2_xor = working_code2;
+			working_code3_xor = working_code3;
+			working_code4_xor = working_code4;
+			working_code5_xor = working_code5;
+			working_code6_xor = working_code6;
+			working_code7_xor = working_code7;
+
+			_decrypt_other_world(working_code0_xor, working_code1_xor, working_code2_xor, working_code3_xor, working_code4_xor, working_code5_xor, working_code6_xor, working_code7_xor);
+
+			if (check_other_world_checksum(working_code0_xor, working_code1_xor, working_code2_xor, working_code3_xor, working_code4_xor, working_code5_xor, working_code6_xor, working_code7_xor))
+			{
+				_store_to_mem(working_code0_xor, working_code1_xor, working_code2_xor, working_code3_xor, working_code4_xor, working_code5_xor, working_code6_xor, working_code7_xor);
+
+				*((uint32*)(&result_data[output_pos])) = data;
+
+				uint8 unshuffled_data[128];
+				unshuffle_mem(working_code_data, unshuffled_data, 128, false);
+
+				result_data[output_pos + 4] = check_machine_code(unshuffled_data, OTHER_WORLD) | OTHER_WORLD;
+				output_pos += 5;
+			}
+		}
+
+		report_progress((float)(i + 1) / amount_to_run);
+	}
+
+	*result_size = output_pos;
+}
+
+void tm_avx_r128s_8::compute_challenge_flags(uint32 key, uint32 data, const key_schedule& schedule_entries, uint8& carnival_flags_out, uint8& other_flags_out)
+{
+	__m128i working_code0;
+	__m128i working_code1;
+	__m128i working_code2;
+	__m128i working_code3;
+	__m128i working_code4;
+	__m128i working_code5;
+	__m128i working_code6;
+	__m128i working_code7;
+
+	__m128i mask_FF = _mm_set1_epi16(0xFFFF);
+	__m128i mask_FE = _mm_set1_epi16(0xFEFE);
+	__m128i mask_7F = _mm_set1_epi16(0x7F7F);
+	__m128i mask_80 = _mm_set1_epi16(0x8080);
+	__m128i mask_01 = _mm_set1_epi16(0x0101);
+
+	__m128i mask_top_01 = _mm_set_epi16(0x0100, 0, 0, 0, 0, 0, 0, 0);
+	__m128i mask_top_80 = _mm_set_epi16(0x8000, 0, 0, 0, 0, 0, 0, 0);
+
+	_expand_code(key, data, working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7);
+
+	_run_all_maps(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, schedule_entries, mask_FF, mask_FE, mask_7F, mask_80, mask_01, mask_top_01, mask_top_80);
+
+	// Carnival world — no checksum check
+	{
+		__m128i wc0 = working_code0, wc1 = working_code1, wc2 = working_code2, wc3 = working_code3;
+		__m128i wc4 = working_code4, wc5 = working_code5, wc6 = working_code6, wc7 = working_code7;
+
+		_decrypt_carnival_world(wc0, wc1, wc2, wc3, wc4, wc5, wc6, wc7);
+		_store_to_mem(wc0, wc1, wc2, wc3, wc4, wc5, wc6, wc7);
+
+		uint8 unshuffled_data[128];
+		unshuffle_mem(working_code_data, unshuffled_data, 128, false);
+
+		carnival_flags_out = check_machine_code(unshuffled_data, CARNIVAL_WORLD);
+	}
+
+	// Other world — no checksum check
+	{
+		__m128i wc0 = working_code0, wc1 = working_code1, wc2 = working_code2, wc3 = working_code3;
+		__m128i wc4 = working_code4, wc5 = working_code5, wc6 = working_code6, wc7 = working_code7;
+
+		_decrypt_other_world(wc0, wc1, wc2, wc3, wc4, wc5, wc6, wc7);
+		_store_to_mem(wc0, wc1, wc2, wc3, wc4, wc5, wc6, wc7);
+
+		uint8 unshuffled_data[128];
+		unshuffle_mem(working_code_data, unshuffled_data, 128, false);
+
+		other_flags_out = check_machine_code(unshuffled_data, OTHER_WORLD) | OTHER_WORLD;
+	}
 }
 
 bool tm_avx_r128s_8::initialized = false;

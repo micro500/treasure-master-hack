@@ -615,6 +615,75 @@ void RNG::generate_seed_forward()
 	}
 }
 
+void RNG::cleanup()
+{
+	delete[] rng_table;          rng_table = nullptr;
+	delete[] seed_forward;       seed_forward = nullptr;
+	delete[] seed_forward_1;     seed_forward_1 = nullptr;
+	delete[] seed_forward_128;   seed_forward_128 = nullptr;
+
+	aligned_free(regular_rng_values_8);                 regular_rng_values_8 = nullptr;
+	aligned_free(regular_rng_values_128_8_shuffled);    regular_rng_values_128_8_shuffled = nullptr;
+	aligned_free(regular_rng_values_256_8_shuffled);    regular_rng_values_256_8_shuffled = nullptr;
+	aligned_free(regular_rng_values_512_8_shuffled);    regular_rng_values_512_8_shuffled = nullptr;
+	aligned_free(regular_rng_values_8_hi);              regular_rng_values_8_hi = nullptr;
+	aligned_free(regular_rng_values_256_8_shuffled_hi); regular_rng_values_256_8_shuffled_hi = nullptr;
+	aligned_free(regular_rng_values_8_lo);              regular_rng_values_8_lo = nullptr;
+	aligned_free(regular_rng_values_256_8_shuffled_lo); regular_rng_values_256_8_shuffled_lo = nullptr;
+	aligned_free(regular_rng_values_16);                regular_rng_values_16 = nullptr;
+
+	aligned_free(expansion_values_8);               expansion_values_8 = nullptr;
+	aligned_free(expansion_values_128_8_shuffled);  expansion_values_128_8_shuffled = nullptr;
+	aligned_free(expansion_values_256_8_shuffled);  expansion_values_256_8_shuffled = nullptr;
+
+	aligned_free(alg0_values_8);                alg0_values_8 = nullptr;
+	aligned_free(alg0_values_128_8_shuffled);   alg0_values_128_8_shuffled = nullptr;
+	aligned_free(alg0_values_256_8_shuffled);   alg0_values_256_8_shuffled = nullptr;
+	aligned_free(alg0_values_512_8_shuffled);   alg0_values_512_8_shuffled = nullptr;
+	aligned_free(alg0_values_16);               alg0_values_16 = nullptr;
+
+	aligned_free(alg2_values_8_8);    alg2_values_8_8 = nullptr;
+	aligned_free(alg2_values_32_8);   alg2_values_32_8 = nullptr;
+	aligned_free(alg2_values_32_16);  alg2_values_32_16 = nullptr;
+	aligned_free(alg2_values_64_8);   alg2_values_64_8 = nullptr;
+	aligned_free(alg2_values_64_16);  alg2_values_64_16 = nullptr;
+	aligned_free(alg2_values_128_8);  alg2_values_128_8 = nullptr;
+	aligned_free(alg2_values_128_16); alg2_values_128_16 = nullptr;
+	aligned_free(alg2_values_256_8);  alg2_values_256_8 = nullptr;
+	aligned_free(alg2_values_256_16); alg2_values_256_16 = nullptr;
+	aligned_free(alg2_values_512_8);  alg2_values_512_8 = nullptr;
+
+	aligned_free(alg4_values_8);                alg4_values_8 = nullptr;
+	aligned_free(alg4_values_8_hi);             alg4_values_8_hi = nullptr;
+	aligned_free(alg4_values_128_8_shuffled);   alg4_values_128_8_shuffled = nullptr;
+	aligned_free(alg4_values_256_8_shuffled);   alg4_values_256_8_shuffled = nullptr;
+	aligned_free(alg4_values_512_8_shuffled);   alg4_values_512_8_shuffled = nullptr;
+	aligned_free(alg4_values_256_8_shuffled_hi);alg4_values_256_8_shuffled_hi = nullptr;
+	aligned_free(alg4_values_8_lo);             alg4_values_8_lo = nullptr;
+	aligned_free(alg4_values_256_8_shuffled_lo);alg4_values_256_8_shuffled_lo = nullptr;
+	aligned_free(alg4_values_16);               alg4_values_16 = nullptr;
+
+	aligned_free(alg5_values_8_8);    alg5_values_8_8 = nullptr;
+	aligned_free(alg5_values_32_8);   alg5_values_32_8 = nullptr;
+	aligned_free(alg5_values_32_16);  alg5_values_32_16 = nullptr;
+	aligned_free(alg5_values_64_8);   alg5_values_64_8 = nullptr;
+	aligned_free(alg5_values_64_16);  alg5_values_64_16 = nullptr;
+	aligned_free(alg5_values_128_8);  alg5_values_128_8 = nullptr;
+	aligned_free(alg5_values_128_16); alg5_values_128_16 = nullptr;
+	aligned_free(alg5_values_256_8);  alg5_values_256_8 = nullptr;
+	aligned_free(alg5_values_256_16); alg5_values_256_16 = nullptr;
+	aligned_free(alg5_values_512_8);  alg5_values_512_8 = nullptr;
+
+	aligned_free(alg6_values_8);                alg6_values_8 = nullptr;
+	aligned_free(alg6_values_128_8_shuffled);   alg6_values_128_8_shuffled = nullptr;
+	aligned_free(alg6_values_256_8_shuffled);   alg6_values_256_8_shuffled = nullptr;
+	aligned_free(alg6_values_512_8_shuffled);   alg6_values_512_8_shuffled = nullptr;
+	aligned_free(alg6_values_16);               alg6_values_16 = nullptr;
+
+	aligned_free(alg06_values_8);              alg06_values_8 = nullptr;
+	aligned_free(alg06_values_128_8_shuffled); alg06_values_128_8_shuffled = nullptr;
+}
+
 uint16* RNG::rng_table = nullptr;
 
 uint8* RNG::regular_rng_values_8 = nullptr;

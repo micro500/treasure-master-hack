@@ -11,6 +11,7 @@
 #endif
 
 void * aligned_malloc(int byte_count, int align_size);
+void aligned_free(void* ptr);
 
 int shuffle_8(int offset, int bits);
 uint8* packing_alloc(int size, bool packing_16);

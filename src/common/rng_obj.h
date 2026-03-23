@@ -11,6 +11,8 @@ public:
 	void generate_rng_table();
 	uint8 run_rng(uint16 * rng_seed);
 
+	static void cleanup();
+
 	void generate_seed_forward();
 
 	void generate_seed_forward_1();

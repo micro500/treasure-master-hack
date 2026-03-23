@@ -48,8 +48,7 @@ void run_alg_validity_tests(tm_tester tester)
 	uint8 test_case[128 + 128 + 3 + 2];
 
 	FILE * pFile;
-
-	pFile = fopen("../common/TM_alg_test_cases4.txt", "r+");
+	pFile = fopen("../../../../tm/TM_alg_test_cases4.txt", "r+");
 	if (pFile == NULL)
 	{
 		printf("File error\n");
@@ -112,7 +111,7 @@ void run_checksum_tests(tm_tester tester)
 
 	FILE* pFile;
 
-	pFile = fopen("../common/TM_checksum_test_cases.txt", "r+");
+	pFile = fopen("../../../../tm/TM_checksum_test_cases.txt", "r+");
 	if (pFile == NULL)
 	{
 		printf("File error\n");
@@ -170,7 +169,7 @@ void run_expansion_validity_tests(tm_tester tester)
 
 	FILE* pFile;
 
-	pFile = fopen("../../tm/TM_expansion_test_cases4.txt", "r+");
+	pFile = fopen("../../../../tm/TM_expansion_test_cases4.txt", "r+");
 	if (pFile == NULL)
 	{
 		printf("File error\n");
@@ -223,7 +222,7 @@ void run_full_validity_tests(tm_tester tester)
 
 	FILE* pFile;
 
-	pFile = fopen("../common/TM_full_test_cases.txt", "r+");
+	pFile = fopen("../../../../tm/TM_full_test_cases.txt", "r+");
 	if (pFile == NULL)
 	{
 		printf("File error\n");
@@ -278,7 +277,7 @@ void run_result_tests(tm_tester tester)
 
 	FILE* pFile;
 
-	pFile = fopen("../common/TM_result_test_cases.txt", "rb");
+	pFile = fopen("../../../../tm/TM_result_test_cases.txt", "rb");
 	if (pFile == NULL)
 	{
 		printf("File error\n");

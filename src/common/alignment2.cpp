@@ -1,12 +1,19 @@
 #include "alignment2.h"
+#include <stdint.h>
 
 void * aligned_malloc(int byte_count, int align_size)
 {
-	uint8 * new_array = new uint8[byte_count + align_size];
-	int mod = ((uint64)new_array) % align_size;
-	int remainder = align_size - mod;
-	uint64 result = (uint64)new_array + (uint64)remainder;
-	return (void*)(result);
+	uint8 * raw = new uint8[byte_count + align_size + sizeof(void*)];
+	uintptr_t ptr = (uintptr_t)raw + sizeof(void*);
+	uintptr_t aligned = (ptr + align_size - 1) & ~((uintptr_t)(align_size - 1));
+	((void**)aligned)[-1] = raw;
+	return (void*)aligned;
+}
+
+void aligned_free(void* ptr)
+{
+	if (ptr)
+		delete[] (uint8*)(((void**)ptr)[-1]);
 }
 
 int shuffle_8(int offset, int bits)
