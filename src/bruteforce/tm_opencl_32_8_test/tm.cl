@@ -318,91 +318,276 @@ __kernel void full_process(__global unsigned char* code_space, __global unsigned
 	copy_to_global(code_space, working_code, code_index, int_index);
 }
 
-unsigned char generate_stats(__local unsigned int* working_code, __global unsigned char* encrypted_data, __global unsigned char* checksum_mask, int int_index, unsigned int length)
+// -------------------------------------------------------------------
+// Constants
+// -------------------------------------------------------------------
+#define CHECKSUM_SENTINEL    0x08
+#define OP_JAM               0x01
+#define OP_ILLEGAL           0x02
+#define OP_NOP2              0x04
+#define OP_NOP_OP            0x08
+#define OP_JUMP              0x10
+
+#define OTHER_WORLD          0x01
+#define FIRST_ENTRY_VALID    0x02
+#define ALL_ENTRIES_VALID    0x04
+#define USES_NOP             0x10
+#define USES_UNOFFICIAL_NOPS 0x20
+#define USES_ILLEGAL_OPCODES 0x40
+#define USES_JAM             0x80
+
+__constant unsigned char other_world_data_k[128] = {
+	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+	0x00,0x00,0x00,0x00,0x00,0xCA,0x68,0xC1,0x66,0x44,
+	0xD2,0x04,0x0B,0x90,0x81,0x86,0xC7,0xF4,0xD2,0xE2,
+	0xF1,0x22,0xE3,0x0C,0xD9,0x54,0xFB,0xFF,0x0A,0xCF,
+	0x81,0x72,0x0A,0x94,0x9A,0x98,0xD3,0xFF,0xAB,0x80,
+	0x9A,0xE5,0xB7,0x45,0x6E,0x8F,0xD2,0xF0,0x67,0xFF,
+	0xB3,0xAE,0x49,0xBB,0x9C,0x06,0x12,0x40,0x49,0xA3,
+	0x9A,0xDB,0x32,0x7B,0x58,0xA1,0x5A,0xB9,0x2B,0x2B,
+	0x2D,0x6E,0x36,0x93,0x1C,0x1A,0x52,0x03,0x18,0xE4,
+	0x5E,0xB1,0xC1,0xBD,0x44,0xFB,0xF1,0x50
+};
+
+__constant unsigned char opcode_bytes_used_k[256] = {
+	1,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
+	2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,
+	3,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
+	2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,
+	1,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
+	2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,
+	1,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
+	2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,
+	2,2,2,0,2,2,2,0,1,2,1,0,3,3,3,0,
+	2,2,0,0,2,2,2,0,1,3,1,0,0,3,0,0,
+	2,2,2,0,2,2,2,0,1,2,1,0,3,3,3,0,
+	2,2,0,0,2,2,2,0,1,3,1,0,3,3,3,0,
+	2,2,2,0,2,2,2,0,1,2,1,0,3,3,3,0,
+	2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,
+	2,2,2,0,2,2,2,0,1,2,1,0,3,3,3,0,
+	2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0
+};
+
+// OP_JAM=1,OP_ILLEGAL=2,OP_NOP2=4,OP_NOP=8,OP_JUMP=16
+__constant unsigned char opcode_type_k[256] = {
+	 0, 0, 1, 2, 4, 0, 0, 2, 0, 0, 0, 2, 4, 0, 0, 2,
+	16, 0, 1, 2, 4, 0, 0, 2, 0, 0, 4, 2, 4, 0, 0, 2,
+	16, 0, 1, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2,
+	16, 0, 1, 2, 4, 0, 0, 2, 0, 0, 4, 2, 4, 0, 0, 2,
+	16, 0, 1, 2, 4, 0, 0, 2, 0, 0, 0, 2,16, 0, 0, 2,
+	16, 0, 1, 2, 4, 0, 0, 2, 0, 0, 4, 2, 4, 0, 0, 2,
+	16, 0, 1, 2, 4, 0, 0, 2, 0, 0, 0, 2,16, 0, 0, 2,
+	16, 0, 1, 2, 4, 0, 0, 2, 0, 0, 4, 2, 4, 0, 0, 2,
+	 4, 0, 4, 2, 0, 0, 0, 2, 0, 4, 0, 2, 0, 0, 0, 2,
+	16, 0, 1, 2, 0, 0, 0, 2, 0, 0, 0, 2, 2, 0, 2, 2,
+	 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2,
+	16, 0, 1, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 4, 2,
+	 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2,
+	16, 0, 1, 2, 4, 0, 0, 2, 0, 0, 4, 2, 4, 0, 0, 2,
+	 0, 0, 4, 2, 0, 0, 0, 2, 0, 0, 8, 2, 0, 0, 0, 2,
+	16, 0, 1, 2, 4, 0, 0, 2, 0, 0, 4, 2, 4, 0, 0, 2
+};
+
+// -------------------------------------------------------------------
+// checksum_ok: run by thread 0 only
+// -------------------------------------------------------------------
+int checksum_ok(__local unsigned int* data_i, int length)
 {
-	int decrypted_data[32];
-	decrypted_data[int_index] = working_code[int_index] ^ ((__global unsigned int*)encrypted_data)[int_index];
-	barrier(CLK_LOCAL_MEM_FENCE);
+	__local unsigned char* data = (__local unsigned char*)data_i;
+	unsigned int checksum_total = ((unsigned int)data[127 - (length - 1)] << 8)
+	                            |  (unsigned int)data[127 - (length - 2)];
+	if (checksum_total > (unsigned int)(length - 2) * 255u)
+		return 0;
+	unsigned int sum = 0;
+	for (int i = 0; i < length - 2; i++)
+		sum += data[127 - i];
+	return (sum == checksum_total);
+}
 
-	unsigned short checksum_total = ((( unsigned char*) decrypted_data)[reverse_offset(length - 1)] << 8) | (( unsigned char*) decrypted_data)[reverse_offset(length - 2)];
-	unsigned short result = 0;
+// -------------------------------------------------------------------
+// machine_code_flags: run by thread 0 only
+// e0..e5 are entry addresses (0xFF = unused)
+// -------------------------------------------------------------------
+unsigned char machine_code_flags(__local unsigned int* data_i, int code_length,
+                                  unsigned char e0, unsigned char e1, unsigned char e2,
+                                  unsigned char e3, unsigned char e4, unsigned char e5)
+{
+	__local unsigned char* data = (__local unsigned char*)data_i;
+	unsigned char entry_addrs[6] = { e0, e1, e2, e3, e4, e5 };
+	unsigned char active_entries[6]  = { 0,0,0,0,0,0 };
+	unsigned char hit_entries[6]     = { 0,0,0,0,0,0 };
+	unsigned char valid_entries[6]   = { 0,0,0,0,0,0 };
+	int last_entry = -1;
+	unsigned char result = 0;
+	unsigned char next_entry_addr = e0;
 
-	if (checksum_total <= (length - 2) * 0xFF)
+	for (int i = 0; i < code_length - 2; i++)
 	{
-		unsigned short sum = 0;
-		for (int i = 0; i < length - 2; i++)
+		if (i == (int)next_entry_addr)
 		{
-			sum += (( unsigned char*) decrypted_data)[reverse_offset(i)];
+			last_entry++;
+			hit_entries[last_entry] = 1;
+			active_entries[last_entry] = 1;
+			next_entry_addr = entry_addrs[last_entry + 1];
 		}
-		if (sum == checksum_total)
+		else if (i > (int)next_entry_addr)
 		{
-			result |= 0x80;
+			last_entry++;
+			next_entry_addr = entry_addrs[last_entry + 1];
 		}
+
+		unsigned char opcode = data[127 - i];
+		unsigned char otype  = opcode_type_k[opcode];
+
+		if (otype & OP_JAM)
+		{
+			result |= USES_JAM;
+			break;
+		}
+		else if (otype & OP_ILLEGAL)
+		{
+			result |= USES_ILLEGAL_OPCODES;
+			break;
+		}
+		else if (otype & OP_NOP2)
+		{
+			result |= USES_UNOFFICIAL_NOPS;
+		}
+		else if (otype & OP_NOP_OP)
+		{
+			result |= USES_NOP;
+		}
+		else if (otype & OP_JUMP)
+		{
+			for (int j = 0; j < 5; j++)
+			{
+				if (active_entries[j] == 1)
+				{
+					active_entries[j] = 0;
+					valid_entries[j]  = 1;
+				}
+			}
+		}
+
+		i += (int)opcode_bytes_used_k[opcode] - 1;
 	}
+
+	int all_entries_valid = 1;
+	for (int i = 0; i < 5; i++)
+	{
+		if (hit_entries[i] == 1)
+		{
+			if (valid_entries[i] != 1)
+			{
+				all_entries_valid = 0;
+				break;
+			}
+		}
+		else if (entry_addrs[i] == 255)
+		{
+			continue;
+		}
+		else
+		{
+			for (int j = (int)entry_addrs[i]; j < code_length - 2; j++)
+			{
+				unsigned char opcode = data[127 - j];
+				unsigned char otype  = opcode_type_k[opcode];
+				if ((otype & OP_JAM) || (otype & OP_ILLEGAL))
+				{
+					all_entries_valid = 0;
+					break;
+				}
+				else if (otype & OP_JUMP)
+				{
+					break;
+				}
+				j += (int)opcode_bytes_used_k[opcode] - 1;
+			}
+		}
+		if (!all_entries_valid) break;
+	}
+
+	if (all_entries_valid)       result |= ALL_ENTRIES_VALID;
+	if (valid_entries[0] == 1)   result |= FIRST_ENTRY_VALID;
 
 	return result;
 }
 
-__kernel void tm_stats(__global unsigned char* result_data, __global unsigned char* regular_rng_values, __global unsigned char* alg0_values, __global unsigned char* alg6_values, __global unsigned short* rng_forward_1, __global unsigned short* rng_forward_128, __global unsigned char* alg2_values, __global unsigned char* alg5_values, __global unsigned char* expansion_values, __global unsigned char* schedule_data, __global unsigned char* carnival_data, __global unsigned char* carnival_checksum_mask, unsigned int key, unsigned int data_start)
+// -------------------------------------------------------------------
+// tm_stats kernel
+// -------------------------------------------------------------------
+__kernel void tm_stats(
+	__global unsigned char*  result_data,
+	__global unsigned char*  regular_rng_values,
+	__global unsigned char*  alg0_values,
+	__global unsigned char*  alg6_values,
+	__global unsigned short* rng_forward_1,
+	__global unsigned short* rng_forward_128,
+	__global unsigned char*  alg2_values,
+	__global unsigned char*  alg5_values,
+	__global unsigned char*  expansion_values,
+	__global unsigned char*  schedule_data,
+	__global unsigned char*  carnival_data,
+	__global unsigned char*  unused_param,
+	unsigned int key,
+	unsigned int data_start)
 {
 	__local unsigned int working_code[32];
-	__local unsigned short rng_seed;
+	__local unsigned int decrypted_carnival[32];
+	__local unsigned int decrypted_other[32];
 
 	unsigned int code_index = get_global_id(1);
-	unsigned int int_index = get_local_id(0);
-	unsigned int cur_data = data_start + code_index;
+	unsigned int int_index  = get_local_id(0);
+	unsigned int cur_data   = data_start + code_index;
 
 	if (int_index % 2 == 0)
-	{
 		working_code[int_index] = key;
-	}
 	else
-	{
 		working_code[int_index] = cur_data;
-	}
 
 	expand(working_code, int_index, key >> 16, expansion_values);
-
-	// make sure expansion values are ready
 	barrier(CLK_LOCAL_MEM_FENCE);
 
 	for (int i = 0; i < 27; i++)
 	{
-		run_one_map(working_code, int_index, regular_rng_values, alg0_values, alg6_values, rng_forward_1, rng_forward_128, alg2_values, alg5_values, schedule_data, i);
+		run_one_map(working_code, int_index,
+		            regular_rng_values, alg0_values, alg6_values,
+		            rng_forward_1, rng_forward_128,
+		            alg2_values, alg5_values,
+		            schedule_data, i);
 	}
 
-	unsigned char stats = generate_stats(working_code, carnival_data, carnival_checksum_mask, int_index, 0x72);
+	// All 32 threads cooperatively decrypt both worlds
+	decrypted_carnival[int_index] = working_code[int_index]
+	                              ^ ((__global unsigned int*)carnival_data)[int_index];
+	decrypted_other[int_index]    = working_code[int_index]
+	                              ^ ((__constant unsigned int*)other_world_data_k)[int_index];
+
 	barrier(CLK_LOCAL_MEM_FENCE);
-	if (get_local_id(0) == 0)
+
+	if (int_index == 0)
 	{
-		result_data[code_index] = 0;
-		result_data[code_index * 2] = stats;
+		unsigned char stats = 0;
+
+		if (checksum_ok(decrypted_carnival, 0x72))
+		{
+			// Carnival world checksum passed
+			stats = machine_code_flags(decrypted_carnival, 0x72,
+			                           0, 0x2B, 0x33, 0x3E, 0xFF, 0xFF);
+			stats |= CHECKSUM_SENTINEL;
+		}
+		else if (checksum_ok(decrypted_other, 0x53))
+		{
+			// Other world checksum passed
+			stats = machine_code_flags(decrypted_other, 0x53,
+			                           0, 0x05, 0x0A, 0x28, 0x50, 0xFF);
+			stats |= CHECKSUM_SENTINEL | OTHER_WORLD;
+		}
+
+		result_data[code_index] = stats;
 	}
-	//copy_to_global(code_space, working_code, code_index, int_index);
 }
-
-// decrypt memory
-// need carnival code and other world code
-
-
-// 
-// id0: store all 0s to global
-// fence
-
-// decrypt: xor current int with data into a new local array
-// fence (make sure data is ready)
-// check if the sum is too high, skip (all cores do this)
-	// mask int with relevant mask
-	// add up the 4 bytes, store to a sumation array
-	// fence (to have summation ready)
-	// id0: add up sumation array, store to local
-	// fence
-	// if sum matches:
-		// id0: 
-			// result now indicates checksum sucess
-			// run machine code checks
-			// store to global
-
-// fence
-
-// same steps for other world, store to a different spot?

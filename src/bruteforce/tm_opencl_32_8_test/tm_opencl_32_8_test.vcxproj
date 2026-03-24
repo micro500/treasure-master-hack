@@ -230,6 +230,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\common\rng.cpp" />
+    <ClCompile Include="..\boinc_app\sha256.c" />
     <ClCompile Include="key_schedule.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
