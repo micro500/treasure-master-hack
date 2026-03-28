@@ -20,6 +20,11 @@ void TM_base::print_working_code()
 
 void TM_base::run_bruteforce_data(uint32 key, uint32 data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size) {}
 
+void TM_base::run_bruteforce_hash_reduction(uint32 key, uint32 data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size)
+{
+	// TODO: implement hash reduction in concrete subclasses
+}
+
 uint8 TM_base::check_machine_code(uint8* data, int world)
 {
 	uint8 code_length;

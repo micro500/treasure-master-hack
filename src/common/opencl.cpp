@@ -164,9 +164,12 @@ cl_program opencl::create_program(std::string filepath)
 	return program;
 }
 
-void opencl::build_program(cl_program program)
+void opencl::build_program(cl_program program, const std::string& options)
 {
-	cl_int build_ret = clBuildProgram(program, 1, &device_id, NULL, NULL, NULL);
+	std::string all_opts = "-cl-nv-opt-level=3 -cl-mad-enable -cl-nv-verbose";
+	if (!options.empty())
+		all_opts += " " + options;
+	cl_int build_ret = clBuildProgram(program, 1, &device_id, all_opts.c_str(), NULL, NULL);
 	size_t log_size;
 	clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
 
@@ -193,7 +196,7 @@ cl_kernel opencl::create_kernel(cl_program program, std::string entry_name)
 	cl_kernel kernel = clCreateKernel(program, entry_name.c_str(), &ret);
 	if (ret != CL_SUCCESS)
 	{
-		std::cout << "Error in clCreateKernel, Ret: " << ret << "Line " << __LINE__ << " in file " << __FILE__ << std::endl;
+		std::cout << "Error in clCreateKernel (\"" << entry_name << "\"), Ret: " << ret << " Line " << __LINE__ << " in file " << __FILE__ << std::endl;
 		std::exit(EXIT_FAILURE);
 	}
 
@@ -263,11 +266,11 @@ std::string get_kernel_asm(cl_program program)
 	clGetProgramInfo(program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &binary_size, NULL);
 
 	char* binary = new char[binary_size];
-	clGetProgramInfo(program, CL_PROGRAM_BINARIES, binary_size, &binary, NULL);
-	std::string binary_str(binary);
-	return binary_str;
-
+	char* binaries[1] = { binary };
+	clGetProgramInfo(program, CL_PROGRAM_BINARIES, sizeof(char*), binaries, NULL);
+	std::string binary_str(binary, binary_size);
 	delete[] binary;
+	return binary_str;
 }
 
 void output_kernel_asm_to_file(cl_program program, std::string filename)

@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <direct.h>
 
 float prev_percent;
 void report_progress(double percentage)
@@ -41,6 +42,9 @@ void report_progress(double percentage)
 
 int main()
 {
+	char cwd[500];
+	_getcwd(cwd, 500);
+	printf("CWD: %s\n", cwd);
 	prev_percent = 0;
 	
 	// Passes carnival checksum, might generate the correct machine code
@@ -57,10 +61,10 @@ int main()
 	RNG rng;
 
 	std::vector<TM_base*> tms;
-	
+	/*
 	tm_8 _tm_8(&rng);
 	tms.push_back(&_tm_8);
-	/*
+	
 	tm_32_8 _tm_32_8(&rng);
 	tms.push_back(&_tm_32_8);
 	tm_32_16 _tm_32_16(&rng);
@@ -80,15 +84,20 @@ int main()
 	
 	tm_avx_m256_8 _tm_avx_m256_8(&rng);
 	tms.push_back(&_tm_avx_m256_8);
+	
 	tm_avx_r256_8 _tm_avx_r256_8(&rng);
 	tms.push_back(&_tm_avx_r256_8);
-	//tm_avx_r256s_8 _tm_avx_r256s_8(&rng);
+	*/
+	tm_avx_r256s_8 _tm_avx_r256s_8(&rng);
 	//tms.push_back(&_tm_avx_r256s_8);
+	
 	tm_avx_r128s_8 _tm_avx_r128s_8(&rng);
 	tms.push_back(&_tm_avx_r128s_8);
+	/*
 	
 	tm_avx_r256_16 _tm_avx_r256_16(&rng);
 	tms.push_back(&_tm_avx_r256_16);
+	
 	
 	tm_avx_m256_16 _tm_avx_m256_16(&rng);
 	tms.push_back(&_tm_avx_m256_16);
@@ -99,6 +108,7 @@ int main()
 	tm_avx512_r512s_8 _tm_avx512_r512s_8(&rng);
 	tms.push_back(&_tm_avx512_r512s_8);
 	*/
+	
 	for (std::vector<TM_base*>::iterator it = tms.begin(); it != tms.end(); ++it)
 	{
 		std::cout << (*it)->obj_name << std::endl;
@@ -112,19 +122,21 @@ int main()
 		//run_speed_tests2(tester2, 10000000);
 		//run_full_speed_test(tester2, 0x10000000);
 		//run_result_speed_test(tester2, 0x00100000);
-		//run_checksum_tests(tester2);
+		run_checksum_tests(tester2);
 		
 		//run_result_tests(tester2);
 	}
+	
 	
 	
 	/*
 	uint8 result_data[400000];
 	uint32 result_size;
 	//_tm_avx_8_in_cpu_shuffled.run_bruteforce_data(0x2CA5B42D, 0x01E190D8, schedule_entries, 0x04000000, &report_progress, result_data, 400000, &result_size);
-	_tm_avx_8_in_cpu_shuffled.run_bruteforce_data(0x2CA5B42D, 0xf73a2612, schedule_entries, 0x04000000, &report_progress, result_data, 400000, &result_size);
+	tms[0]->run_bruteforce_data(749057069, 638623, schedule_data, 65537, &report_progress, result_data, 400000, &result_size);
 	
 	printf("%i", result_size);
 	*/
+	
 	return 0;
 }

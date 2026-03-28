@@ -1,5 +1,7 @@
 #pragma once
 #include <CL/cl.h>
+#include <iostream>
+#include <string>
 
 class opencl
 {
@@ -8,7 +10,7 @@ public:
 
 	cl_program create_program(std::string filepath);
 	cl_kernel create_kernel(cl_program program, std::string entry_name);
-	void build_program(cl_program program);
+	void build_program(cl_program program, const std::string& options = "");
 	cl_event run_kernel(cl_kernel kernel, cl_uint work_dim, const size_t* global_work_offset, const size_t* global_work_size, const size_t* local_work_size);
 	void finish();
 

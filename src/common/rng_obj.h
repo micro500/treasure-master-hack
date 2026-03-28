@@ -93,7 +93,12 @@ public:
 	void generate_alg06_values_128_8_shuffled();
 
 
+	void generate_rng_seq_tables();
+
 	static uint16* rng_table;
+	static uint16* rng_seq_table;
+	static uint32* rng_pos_table;
+	static uint32  rng_seq_table_size;
 	static uint16* seed_forward;
 	static uint16* seed_forward_1;
 	static uint16* seed_forward_128;

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "data_sizes.h"
 #include "alignment2.h"
 #include "rng_obj.h"
@@ -615,6 +616,106 @@ void RNG::generate_seed_forward()
 	}
 }
 
+void RNG::generate_rng_seq_tables()
+{
+	if (rng_seq_table != nullptr)
+		return;
+
+	// RNG structure (from reverse-engineering):
+	//   X  cycle: 2067  seeds, starting at 0x000F (pure cycle)
+	//   Y  cycle: 11429 seeds, starting at 0x0004 (pure cycle)
+	//   Z0 cycle: 33153 seeds, starting at 0x0000, includes 0xAA6D (pure cycle)
+	//   Z1 tail:  18887 seeds, starting at 0x2143, leads into Z0 at 0xAA6D (no predecessor)
+	//   Total: 65536 seeds exactly
+	//
+	// Layout: [Z1 tail][Z0 cycle + 127 pad][X cycle + 127 pad][Y cycle + 127 pad]
+	// Z1 tail is placed first so forward reads from tail seeds continue into Z0.
+	// Only the 3 pure cycles need 127-entry wrap-around padding.
+	// Max size: 65536 + 3*127 = 65917 entries.
+
+	const uint32 MAX_SEQ_SIZE = 65536 + 3 * 127;
+	rng_seq_table = (uint16*)aligned_malloc(MAX_SEQ_SIZE * sizeof(uint16), 64);
+	rng_pos_table = (uint32*)aligned_malloc(0x10000 * sizeof(uint32), 64);
+
+	bool visited[0x10000] = {};
+	uint32 write_pos = 0;
+
+	// 1. Z1 tail: walk forward from 0x2143 until we reach 0xAA6D (Z0's entry point).
+	//    No padding needed — Z0 follows immediately, so reads naturally continue into it.
+	{
+		uint16 cur = 0x2143;
+		while (cur != 0xAA6D)
+		{
+			rng_pos_table[cur] = write_pos;
+			rng_seq_table[write_pos++] = rng_table[cur];
+			visited[cur] = true;
+			cur = rng_table[cur];
+		}
+	}
+
+	// 2. Z0 cycle: start from 0xAA6D so it's contiguous with the Z1 tail above.
+	{
+		uint32 z0_base = write_pos;
+		uint16 cur = 0xAA6D;
+		do {
+			rng_pos_table[cur] = write_pos;
+			rng_seq_table[write_pos++] = rng_table[cur];
+			visited[cur] = true;
+			cur = rng_table[cur];
+		} while (cur != 0xAA6D);
+		uint32 z0_len = write_pos - z0_base;
+		for (uint32 i = 0; i < 127; i++)
+			rng_seq_table[write_pos++] = rng_seq_table[z0_base + (i % z0_len)];
+	}
+
+	// 3. X cycle: start from 0x000F.
+	{
+		uint32 x_base = write_pos;
+		uint16 cur = 0x000F;
+		do {
+			rng_pos_table[cur] = write_pos;
+			rng_seq_table[write_pos++] = rng_table[cur];
+			visited[cur] = true;
+			cur = rng_table[cur];
+		} while (cur != 0x000F);
+		uint32 x_len = write_pos - x_base;
+		for (uint32 i = 0; i < 127; i++)
+			rng_seq_table[write_pos++] = rng_seq_table[x_base + (i % x_len)];
+	}
+
+	// 4. Y cycle: start from 0x0004.
+	{
+		uint32 y_base = write_pos;
+		uint16 cur = 0x0004;
+		do {
+			rng_pos_table[cur] = write_pos;
+			rng_seq_table[write_pos++] = rng_table[cur];
+			visited[cur] = true;
+			cur = rng_table[cur];
+		} while (cur != 0x0004);
+		uint32 y_len = write_pos - y_base;
+		for (uint32 i = 0; i < 127; i++)
+			rng_seq_table[write_pos++] = rng_seq_table[y_base + (i % y_len)];
+	}
+
+	rng_seq_table_size = write_pos;
+
+	// Verify all 65536 seeds were covered.
+	uint32 missed = 0;
+	for (uint32 s = 0; s < 0x10000; s++)
+	{
+		if (!visited[s])
+		{
+			fprintf(stderr, "generate_rng_seq_tables: unvisited seed 0x%04X\n", s);
+			missed++;
+		}
+	}
+	if (missed == 0)
+		fprintf(stderr, "generate_rng_seq_tables: all 65536 seeds OK, table size=%u\n", write_pos);
+	else
+		fprintf(stderr, "generate_rng_seq_tables: ERROR: %u seeds not visited!\n", missed);
+}
+
 void RNG::cleanup()
 {
 	delete[] rng_table;          rng_table = nullptr;
@@ -682,9 +783,15 @@ void RNG::cleanup()
 
 	aligned_free(alg06_values_8);              alg06_values_8 = nullptr;
 	aligned_free(alg06_values_128_8_shuffled); alg06_values_128_8_shuffled = nullptr;
+
+	aligned_free(rng_seq_table); rng_seq_table = nullptr;
+	aligned_free(rng_pos_table); rng_pos_table = nullptr;
 }
 
 uint16* RNG::rng_table = nullptr;
+uint16* RNG::rng_seq_table      = nullptr;
+uint32* RNG::rng_pos_table      = nullptr;
+uint32  RNG::rng_seq_table_size = 0;
 
 uint8* RNG::regular_rng_values_8 = nullptr;
 uint8* RNG::regular_rng_values_128_8_shuffled = nullptr;
