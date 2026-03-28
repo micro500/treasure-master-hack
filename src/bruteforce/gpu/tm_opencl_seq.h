@@ -4,9 +4,9 @@
 #include "tm_gpu_base.h"
 #include "opencl.h"
 
-// GPU bruteforce implementation using the RNG sequence table approach.
-// Replaces all large per-algorithm LUTs (~50MB total) with two small tables
-// (~388KB total) that fit in GPU L2 cache.
+// GPU bruteforce implementation using a per-schedule RNG table.
+// Replaces rng_seq/rng_pos/rng_out (~450KB) with a single per-run map_rng
+// table (~52KB) that fits in L1 cache, eliminating the 2-level lookup chain.
 // Each workgroup of 32 threads processes 64 candidates sequentially, then
 // writes results as a single coalesced 128-byte global write.
 class tm_opencl_seq : public TM_GPU_base
@@ -29,9 +29,6 @@ private:
 
 	cl_kernel _kernel_bruteforce;
 
-	cl_mem _rng_seq_d;      // rng_seq_table (~132KB)
-	cl_mem _rng_pos_d;      // rng_pos_table (256KB)
-	cl_mem _rng_out_d;      // pre-computed output bytes (~66KB)
 	cl_mem _result_data_d;  // BATCH_SIZE * 2 bytes (2 bytes per candidate)
 
 	// 64 candidates per workgroup, 2 bytes per result = 128-byte coalesced write

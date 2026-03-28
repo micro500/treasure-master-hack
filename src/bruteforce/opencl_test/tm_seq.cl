@@ -91,111 +91,101 @@ __constant unsigned char opcode_type_k[256] = {
 };
 
 // -------------------------------------------------------------------
-// RNG sequence table helpers
+// Per-schedule RNG table approach.
 //
-// rng_seq[pos] = the next seed value after one RNG step from the seed
-//               at that position in the chain.
-// rng_pos[seed] = absolute index into rng_seq where seed's chain starts.
+// map_rng[map_idx * 2048 + i] = pre-computed output byte at step i
+//   from the map's initial RNG seed.
 //
-// Output byte from a stored next-seed value:
-//   output = ((next_seed >> 8) ^ next_seed) & 0xFF
+// local_pos tracks absolute offset within the 2048-entry window.
+//   Advances +128 for alg0/1/3/4/6, +1 for alg2/5, +0 for alg7.
 //
-// Seed advancement:
-//   1-step  (alg2/5): rng_seq[rng_pos[seed] + 0]
-//   128-step (others): rng_seq[rng_pos[seed] + 127]
+// For 128-step algs, thread code_index reads 4 bytes at offsets:
+//   map_base + local_pos + (127 - code_index*4) down to
+//   map_base + local_pos + (124 - code_index*4)
+// For 1-step algs (alg2/5), carry byte is at map_base + local_pos.
 // -------------------------------------------------------------------
-
-// Compute the 4-byte RNG output pack for thread code_index.
-// Each byte is the full output byte at the corresponding position.
-// pos_base = rng_pos[current_rng_seed].
-// The existing LUT layout stores position (127 - byte_offset) in reverse,
-// so thread t reads positions pos_base+(127-t*4) down to pos_base+(124-t*4).
-__attribute__((always_inline))
-uint rng_full_bytes(uint pos_base, uint code_index, __global uchar* rng_out)
-{
-	uint p0 = pos_base + (127 - code_index * 4);
-	uint p1 = pos_base + (126 - code_index * 4);
-	uint p2 = pos_base + (125 - code_index * 4);
-	uint p3 = pos_base + (124 - code_index * 4);
-	return rng_out[p0] | ((uint)rng_out[p1] << 8) | ((uint)rng_out[p2] << 16) | ((uint)rng_out[p3] << 24);
-}
-
-// MSB-only version for alg0: each byte is 0 or 1 (bit 0).
-__attribute__((always_inline))
-uint rng_msb_lo_bytes(uint pos_base, uint code_index, __global uchar* rng_out)
-{
-	uint p0 = pos_base + (127 - code_index * 4);
-	uint p1 = pos_base + (126 - code_index * 4);
-	uint p2 = pos_base + (125 - code_index * 4);
-	uint p3 = pos_base + (124 - code_index * 4);
-	uint b0 = (rng_out[p0] >> 7) & 1;
-	uint b1 = (rng_out[p1] >> 7) & 1;
-	uint b2 = (rng_out[p2] >> 7) & 1;
-	uint b3 = (rng_out[p3] >> 7) & 1;
-	return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
-}
-
-// MSB-in-bit7 version for alg6: each byte is 0 or 0x80.
-__attribute__((always_inline))
-uint rng_msb_hi_bytes(uint pos_base, uint code_index, __global uchar* rng_out)
-{
-	uint p0 = pos_base + (127 - code_index * 4);
-	uint p1 = pos_base + (126 - code_index * 4);
-	uint p2 = pos_base + (125 - code_index * 4);
-	uint p3 = pos_base + (124 - code_index * 4);
-	return (rng_out[p0] & 0x80) | ((uint)(rng_out[p1] & 0x80) << 8) | ((uint)(rng_out[p2] & 0x80) << 16) | ((uint)(rng_out[p3] & 0x80) << 24);
-}
 
 // -------------------------------------------------------------------
 // Algorithm step
-// Mirrors the original branchy alg(): algorithm_id is uniform across
-// all threads (broadcast via alg_byte), so branches are not divergent.
-// Only the needed RNG values are read; barrier only for alg2/5.
+// algorithm_id is uniform across all threads — no divergence.
 // -------------------------------------------------------------------
 __attribute__((always_inline))
-uint alg_seq(uint cur_val, uint algorithm_id, ushort* rng_seed,
-             __global ushort* rng_seq, __global uint* rng_pos, __global uchar* rng_out)
+uint alg_seq(uint cur_val, uint algorithm_id, uint* local_pos,
+             uint map_base, __global uchar* map_rng)
 {
 	uint code_index = get_local_id(0);
-	uint pos_base   = rng_pos[*rng_seed];
+	uint base       = map_base + *local_pos;
 
 	if (algorithm_id == 0)
 	{
-		uint rng = rng_msb_lo_bytes(pos_base, code_index, rng_out);
+		uint p0 = base + (127 - code_index * 4);
+		uint p1 = base + (126 - code_index * 4);
+		uint p2 = base + (125 - code_index * 4);
+		uint p3 = base + (124 - code_index * 4);
+		uint b0 = (map_rng[p0] >> 7) & 1;
+		uint b1 = (map_rng[p1] >> 7) & 1;
+		uint b2 = (map_rng[p2] >> 7) & 1;
+		uint b3 = (map_rng[p3] >> 7) & 1;
+		uint rng = b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
 		cur_val = ((cur_val << 1) & 0xFEFEFEFEu) | rng;
+		*local_pos += 128;
 	}
 	else if (algorithm_id == 1)
 	{
-		uint rng = rng_full_bytes(pos_base, code_index, rng_out);
+		uint p0 = base + (127 - code_index * 4);
+		uint p1 = base + (126 - code_index * 4);
+		uint p2 = base + (125 - code_index * 4);
+		uint p3 = base + (124 - code_index * 4);
+		uint rng = map_rng[p0] | ((uint)map_rng[p1] << 8)
+		         | ((uint)map_rng[p2] << 16) | ((uint)map_rng[p3] << 24);
 		asm volatile("vadd.u32.u32.u32 %0, %1, %2;" : "=r"(cur_val) : "r"(cur_val), "r"(rng));
+		*local_pos += 128;
 	}
 	else if (algorithm_id == 3)
 	{
-		uint rng = rng_full_bytes(pos_base, code_index, rng_out);
+		uint p0 = base + (127 - code_index * 4);
+		uint p1 = base + (126 - code_index * 4);
+		uint p2 = base + (125 - code_index * 4);
+		uint p3 = base + (124 - code_index * 4);
+		uint rng = map_rng[p0] | ((uint)map_rng[p1] << 8)
+		         | ((uint)map_rng[p2] << 16) | ((uint)map_rng[p3] << 24);
 		cur_val ^= rng;
+		*local_pos += 128;
 	}
 	else if (algorithm_id == 4)
 	{
-		uint rng = rng_full_bytes(pos_base, code_index, rng_out);
+		uint p0 = base + (127 - code_index * 4);
+		uint p1 = base + (126 - code_index * 4);
+		uint p2 = base + (125 - code_index * 4);
+		uint p3 = base + (124 - code_index * 4);
+		uint rng = map_rng[p0] | ((uint)map_rng[p1] << 8)
+		         | ((uint)map_rng[p2] << 16) | ((uint)map_rng[p3] << 24);
 		asm volatile("vsub.u32.u32.u32 %0, %1, %2;" : "=r"(cur_val) : "r"(cur_val), "r"(rng));
+		*local_pos += 128;
 	}
 	else if (algorithm_id == 6)
 	{
-		uint rng = rng_msb_hi_bytes(pos_base, code_index, rng_out);
+		uint p0 = base + (127 - code_index * 4);
+		uint p1 = base + (126 - code_index * 4);
+		uint p2 = base + (125 - code_index * 4);
+		uint p3 = base + (124 - code_index * 4);
+		uint rng = (map_rng[p0] & 0x80) | ((uint)(map_rng[p1] & 0x80) << 8)
+		         | ((uint)(map_rng[p2] & 0x80) << 16) | ((uint)(map_rng[p3] & 0x80) << 24);
 		cur_val = ((cur_val >> 1) & 0x7F7F7F7Fu) | rng;
+		*local_pos += 128;
 	}
 	else if (algorithm_id == 7)
 	{
 		cur_val ^= 0xFFFFFFFFu;
+		// no advance
 	}
-	else if (algorithm_id == 2 || algorithm_id == 5)
+	else // algorithm_id == 2 || algorithm_id == 5
 	{
 		uint neighbor;
 		asm volatile("shfl.sync.down.b32 %0, %1, 1, 31, 0xffffffff;"
 		             : "=r"(neighbor) : "r"(cur_val));
 		neighbor &= -(uint)(code_index != 31u);
-		uint one_step_seed = rng_seq[pos_base];
-		uint carry_byte    = rng_out[pos_base];
+		uint carry_byte = map_rng[map_base + *local_pos];
 
 		if (algorithm_id == 2)
 		{
@@ -207,7 +197,7 @@ uint alg_seq(uint cur_val, uint algorithm_id, ushort* rng_seed,
 			        | ((cur_val << 1) & 0xFE00FE00u)
 			        | ((cur_val >> 8) & 0x00800080u);
 		}
-		else if (algorithm_id == 5)
+		else // algorithm_id == 5
 		{
 			uint carry = (code_index == 31)
 			           ? ((carry_byte & 0x80u) << 24)
@@ -218,15 +208,9 @@ uint alg_seq(uint cur_val, uint algorithm_id, ushort* rng_seed,
 			        | ((cur_val >> 8) & 0x00010001u);
 		}
 
-		*rng_seed = (ushort)one_step_seed; // 1-step advance
-		return cur_val;
+		*local_pos += 1;
 	}
 
-	// alg7 (NOT): no seed advance — seed is unchanged.
-	if (algorithm_id == 7)
-		return cur_val;
-
-	*rng_seed = (ushort)rng_seq[pos_base + 127]; // 128-step advance (alg0/1/3/4/6)
 	return cur_val;
 }
 
@@ -234,12 +218,12 @@ uint alg_seq(uint cur_val, uint algorithm_id, ushort* rng_seed,
 // Map execution
 // -------------------------------------------------------------------
 __attribute__((always_inline))
-uint run_one_map_seq(uint cur_val, uint code_index,
-                     __constant uchar* schedule_data,
-                     __global ushort* rng_seq, __global uint* rng_pos, __global uchar* rng_out)
+uint run_one_map_seq(uint cur_val, uint code_index, uint map_idx,
+                     __constant ushort* nibble_sel, __global uchar* map_rng)
 {
-	ushort rng_seed        = (*(schedule_data) << 8) | *(schedule_data + 1);
-	ushort nibble_selector = (*(schedule_data + 2) << 8) | *(schedule_data + 3);
+	uint local_pos     = 0;
+	uint map_base      = map_idx * 2048;
+	ushort nibble_selector = nibble_sel[map_idx];
 
 	for (int i = 0; i < 16; i++)
 	{
@@ -259,45 +243,8 @@ uint run_one_map_seq(uint cur_val, uint code_index,
 
 		uint algorithm_id = (current_byte >> 1) & 0x07;
 
-		cur_val = alg_seq(cur_val, algorithm_id, &rng_seed,
-		                  rng_seq, rng_pos, rng_out);
+		cur_val = alg_seq(cur_val, algorithm_id, &local_pos, map_base, map_rng);
 	}
-
-	return cur_val;
-}
-
-// -------------------------------------------------------------------
-// Expansion: computed inline from rng_seq_table.
-//
-// Byte at position b = (code_index*4 + byte_idx) has value:
-//   sum of RNG outputs at sequence steps k, k+8, k+16, ..., k+(j-1)*8
-//   where j = b/8, k = b%8  (0-indexed steps into rng_seq from pos_base)
-// First 16 bytes (j=0) are always 0.
-// -------------------------------------------------------------------
-__attribute__((always_inline))
-uint expand_inline(uint cur_val, uint pos_base, uint code_index,
-                   __global ushort* rng_seq)
-{
-	uint expansion_val = 0;
-
-	for (int byte_idx = 0; byte_idx < 4; byte_idx++)
-	{
-		uint b = code_index * 4 + (uint)byte_idx;
-		uint j = b / 8;
-		uint k = b % 8;
-		uint accum = 0;
-		for (uint i = 0; i < j; i++)
-		{
-			uint step = k + i * 8;
-			uint sv   = rng_seq[pos_base + step];
-			accum    += ((sv >> 8) ^ sv) & 0xFF;
-		}
-		expansion_val |= ((accum & 0xFF) << ((uint)byte_idx * 8));
-	}
-
-	uchar4* working_uchar4   = (uchar4*)&cur_val;
-	uchar4* expansion_uchar4 = (uchar4*)&expansion_val;
-	*working_uchar4 += *expansion_uchar4;
 
 	return cur_val;
 }
@@ -440,18 +387,15 @@ unsigned char machine_code_flags(__local unsigned int* data_i, int code_length,
 // -------------------------------------------------------------------
 __attribute__((reqd_work_group_size(32, 1, 1)))
 __kernel void tm_bruteforce_seq(
-	__global unsigned char* result_data,
-	__global ushort*        rng_seq,
-	__global uint*          rng_pos,
-	__constant unsigned char* schedule_data,
-	unsigned int            key,
-	unsigned int            data_start,
-	int                     schedule_count,
-	unsigned int            chunk,
-	__constant uint*        expansion_vals,
-	__global uchar*         rng_out)
+	__global unsigned char* result_data,    // arg 0
+	__global uchar*         map_rng,        // arg 1: schedule_count * 2048 bytes
+	__constant ushort*      nibble_sel,     // arg 2: schedule_count ushorts
+	unsigned int            key,            // arg 3
+	unsigned int            data_start,     // arg 4
+	int                     schedule_count, // arg 5
+	unsigned int            chunk,          // arg 6
+	__constant uint*        expansion_vals) // arg 7
 {
-	__local uint  working_code_storage[32];
 	__local uint  decrypted_carnival[32];
 	__local uint  decrypted_other[32];
 	__local uchar local_results[128];    // 64 candidates * 2 bytes
@@ -486,18 +430,14 @@ __kernel void tm_bruteforce_seq(
 
 		for (int i = 0; i < schedule_count; i++)
 		{
-			__constant uchar* sched_ptr = schedule_data + i * 4;
-			working_val = run_one_map_seq(working_val, code_index, sched_ptr,
-			                             rng_seq, rng_pos, rng_out);
+			working_val = run_one_map_seq(working_val, code_index, (uint)i,
+			                             nibble_sel, map_rng);
 		}
 
-		// Store final state for decryption
-		working_code_storage[code_index] = working_val;
-		barrier(CLK_LOCAL_MEM_FENCE);
 		/*
-		decrypted_carnival[code_index] = working_code_storage[code_index]
+		decrypted_carnival[code_index] = working_val
 		                               ^ ((__constant uint*)carnival_world_data_k)[code_index];
-		decrypted_other[code_index]    = working_code_storage[code_index]
+		decrypted_other[code_index]    = working_val
 		                               ^ ((__constant uint*)other_world_data_k)[code_index];
 		barrier(CLK_LOCAL_MEM_FENCE);
 
