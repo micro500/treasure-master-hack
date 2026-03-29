@@ -116,99 +116,109 @@ uint alg_seq(uint cur_val, uint algorithm_id, uint* local_pos,
 	uint code_index = get_local_id(0);
 	uint base       = map_base + *local_pos;
 
-	if (algorithm_id == 0)
+	switch (algorithm_id)
 	{
-		uint p0 = base + (127 - code_index * 4);
-		uint p1 = base + (126 - code_index * 4);
-		uint p2 = base + (125 - code_index * 4);
-		uint p3 = base + (124 - code_index * 4);
-		uint b0 = (map_rng[p0] >> 7) & 1;
-		uint b1 = (map_rng[p1] >> 7) & 1;
-		uint b2 = (map_rng[p2] >> 7) & 1;
-		uint b3 = (map_rng[p3] >> 7) & 1;
-		uint rng = b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
-		cur_val = ((cur_val << 1) & 0xFEFEFEFEu) | rng;
-		*local_pos += 128;
-	}
-	else if (algorithm_id == 1)
-	{
-		uint p0 = base + (127 - code_index * 4);
-		uint p1 = base + (126 - code_index * 4);
-		uint p2 = base + (125 - code_index * 4);
-		uint p3 = base + (124 - code_index * 4);
-		uint rng = map_rng[p0] | ((uint)map_rng[p1] << 8)
-		         | ((uint)map_rng[p2] << 16) | ((uint)map_rng[p3] << 24);
-		asm volatile("vadd.u32.u32.u32 %0, %1, %2;" : "=r"(cur_val) : "r"(cur_val), "r"(rng));
-		*local_pos += 128;
-	}
-	else if (algorithm_id == 3)
-	{
-		uint p0 = base + (127 - code_index * 4);
-		uint p1 = base + (126 - code_index * 4);
-		uint p2 = base + (125 - code_index * 4);
-		uint p3 = base + (124 - code_index * 4);
-		uint rng = map_rng[p0] | ((uint)map_rng[p1] << 8)
-		         | ((uint)map_rng[p2] << 16) | ((uint)map_rng[p3] << 24);
-		cur_val ^= rng;
-		*local_pos += 128;
-	}
-	else if (algorithm_id == 4)
-	{
-		uint p0 = base + (127 - code_index * 4);
-		uint p1 = base + (126 - code_index * 4);
-		uint p2 = base + (125 - code_index * 4);
-		uint p3 = base + (124 - code_index * 4);
-		uint rng = map_rng[p0] | ((uint)map_rng[p1] << 8)
-		         | ((uint)map_rng[p2] << 16) | ((uint)map_rng[p3] << 24);
-		asm volatile("vsub.u32.u32.u32 %0, %1, %2;" : "=r"(cur_val) : "r"(cur_val), "r"(rng));
-		*local_pos += 128;
-	}
-	else if (algorithm_id == 6)
-	{
-		uint p0 = base + (127 - code_index * 4);
-		uint p1 = base + (126 - code_index * 4);
-		uint p2 = base + (125 - code_index * 4);
-		uint p3 = base + (124 - code_index * 4);
-		uint rng = (map_rng[p0] & 0x80) | ((uint)(map_rng[p1] & 0x80) << 8)
-		         | ((uint)(map_rng[p2] & 0x80) << 16) | ((uint)(map_rng[p3] & 0x80) << 24);
-		cur_val = ((cur_val >> 1) & 0x7F7F7F7Fu) | rng;
-		*local_pos += 128;
-	}
-	else if (algorithm_id == 7)
-	{
-		cur_val ^= 0xFFFFFFFFu;
-		// no advance
-	}
-	else // algorithm_id == 2 || algorithm_id == 5
-	{
-		uint neighbor;
-		asm volatile("shfl.sync.down.b32 %0, %1, 1, 31, 0xffffffff;"
-		             : "=r"(neighbor) : "r"(cur_val));
-		neighbor &= -(uint)(code_index != 31u);
-		uint carry_byte = map_rng[map_base + *local_pos];
-
-		if (algorithm_id == 2)
+		case 0:
 		{
-			uint carry = (code_index == 31)
-			           ? (((carry_byte >> 7) & 1u) << 24)
-			           : ((neighbor & 0x00000001u) << 24);
-			cur_val = ((cur_val & 0x00010000u) >> 8) | carry
-			        | ((cur_val >> 1) & 0x007F007Fu)
-			        | ((cur_val << 1) & 0xFE00FE00u)
-			        | ((cur_val >> 8) & 0x00800080u);
+			uint p0 = base + (127 - code_index * 4);
+			uint p1 = base + (126 - code_index * 4);
+			uint p2 = base + (125 - code_index * 4);
+			uint p3 = base + (124 - code_index * 4);
+			uint b0 = (map_rng[p0] >> 7) & 1;
+			uint b1 = (map_rng[p1] >> 7) & 1;
+			uint b2 = (map_rng[p2] >> 7) & 1;
+			uint b3 = (map_rng[p3] >> 7) & 1;
+			uint rng = b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
+			cur_val = ((cur_val << 1) & 0xFEFEFEFEu) | rng;
+			*local_pos += 128;
+			break;
 		}
-		else // algorithm_id == 5
+		case 1:
 		{
-			uint carry = (code_index == 31)
-			           ? ((carry_byte & 0x80u) << 24)
-			           : ((neighbor & 0x00000080u) << 24);
-			cur_val = ((cur_val & 0x00800000u) >> 8) | carry
-			        | ((cur_val >> 1) & 0x7F007F00u)
-			        | ((cur_val << 1) & 0x00FE00FEu)
-			        | ((cur_val >> 8) & 0x00010001u);
+			uint p0 = base + (127 - code_index * 4);
+			uint p1 = base + (126 - code_index * 4);
+			uint p2 = base + (125 - code_index * 4);
+			uint p3 = base + (124 - code_index * 4);
+			uint rng = map_rng[p0] | ((uint)map_rng[p1] << 8)
+			         | ((uint)map_rng[p2] << 16) | ((uint)map_rng[p3] << 24);
+			asm volatile("vadd.u32.u32.u32 %0, %1, %2;" : "=r"(cur_val) : "r"(cur_val), "r"(rng));
+			*local_pos += 128;
+			break;
 		}
+		case 2:
+		case 5:
+		{
+			uint neighbor;
+			asm volatile("shfl.sync.down.b32 %0, %1, 1, 31, 0xffffffff;"
+			             : "=r"(neighbor) : "r"(cur_val));
+			neighbor &= -(uint)(code_index != 31u);
+			uint carry_byte = map_rng[map_base + *local_pos];
 
-		*local_pos += 1;
+			if (algorithm_id == 2)
+			{
+				uint carry = (code_index == 31)
+				           ? (((carry_byte >> 7) & 1u) << 24)
+				           : ((neighbor & 0x00000001u) << 24);
+				cur_val = ((cur_val & 0x00010000u) >> 8) | carry
+				        | ((cur_val >> 1) & 0x007F007Fu)
+				        | ((cur_val << 1) & 0xFE00FE00u)
+				        | ((cur_val >> 8) & 0x00800080u);
+			}
+			else
+			{
+				uint carry = (code_index == 31)
+				           ? ((carry_byte & 0x80u) << 24)
+				           : ((neighbor & 0x00000080u) << 24);
+				cur_val = ((cur_val & 0x00800000u) >> 8) | carry
+				        | ((cur_val >> 1) & 0x7F007F00u)
+				        | ((cur_val << 1) & 0x00FE00FEu)
+				        | ((cur_val >> 8) & 0x00010001u);
+			}
+
+			*local_pos += 1;
+			break;
+		}
+		case 3:
+		{
+			uint p0 = base + (127 - code_index * 4);
+			uint p1 = base + (126 - code_index * 4);
+			uint p2 = base + (125 - code_index * 4);
+			uint p3 = base + (124 - code_index * 4);
+			uint rng = map_rng[p0] | ((uint)map_rng[p1] << 8)
+			         | ((uint)map_rng[p2] << 16) | ((uint)map_rng[p3] << 24);
+			cur_val ^= rng;
+			*local_pos += 128;
+			break;
+		}
+		case 4:
+		{
+			uint p0 = base + (127 - code_index * 4);
+			uint p1 = base + (126 - code_index * 4);
+			uint p2 = base + (125 - code_index * 4);
+			uint p3 = base + (124 - code_index * 4);
+			uint rng = map_rng[p0] | ((uint)map_rng[p1] << 8)
+			         | ((uint)map_rng[p2] << 16) | ((uint)map_rng[p3] << 24);
+			asm volatile("vsub.u32.u32.u32 %0, %1, %2;" : "=r"(cur_val) : "r"(cur_val), "r"(rng));
+			*local_pos += 128;
+			break;
+		}
+		case 6:
+		{
+			uint p0 = base + (127 - code_index * 4);
+			uint p1 = base + (126 - code_index * 4);
+			uint p2 = base + (125 - code_index * 4);
+			uint p3 = base + (124 - code_index * 4);
+			uint rng = (map_rng[p0] & 0x80) | ((uint)(map_rng[p1] & 0x80) << 8)
+			         | ((uint)(map_rng[p2] & 0x80) << 16) | ((uint)(map_rng[p3] & 0x80) << 24);
+			cur_val = ((cur_val >> 1) & 0x7F7F7F7Fu) | rng;
+			*local_pos += 128;
+			break;
+		}
+		case 7:
+		{
+			cur_val ^= 0xFFFFFFFFu;
+			break;
+		}
 	}
 
 	return cur_val;
