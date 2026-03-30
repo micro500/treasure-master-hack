@@ -1,6 +1,7 @@
 #include "data_sizes.h"
 #include "key_schedule.h"
 
+#include <cassert>
 #include <vector>
 
 key_schedule::key_schedule(uint32 key, key_schedule::map_list_type map_list_option)
@@ -24,6 +25,9 @@ key_schedule::key_schedule(uint32 key, std::vector<uint8> map_list)
 
 void key_schedule::init(uint32 key, std::vector<uint8> map_list)
 {
+	entries.clear();
+	entry_count = 0;
+
 	schedule_data.as_uint8[0] = (key >> 24) & 0xFF;
 	schedule_data.as_uint8[1] = (key >> 16) & 0xFF;
 	schedule_data.as_uint8[2] = (key >> 8) & 0xFF;
@@ -31,12 +35,21 @@ void key_schedule::init(uint32 key, std::vector<uint8> map_list)
 
 	for (std::vector<uint8>::iterator it = map_list.begin(); it != map_list.end(); ++it)
 	{
-		entries.push_back(generate_schedule_entry(*it));
+		push_entry(generate_schedule_entry(*it));
 		if (*it == 0x22)
 		{
-			entries.push_back(generate_schedule_entry(*it, 4));
+			push_entry(generate_schedule_entry(*it, 4));
 		}
 	}
+}
+
+void key_schedule::push_entry(key_schedule_entry e)
+{
+	assert(entry_count < MAX_ENTRIES);
+	entries.push_back(e);
+	seeds[entry_count] = (uint16(e.rng1) << 8) | e.rng2;
+	nibble_selectors[entry_count] = e.nibble_selector;
+	entry_count++;
 }
 
 

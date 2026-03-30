@@ -21,9 +21,9 @@ int shuffle_8(int offset, int bits)
 	return (offset / (bits / 4)) * (bits / 4) + (offset % 2) * (bits / 8) + ((offset / 2) % (bits / 8));
 }
 
-uint8* packing_alloc(int size, bool packing_16)
+uint8* packing_alloc(int size, bool packing_16, int align_size)
 {
-	return (uint8*)aligned_malloc(size * (packing_16 ? 2 : 1), 64);
+	return (uint8*)aligned_malloc(size * (packing_16 ? 2 : 1), align_size);
 }
 
 void packing_store(uint8* dest, int offset, uint8 value, bool packing_16)

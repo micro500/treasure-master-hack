@@ -31,6 +31,11 @@ public:
 		uint32 as_uint32;
 	} key_schedule_data;
 
+	static const int MAX_ENTRIES = 27;
+	int entry_count;
+	uint16 seeds[MAX_ENTRIES];
+	uint16 nibble_selectors[MAX_ENTRIES];
+
 	std::vector<key_schedule_entry> entries;
 
 private:
@@ -38,6 +43,8 @@ private:
 
 	key_schedule_entry generate_schedule_entry(uint8 map);
 	key_schedule_entry generate_schedule_entry(uint8 map, uint8 algorithm);
+
+	void push_entry(key_schedule_entry e);
 
 	void algorithm_0(uint8 map);
 	void algorithm_1(uint8 map);

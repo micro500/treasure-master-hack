@@ -14,7 +14,7 @@ void * aligned_malloc(int byte_count, int align_size);
 void aligned_free(void* ptr);
 
 int shuffle_8(int offset, int bits);
-uint8* packing_alloc(int size, bool packing_16);
+uint8* packing_alloc(int size, bool packing_16, int align_size = 64);
 void packing_store(uint8* dest, int offset, uint8 value, bool packing_16);
 uint8 packing_load(uint8* src, int offset, bool packing_16);
 
