@@ -2,6 +2,8 @@
 #include "opencl_intellisense.h"
 #endif
 
+#pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
+
 // -------------------------------------------------------------------
 // Constants
 // -------------------------------------------------------------------
@@ -19,6 +21,39 @@
 #define USES_UNOFFICIAL_NOPS 0x20
 #define USES_ILLEGAL_OPCODES 0x40
 #define USES_JAM             0x80
+
+// Hash reduction constants
+//
+// Hash slot layout (4 x uint at indices slot*4+0, +1, +2, +3):
+//   +0: H2 (first  32-bit validation hash)
+//   +1: writer_data (canonical data value, written after claim succeeds)
+//   +2: status:
+//         0               = empty
+//         HASH_IN_PROGRESS = claimed by writer, writer_data not yet valid
+//         HASH_CLAIMED     = claimed, writer_data valid, phase 2 in progress
+//         HASH_DONE_BIT|.. = done: bits[15:8]=other_stats, bits[7:0]=carnival_stats
+//   +3: H3 (second 32-bit validation hash, independent seed — combined 64-bit check)
+//
+// Deferred list (separate buffer, one entry per IN_PROGRESS miss):
+//   deferred_pairs[i*4+0] = reader's data value
+//   deferred_pairs[i*4+1] = writer's data value (look up in CPU result list)
+//   deferred_pairs[i*4+2] = h2
+//   deferred_pairs[i*4+3] = h3
+//
+// Byte-swap a uint32: maps CPU byte 0 (MSB) to bits 7-0 (LE convention)
+#define bswap32(x) \
+    (  ((x) & 0xFFu)         << 24  \
+     | (((x) >> 8) & 0xFFu)  << 16  \
+     | (((x) >> 16) & 0xFFu) <<  8  \
+     | (((x) >> 24) & 0xFFu)        )
+
+#define HASH_SPLIT_MAP    5
+#define HASH_MAX_PROBE    8
+#define HASH_IN_PROGRESS  0xFFFFFFFFu
+#define HASH_CLAIMED      0x40000000u
+#define HASH_DONE_BIT     0x80000000u
+// Must match BATCH_SIZE in tm_opencl_seq.h
+#define MAX_DEFERRED      (1u << 20)
 
 __constant unsigned char carnival_world_data_k[128] = {
 	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
@@ -141,7 +176,7 @@ uint alg_seq(uint cur_val, uint algorithm_id, uint* local_pos,
 			uint p3 = base + (124 - code_index * 4);
 			uint rng = map_rng[p0] | ((uint)map_rng[p1] << 8)
 			         | ((uint)map_rng[p2] << 16) | ((uint)map_rng[p3] << 24);
-			asm volatile("vadd.u32.u32.u32 %0, %1, %2;" : "=r"(cur_val) : "r"(cur_val), "r"(rng));
+			*((uchar4*)&cur_val) += *((uchar4*)&rng);
 			*local_pos += 128;
 			break;
 		}
@@ -198,16 +233,17 @@ uint alg_seq(uint cur_val, uint algorithm_id, uint* local_pos,
 			uint p3 = base + (124 - code_index * 4);
 			uint rng = map_rng[p0] | ((uint)map_rng[p1] << 8)
 			         | ((uint)map_rng[p2] << 16) | ((uint)map_rng[p3] << 24);
-			asm volatile("vsub.u32.u32.u32 %0, %1, %2;" : "=r"(cur_val) : "r"(cur_val), "r"(rng));
+			*((uchar4*)&cur_val) -= *((uchar4*)&rng);
 			*local_pos += 128;
 			break;
 		}
 		case 6:
 		{
-			uint p0 = base + (127 - code_index * 4);
-			uint p1 = base + (126 - code_index * 4);
-			uint p2 = base + (125 - code_index * 4);
-			uint p3 = base + (124 - code_index * 4);
+			// alg6 uses forward RNG indexing (CPU stores step j at position j, not reversed)
+			uint p0 = base + (code_index * 4);
+			uint p1 = base + (code_index * 4 + 1);
+			uint p2 = base + (code_index * 4 + 2);
+			uint p3 = base + (code_index * 4 + 3);
 			uint rng = (map_rng[p0] & 0x80) | ((uint)(map_rng[p1] & 0x80) << 8)
 			         | ((uint)(map_rng[p2] & 0x80) << 16) | ((uint)(map_rng[p3] & 0x80) << 24);
 			cur_val = ((cur_val >> 1) & 0x7F7F7F7Fu) | rng;
@@ -229,7 +265,8 @@ uint alg_seq(uint cur_val, uint algorithm_id, uint* local_pos,
 // -------------------------------------------------------------------
 __attribute__((always_inline))
 uint run_one_map_seq(uint cur_val, uint code_index, uint map_idx,
-                     __constant ushort* nibble_sel, __global uchar* map_rng)
+                     __constant ushort* nibble_sel, __global uchar* map_rng,
+                     __local uint* lane_buf)
 {
 	uint local_pos     = 0;
 	uint map_base      = map_idx * 2048;
@@ -237,13 +274,13 @@ uint run_one_map_seq(uint cur_val, uint code_index, uint map_idx,
 
 	for (int i = 0; i < 16; i++)
 	{
-		uint src_lane    = (uint)(i / 4);
-		uint byte_shift  = (uint)(i & 3) * 8u;
-		uint my_byte     = (cur_val >> byte_shift) & 0xFFu;
-		uint bcast_byte;
-		asm volatile("shfl.sync.idx.b32 %0, %1, %2, 31, 0xffffffff;"
-		             : "=r"(bcast_byte) : "r"(my_byte), "r"(src_lane));
-		uchar current_byte = (uchar)bcast_byte;
+		uint src_lane   = (uint)(i / 4);
+		uint byte_shift = (uint)(i & 3) * 8u;
+
+		lane_buf[code_index] = cur_val;
+		barrier(CLK_LOCAL_MEM_FENCE);
+
+		uchar current_byte = (uchar)((lane_buf[src_lane] >> byte_shift) & 0xFFu);
 
 		uchar nibble = (nibble_selector >> 15) & 0x01;
 		nibble_selector = nibble_selector << 1;
@@ -383,30 +420,43 @@ unsigned char machine_code_flags(__local unsigned int* data_i, int code_length,
 	return result;
 }
 
+
 // -------------------------------------------------------------------
 // Production kernel: tm_bruteforce_seq
 //
 // Launch dimensions: global={32, num_wg, 1}, local={32, 1, 1}
-// Each workgroup of 32 threads processes CANDIDATES_PER_WG=64 candidates
-// sequentially, then writes results as a single coalesced 128-byte write
-// (32 threads * 4 bytes each = 128 bytes = 64 candidates * 2 bytes).
+// Each workgroup processes 64 candidates sequentially, writing results as
+// a single coalesced 128-byte write (32 threads * 4 bytes).
+//
+// Hash reduction: after HASH_SPLIT_MAP maps, hash the 128-byte state and
+// look up in a global hash table.
+//   - DONE match   → use cached result directly, skip phase 2
+//   - IN_PROGRESS  → tiny spin until writer_data is committed (CLAIMED state),
+//                    then record {reader_data, writer_data} in the deferred list
+//                    and skip phase 2; CPU resolves after kernel completes
+//   - Empty        → claim slot, run phase 2, commit result
 //
 // Result format: 2 bytes per candidate.
-//   byte 0: flags | CHECKSUM_SENTINEL if hit, else 0
-//   byte 1: 0 (reserved)
+//   byte 0: carnival_flags | CHECKSUM_SENTINEL if carnival hit, else 0
+//   byte 1: other_flags | CHECKSUM_SENTINEL | OTHER_WORLD if other hit, else 0
 // -------------------------------------------------------------------
 __attribute__((reqd_work_group_size(32, 1, 1)))
 __kernel void tm_bruteforce_seq(
-	__global unsigned char* result_data,    // arg 0
-	__global uchar*         map_rng,        // arg 1: schedule_count * 2048 bytes
-	__constant ushort*      nibble_sel,     // arg 2: schedule_count ushorts
-	unsigned int            key,            // arg 3
-	unsigned int            data_start,     // arg 4
-	int                     schedule_count, // arg 5
-	unsigned int            chunk,          // arg 6
-	__constant uint*        expansion_vals) // arg 7
+	__global unsigned char*  result_data,     // arg 0
+	__global uchar*          map_rng,         // arg 1: schedule_count * 2048 bytes
+	__constant ushort*       nibble_sel,      // arg 2: schedule_count ushorts
+	unsigned int             key,             // arg 3
+	unsigned int             data_start,      // arg 4
+	int                      schedule_count,  // arg 5
+	unsigned int             chunk,           // arg 6
+	__constant uint*         expansion_vals,  // arg 7
+	__global volatile uint*  hash_table,      // arg 8: hash_table_size*4 uints, zeroed before run
+	uint                     hash_table_mask, // arg 9: hash_table_size - 1
+	__global uint*           deferred_pairs,  // arg 10: MAX_DEFERRED*4 uints {reader_data, writer_data, h2, reader_lane0}
+	__global volatile uint*  deferred_count)  // arg 11: atomic counter, zeroed before run
 {
 	__local uint  decrypted_carnival[32];
+	__local uint  hash_scratch[32];
 	__local uint  decrypted_other[32];
 	__local uchar local_results[128];    // 64 candidates * 2 bytes
 
@@ -424,7 +474,7 @@ __kernel void tm_bruteforce_seq(
 		unsigned int working_val;
 		if (data_idx < chunk)
 		{
-			working_val = (code_index % 2 == 0) ? key : data;
+			working_val = (code_index % 2 == 0) ? bswap32(key) : bswap32(data);
 			*((uchar4*)&working_val) += *((uchar4*)&my_expansion);
 		}
 		else
@@ -438,13 +488,141 @@ __kernel void tm_bruteforce_seq(
 			continue;
 		}
 
-		for (int i = 0; i < schedule_count; i++)
+		// Phase 1: maps 0..HASH_SPLIT_MAP-1 (or all maps if schedule_count <= HASH_SPLIT_MAP)
+		int phase1_end = min(schedule_count, HASH_SPLIT_MAP);
+		for (int i = 0; i < phase1_end; i++)
+			working_val = run_one_map_seq(working_val, code_index, (uint)i, nibble_sel, map_rng, hash_scratch);
+
+		// Hash lookup / claim (only when maps remain after the split point)
+		uint h1 = 0, h2 = 0, h3 = 0;
+		int claimed_slot = -1;
+		// cache_hit values: 0=miss (run phase 2), 1=direct hit, 2=deferred (skip phase 2)
+		int cache_hit = 0;
+		unsigned char cached_carnival = 0;
+		unsigned char cached_other = 0;
+
+		if (schedule_count > HASH_SPLIT_MAP)
 		{
-			working_val = run_one_map_seq(working_val, code_index, (uint)i,
-			                             nibble_sel, map_rng);
+			// All 32 threads write their working_val into shared scratch, then
+			// a barrier (directly in kernel body) ensures all writes are visible.
+			// Thread 0 reads all 32 values and computes three independent FNV-1a-style
+			// hashes over the full 128-byte post-phase-1 state.
+			hash_scratch[code_index] = working_val;
+			barrier(CLK_LOCAL_MEM_FENCE);
+
+			if (code_index == 0)
+			{
+				uint acc1 = 2166136261u;
+				uint acc2 = 2166136261u ^ 0xDEADBEEFu;
+				uint acc3 = 2166136261u ^ 0xCAFEBABEu;
+				for (uint i = 0u; i < 32u; i++)
+				{
+					uint contrib = hash_scratch[i] * (i * 2654435761u + 1u);
+					acc1 = (acc1 ^ contrib) * 16777619u;
+					acc2 = (acc2 ^ contrib) * 16777619u;
+					acc3 = (acc3 ^ contrib) * 16777619u;
+				}
+				h1 = acc1;
+				h2 = acc2;
+				h3 = acc3;
+			}
+
+			if (code_index == 0)
+			{
+				uint slot = h1 & hash_table_mask;
+				for (int probe = 0; probe < HASH_MAX_PROBE; probe++)
+				{
+					// Always attempt to claim the slot first.  The CAS return value
+					// tells us the slot's status atomically — no separate pre-read.
+					uint old = atom_cmpxchg(
+						(volatile __global uint*)&hash_table[slot * 4 + 2],
+						0u, HASH_IN_PROGRESS);
+
+					if (old == 0u)
+					{
+						// Won the CAS — we are the writer for this slot.
+						hash_table[slot * 4]     = h2;
+						hash_table[slot * 4 + 1] = data;
+						hash_table[slot * 4 + 3] = h3;
+						asm volatile("membar.gl;");
+						hash_table[slot * 4 + 2] = HASH_CLAIMED;
+						claimed_slot = (int)slot;
+						break;
+					}
+
+					// Lost the CAS — slot was already occupied.  `old` is the status.
+					uint s = old;
+
+					// If the writer hasn't finished committing yet, spin until it does.
+					while (s == HASH_IN_PROGRESS)
+						s = hash_table[slot * 4 + 2];
+					asm volatile("membar.gl;");
+
+					// Now s is either CLAIMED or has HASH_DONE_BIT set.
+					// Validate h2+h3 to confirm a true state collision.
+					if (hash_table[slot * 4] == h2 && hash_table[slot * 4 + 3] == h3)
+					{
+						if ((s & HASH_DONE_BIT) != 0u)
+						{
+							// Writer finished — result is already in the slot.
+							cached_carnival = (uchar)(s & 0xFFu);
+							cached_other    = (uchar)((s >> 8) & 0xFFu);
+							cache_hit = 1;
+						}
+						else
+						{
+							// Writer still in phase 2 — defer resolution to CPU.
+							uint writer_data = hash_table[slot * 4 + 1];
+							uint di = atom_add(
+								(volatile __global uint*)deferred_count, 1u);
+							if (di < MAX_DEFERRED)
+							{
+								deferred_pairs[di * 4]     = data;
+								deferred_pairs[di * 4 + 1] = writer_data;
+								deferred_pairs[di * 4 + 2] = h2;
+								deferred_pairs[di * 4 + 3] = h3;
+							}
+							cache_hit = 2;
+						}
+						break;
+					}
+					// H2/H3 mismatch — hash collision, probe next slot.
+
+					slot = (slot + 1u) & hash_table_mask;
+				}
+			}
+
+			// Broadcast cache_hit from thread 0 to all threads in the warp
+			int cache_hit_bcast;
+			asm volatile("shfl.sync.idx.b32 %0, %1, 0, 31, 0xffffffff;"
+			             : "=r"(cache_hit_bcast) : "r"(cache_hit));
+			if (cache_hit_bcast == 1)
+			{
+				// Direct hit: write cached result and skip phase 2
+				if (code_index == 0)
+				{
+					local_results[local_cand * 2]     = cached_carnival;
+					local_results[local_cand * 2 + 1] = cached_other;
+				}
+				continue;
+			}
+			else if (cache_hit_bcast == 2)
+			{
+				// Deferred: pair recorded in deferred list; no direct result here
+				if (code_index == 0)
+				{
+					local_results[local_cand * 2]     = 0;
+					local_results[local_cand * 2 + 1] = 0;
+				}
+				continue;
+			}
 		}
 
-		/*
+		// Phase 2: maps HASH_SPLIT_MAP..schedule_count-1
+		// (empty loop when schedule_count <= HASH_SPLIT_MAP)
+		for (int i = phase1_end; i < schedule_count; i++)
+			working_val = run_one_map_seq(working_val, code_index, (uint)i, nibble_sel, map_rng, hash_scratch);
+
 		decrypted_carnival[code_index] = working_val
 		                               ^ ((__constant uint*)carnival_world_data_k)[code_index];
 		decrypted_other[code_index]    = working_val
@@ -453,27 +631,36 @@ __kernel void tm_bruteforce_seq(
 
 		if (code_index == 0)
 		{
-			unsigned char stats = 0;
+			unsigned char carnival_stats = 0;
+			unsigned char other_stats = 0;
 
 			if (checksum_ok(decrypted_carnival, 0x72))
 			{
-				stats = machine_code_flags(decrypted_carnival, 0x72,
-				                           0, 0x2B, 0x33, 0x3E, 0xFF, 0xFF);
-				stats |= CHECKSUM_SENTINEL;
+				carnival_stats = machine_code_flags(decrypted_carnival, 0x72,
+				                                    0, 0x2B, 0x33, 0x3E, 0xFF, 0xFF);
+				carnival_stats |= CHECKSUM_SENTINEL;
 			}
-			else if (checksum_ok(decrypted_other, 0x53))
+			if (checksum_ok(decrypted_other, 0x53))
 			{
-				stats = machine_code_flags(decrypted_other, 0x53,
-				                           0, 0x05, 0x0A, 0x28, 0x50, 0xFF);
-				stats |= CHECKSUM_SENTINEL | OTHER_WORLD;
+				other_stats = machine_code_flags(decrypted_other, 0x53,
+				                                 0, 0x05, 0x0A, 0x28, 0x50, 0xFF);
+				other_stats |= CHECKSUM_SENTINEL | OTHER_WORLD;
 			}
 
-			local_results[local_cand * 2]     = stats;
-			local_results[local_cand * 2 + 1] = 0;
+			local_results[local_cand * 2]     = carnival_stats;
+			local_results[local_cand * 2 + 1] = other_stats;
+
+			// Commit result to the claimed slot
+			if (claimed_slot >= 0)
+			{
+				asm volatile("membar.gl;"); // release: all prior writes visible before done marker
+				hash_table[claimed_slot * 4 + 2] = HASH_DONE_BIT
+				                                 | ((uint)other_stats << 8)
+				                                 | (uint)carnival_stats;
+			}
 		}
 		// No barrier here: only thread 0 writes local_results,
 		// and nothing reads it until the write-out after the loop.
-		*/
 	}
 
 	// One barrier to make all of thread 0's writes to local_results
@@ -484,4 +671,77 @@ __kernel void tm_bruteforce_seq(
 	uint write_base = group_id * 32;
 	((__global uint*)result_data)[write_base + code_index] =
 	    ((__local uint*)local_results)[code_index];
+}
+
+// -------------------------------------------------------------------
+// Test kernels — exercise alg_seq / run_one_map_seq / expand using
+// the same code as the production kernel, with CPU-byte-order I/O.
+//
+// alg_seq uses little-endian convention: CPU byte N of a 4-byte group
+// lives at bits (N%4)*8 of cur_val — i.e. CPU byte 0 at bits 7-0.
+//
+// I/O boundary: load CPU byte 0 → bits 7-0; write bits 7-0 → CPU byte 0.
+//
+// Expand/pipeline init: key/data are passed as uint32 in host byte order
+// (CPU byte 0 = key>>24 at the MSB). Byte-swap before use so CPU byte 0
+// lands at bits 7-0 as alg_seq expects.
+// -------------------------------------------------------------------
+
+__attribute__((reqd_work_group_size(32, 1, 1)))
+__kernel void tm_test_expand(
+    unsigned int key, unsigned int data,
+    __constant uint* expansion_vals, __global uchar* output)
+{
+    uint code_index = get_local_id(0);
+    uint my_expansion = expansion_vals[code_index];
+    uint working_val = (code_index % 2 == 0) ? bswap32(key) : bswap32(data);
+    *((uchar4*)&working_val) += *((uchar4*)&my_expansion);
+    uint base = code_index * 4;
+    output[base + 0] =  working_val        & 0xFFu;
+    output[base + 1] = (working_val >>  8) & 0xFFu;
+    output[base + 2] = (working_val >> 16) & 0xFFu;
+    output[base + 3] = (working_val >> 24) & 0xFFu;
+}
+
+__attribute__((reqd_work_group_size(32, 1, 1)))
+__kernel void tm_test_alg(
+    __global const uchar* input, uint alg_id,
+    __global uchar* map_rng, __global uchar* output)
+{
+    uint code_index = get_local_id(0);
+    uint base = code_index * 4;
+    // Load CPU bytes into LE convention: CPU byte 0 → bits 7-0
+    uint cur_val =  (uint)input[base+0]
+                 | ((uint)input[base+1] <<  8)
+                 | ((uint)input[base+2] << 16)
+                 | ((uint)input[base+3] << 24);
+    uint local_pos = 0;
+    cur_val = alg_seq(cur_val, alg_id, &local_pos, 0, map_rng);
+    // Write back: bits 7-0 → CPU byte 0
+    output[base + 0] =  cur_val        & 0xFFu;
+    output[base + 1] = (cur_val >>  8) & 0xFFu;
+    output[base + 2] = (cur_val >> 16) & 0xFFu;
+    output[base + 3] = (cur_val >> 24) & 0xFFu;
+}
+
+__attribute__((reqd_work_group_size(32, 1, 1)))
+__kernel void tm_test_pipeline(
+    unsigned int key, unsigned int data,
+    __constant uint* expansion_vals, __global uchar* map_rng,
+    __constant ushort* nibble_sel, int schedule_count,
+    __global uchar* output)
+{
+    __local uint lane_buf[32];
+    uint code_index = get_local_id(0);
+    uint my_expansion = expansion_vals[code_index];
+    uint working_val = (code_index % 2 == 0) ? bswap32(key) : bswap32(data);
+    *((uchar4*)&working_val) += *((uchar4*)&my_expansion);
+    for (int i = 0; i < schedule_count; i++)
+        working_val = run_one_map_seq(working_val, code_index, (uint)i,
+                                      nibble_sel, map_rng, lane_buf);
+    uint base = code_index * 4;
+    output[base + 0] =  working_val        & 0xFFu;
+    output[base + 1] = (working_val >>  8) & 0xFFu;
+    output[base + 2] = (working_val >> 16) & 0xFFu;
+    output[base + 3] = (working_val >> 24) & 0xFFu;
 }

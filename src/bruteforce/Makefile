@@ -1,10 +1,12 @@
 CC = g++
-CFLAGS = -Icommon -Icpu -std=c++11 -O2 -m64
+CFLAGS = -Icommon -Icpu -Igpu -std=c++17 -O2 -m64
 AVXFLAGS = -mavx
 AVX2FLAGS = -mavx2
 AVX512FFLAGS = -mavx512f
 AVX512BWFLAGS = -mavx512bw
-all: cpu_test
+OPENCL_CFLAGS = -I/usr/local/cuda/include
+OPENCL_LDFLAGS = -L/usr/local/cuda/lib64 -lOpenCL
+all: cpu_test test_gpu
 
 tm_tester.o:
 	$(CC) $(CFLAGS) -c common/tm_tester.cpp
@@ -72,5 +74,18 @@ test_cpu.o:
 cpu_test: tm_tester.o key_schedule.o rng_obj.o alignment2.o tm_base.o tm_8.o tm_32_8.o tm_32_16.o tm_64_8.o tm_64_16.o tm_128_8.o tm_128_16.o tm_avx_8.o tm_avx_8_in_cpu.o tm_avx_8_in_cpu_shuffled.o tm_avx_16.o tm_avx_in_cpu.o tm_sse2_8_shuffled.o tm_avx2_8_in_cpu_shuffled.o tm_avx512_8_in_cpu_shuffled.o test_cpu.o
 	$(CC) $(CFLAGS) -o cpu_test tm_tester.o key_schedule.o rng_obj.o alignment2.o tm_base.o tm_8.o tm_32_8.o tm_32_16.o tm_64_8.o tm_64_16.o tm_128_8.o tm_128_16.o tm_avx_8.o tm_avx_8_in_cpu.o tm_avx_8_in_cpu_shuffled.o tm_avx_16.o tm_avx_in_cpu.o tm_sse2_8_shuffled.o tm_avx2_8_in_cpu_shuffled.o tm_avx512_8_in_cpu_shuffled.o test_cpu.o
   
+opencl.o:
+	$(CC) $(CFLAGS) $(OPENCL_CFLAGS) -c common/opencl.cpp
+
+tm_opencl_seq.o:
+	$(CC) $(CFLAGS) $(OPENCL_CFLAGS) -c gpu/tm_opencl_seq.cpp
+
+test_gpu.o:
+	$(CC) $(CFLAGS) $(OPENCL_CFLAGS) -c test_gpu.cpp
+
+test_gpu: key_schedule.o rng_obj.o alignment2.o tm_base.o opencl.o tm_opencl_seq.o test_gpu.o
+	$(CC) $(CFLAGS) -o test_gpu key_schedule.o rng_obj.o alignment2.o tm_base.o opencl.o tm_opencl_seq.o test_gpu.o $(OPENCL_LDFLAGS)
+	cp opencl_test/tm_seq.cl tm_seq.cl
+
 clean:
-	rm tm_tester.o key_schedule.o rng_obj.o alignment2.o tm_base.o tm_8.o tm_32_8.o tm_32_16.o tm_64_8.o tm_64_16.o tm_128_8.o tm_128_16.o tm_avx_8.o tm_avx_8_in_cpu.o tm_avx_8_in_cpu_shuffled.o tm_avx_16.o tm_avx_in_cpu.o tm_sse2_8_shuffled.o tm_avx2_8_in_cpu_shuffled.o tm_avx512_8_in_cpu_shuffled.o test_cpu.o
+	rm -f tm_tester.o key_schedule.o rng_obj.o alignment2.o tm_base.o tm_8.o tm_32_8.o tm_32_16.o tm_64_8.o tm_64_16.o tm_128_8.o tm_128_16.o tm_avx_8.o tm_avx_8_in_cpu.o tm_avx_8_in_cpu_shuffled.o tm_avx_16.o tm_avx_in_cpu.o tm_sse2_8_shuffled.o tm_avx2_8_in_cpu_shuffled.o tm_avx512_8_in_cpu_shuffled.o test_cpu.o opencl.o tm_opencl_seq.o test_gpu.o

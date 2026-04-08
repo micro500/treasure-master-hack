@@ -28,12 +28,20 @@ private:
 	void run_bruteforce_batch(uint32 key, uint32 start_data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size);
 
 	cl_kernel _kernel_bruteforce;
+	cl_kernel _kernel_test_expand;
+	cl_kernel _kernel_test_alg;
+	cl_kernel _kernel_test_pipeline;
 
-	cl_mem _result_data_d;  // BATCH_SIZE * 2 bytes (2 bytes per candidate)
+	cl_mem _result_data_d;   // BATCH_SIZE * 2 bytes (2 bytes per candidate)
+	cl_mem _hash_table_d;    // HASH_TABLE_SIZE * 4 uints; zeroed once per run, persists across batches
+	cl_mem _deferred_pairs_d; // BATCH_SIZE * 4 uints: {reader_data, writer_data, h2, reader_lane0 | writer_lane0<<32} per pair
+	cl_mem _deferred_count_d; // 1 uint: atomic counter for deferred_pairs
 
 	// 64 candidates per workgroup, 2 bytes per result = 128-byte coalesced write
-	static const uint32_t BATCH_SIZE         = 1u << 20;
+	static const uint32_t BATCH_SIZE         = 1u << 22;
 	static const uint32_t CANDIDATES_PER_WG  = 64;
+	// Hash table: 8M entries * 16 bytes = 128 MB.  Must be a power of 2.
+	static const uint32_t HASH_TABLE_SIZE    = 1u << 23;
 
 	opencl* _cl;
 	RNG* rng;

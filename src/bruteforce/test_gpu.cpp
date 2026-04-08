@@ -1,7 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#ifdef _WIN32
 #include <direct.h>
+#define getcwd_impl(buf, sz) _getcwd(buf, sz)
+#else
+#include <unistd.h>
+#define getcwd_impl(buf, sz) getcwd(buf, sz)
+#endif
 
 #include "rng_obj.h"
 #include "key_schedule.h"
@@ -15,7 +21,7 @@
 int main()
 {
 	char cwd[500];
-	_getcwd(cwd, 500);
+	getcwd_impl(cwd, 500);
 	fprintf(stderr, "CWD: %s\n", cwd);
 
 	fprintf(stderr, "Initializing OpenCL...\n");
