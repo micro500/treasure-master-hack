@@ -207,8 +207,9 @@ TYPED_TEST(TmTest, Validate_Invalid_V0) {
     EXPECT_FALSE(this->impl->test_bruteforce_checksum(validate_invalid_data, OTHER_WORLD));
 }
 
-
+#ifndef __linux__
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+#endif
