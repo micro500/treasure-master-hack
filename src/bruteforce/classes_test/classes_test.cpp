@@ -19,7 +19,7 @@ static RNG g_rng;
 // Test fixture
 // =========================================================
 
-using Implementations = ::testing::Types<tm_8/*, tm_32_8*/, tm_avx_r128_8, tm_avx_r128s_8, tm_avx_r128s_map_8, tm_avx_r128_map_8, tm_avx_r256_map_8, /*tm_opencl_seq_test*/>;
+using Implementations = ::testing::Types<tm_8/*, tm_32_8*/, tm_avx_r128_8, tm_avx_r128s_8, tm_avx_r128s_map_8, tm_avx_r128_map_8, tm_avx_r256_map_8/*, *tm_opencl_seq_test*/>;
 
 struct ImplementationNames {
     template <typename T>
