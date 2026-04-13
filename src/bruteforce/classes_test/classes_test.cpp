@@ -31,7 +31,7 @@ struct ImplementationNames {
         if (std::is_same<T, tm_avx_r128s_map_8>()) return "tm_avx_r128s_map_8";
         if (std::is_same<T, tm_avx_r128_map_8>()) return "tm_avx_r128_map_8";
         if (std::is_same<T, tm_avx_r256_map_8>()) return "tm_avx_r256_map_8";
-        if (std::is_same<T, tm_opencl_seq_test>()) return "tm_opencl_seq_test";
+        //if (std::is_same<T, tm_opencl_seq_test>()) return "tm_opencl_seq_test";
 
         return std::to_string(i);
     }
