@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 #include "data_sizes.h"
 #include "alignment2.h"
 #include "rng_obj.h"
@@ -9,32 +10,6 @@ RNG::RNG()
 	{
 		generate_rng_table();
 	}
-	regular_rng_values_for_seeds_8 = nullptr;
-	regular_rng_values_for_seeds_16 = nullptr;
-	alg0_values_for_seeds_8 = nullptr;
-	alg0_values_for_seeds_16 = nullptr;
-	alg6_values_for_seeds_8 = nullptr;
-	alg6_values_for_seeds_16 = nullptr;
-	alg2_values_for_seeds_8_8 = nullptr;
-	alg2_values_for_seeds_32_8 = nullptr;
-	alg2_values_for_seeds_32_16 = nullptr;
-	alg2_values_for_seeds_64_8 = nullptr;
-	alg2_values_for_seeds_64_16 = nullptr;
-	alg2_values_for_seeds_128_8 = nullptr;
-	alg2_values_for_seeds_128_16 = nullptr;
-	alg2_values_for_seeds_256_8 = nullptr;
-	alg2_values_for_seeds_256_16 = nullptr;
-	alg2_values_for_seeds_512_8 = nullptr;
-	alg5_values_for_seeds_8_8 = nullptr;
-	alg5_values_for_seeds_32_8 = nullptr;
-	alg5_values_for_seeds_32_16 = nullptr;
-	alg5_values_for_seeds_64_8 = nullptr;
-	alg5_values_for_seeds_64_16 = nullptr;
-	alg5_values_for_seeds_128_8 = nullptr;
-	alg5_values_for_seeds_128_16 = nullptr;
-	alg5_values_for_seeds_256_8 = nullptr;
-	alg5_values_for_seeds_256_16 = nullptr;
-	alg5_values_for_seeds_512_8 = nullptr;
 }
 
 void RNG::generate_rng_table()
@@ -102,14 +77,9 @@ void RNG::generate_regular_rng_values_for_seeds(uint8** out, uint16* seeds, int 
 	}
 }
 
-void RNG::generate_regular_rng_values_for_seeds_8(uint16* seeds, int seed_count)
+void RNG::generate_regular_rng_values_for_seeds_8(uint8_t** out, uint16* seeds, int seed_count)
 {
-	generate_regular_rng_values_for_seeds(&regular_rng_values_for_seeds_8, seeds, seed_count, false);
-}
-
-void RNG::generate_regular_rng_values_for_seeds_16(uint16* seeds, int seed_count)
-{
-	generate_regular_rng_values_for_seeds((uint8**)&regular_rng_values_for_seeds_16, seeds, seed_count, true);
+	generate_regular_rng_values_for_seeds(out, seeds, seed_count, false);
 }
 
 void RNG::_generate_regular_rng_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)
@@ -209,6 +179,33 @@ void RNG::generate_regular_rng_values_16()
 	_generate_regular_rng_values((uint8**)&regular_rng_values_16, false, -1, true);
 }
 
+void RNG::_generate_expansion_values_for_seed(uint8* rng_values, uint16_t rng_seed, bool shuffle, int bits, bool packing_16)
+{
+	uint8_t temp_values[8];
+	for (int j = 0; j < 16; j++)
+	{
+		for (int k = 0; k < 8; k++)
+		{
+			if (j == 0)
+			{
+				temp_values[k] = 0;
+			}
+			else
+			{
+				temp_values[k] = temp_values[k] + run_rng(&rng_seed);
+			}
+
+			int offset = j * 8 + k;
+			if (shuffle)
+			{
+				offset = shuffle_8(offset, bits);
+			}
+			packing_store(rng_values, offset, temp_values[k], packing_16);
+		}
+	}
+}
+
+
 void RNG::_generate_expansion_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)
 {
 	if (*rng_values == nullptr)
@@ -216,32 +213,11 @@ void RNG::_generate_expansion_values(uint8** rng_values, bool shuffle, int bits,
 		*rng_values = packing_alloc(0x10000 * 128, packing_16);
 
 		uint16 rng_seed;
-		uint8 temp_values[8];
 
 		for (int i = 0; i < 0x10000; i++)
 		{
 			rng_seed = i;
-			for (int j = 0; j < 16; j++)
-			{
-				for (int k = 0; k < 8; k++)
-				{
-					if (j == 0)
-					{
-						temp_values[k] = 0;
-					}
-					else
-					{
-						temp_values[k] = temp_values[k] + run_rng(&rng_seed);
-					}
-
-					int offset = j * 8 + k;
-					if (shuffle)
-					{
-						offset = shuffle_8(offset, bits);
-					}
-					packing_store(*rng_values, i * 128 + offset, temp_values[k], packing_16);
-				}
-			}
+			_generate_expansion_values_for_seed(*rng_values + rng_seed * 128 * (packing_16 ? 2 : 1), rng_seed, shuffle, bits, packing_16);
 		}
 	}
 }
@@ -259,6 +235,14 @@ void RNG::generate_expansion_values_128_8_shuffled()
 void RNG::generate_expansion_values_256_8_shuffled()
 {
 	_generate_expansion_values(&expansion_values_256_8_shuffled, true, 256, false);
+}
+
+void RNG::_generate_expansion_values_for_seed_8(uint8** rng_values, uint16_t rng_seed, bool shuffle, int bits)
+{
+	aligned_free(*rng_values);
+	*rng_values = packing_alloc(128, false);
+
+	_generate_expansion_values_for_seed(*rng_values, rng_seed, shuffle, bits, false);
 }
 
 
@@ -284,14 +268,9 @@ void RNG::generate_alg0_values_for_seeds(uint8** out, uint16* seeds, int seed_co
 	}
 }
 
-void RNG::generate_alg0_values_for_seeds_8(uint16* seeds, int seed_count)
+void RNG::generate_alg0_values_for_seeds_8(uint8_t** out, uint16* seeds, int seed_count)
 {
-	generate_alg0_values_for_seeds(&alg0_values_for_seeds_8, seeds, seed_count, false);
-}
-
-void RNG::generate_alg0_values_for_seeds_16(uint16* seeds, int seed_count)
-{
-	generate_alg0_values_for_seeds((uint8**)&alg0_values_for_seeds_16, seeds, seed_count, true);
+	generate_alg0_values_for_seeds(out, seeds, seed_count, false);
 }
 
 void RNG::_generate_alg0_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)
@@ -369,54 +348,9 @@ void RNG::generate_alg2_values_for_seeds(uint8** out, uint16* seeds, int seed_co
 	}
 }
 
-void RNG::generate_alg2_values_for_seeds_8_8(uint16* seeds, int seed_count)
+void RNG::generate_alg2_values_for_seeds_128_8(uint8_t** out, uint16* seeds, int seed_count)
 {
-	generate_alg2_values_for_seeds(&alg2_values_for_seeds_8_8, seeds, seed_count, 8, false);
-}
-
-void RNG::generate_alg2_values_for_seeds_32_8(uint16* seeds, int seed_count)
-{
-	generate_alg2_values_for_seeds((uint8**)&alg2_values_for_seeds_32_8, seeds, seed_count, 32, false);
-}
-
-void RNG::generate_alg2_values_for_seeds_32_16(uint16* seeds, int seed_count)
-{
-	generate_alg2_values_for_seeds((uint8**)&alg2_values_for_seeds_32_16, seeds, seed_count, 32, true);
-}
-
-void RNG::generate_alg2_values_for_seeds_64_8(uint16* seeds, int seed_count)
-{
-	generate_alg2_values_for_seeds((uint8**)&alg2_values_for_seeds_64_8, seeds, seed_count, 64, false);
-}
-
-void RNG::generate_alg2_values_for_seeds_64_16(uint16* seeds, int seed_count)
-{
-	generate_alg2_values_for_seeds((uint8**)&alg2_values_for_seeds_64_16, seeds, seed_count, 64, true);
-}
-
-void RNG::generate_alg2_values_for_seeds_128_8(uint16* seeds, int seed_count)
-{
-	generate_alg2_values_for_seeds(&alg2_values_for_seeds_128_8, seeds, seed_count, 128, false);
-}
-
-void RNG::generate_alg2_values_for_seeds_128_16(uint16* seeds, int seed_count)
-{
-	generate_alg2_values_for_seeds(&alg2_values_for_seeds_128_16, seeds, seed_count, 128, true);
-}
-
-void RNG::generate_alg2_values_for_seeds_256_8(uint16* seeds, int seed_count)
-{
-	generate_alg2_values_for_seeds(&alg2_values_for_seeds_256_8, seeds, seed_count, 256, false);
-}
-
-void RNG::generate_alg2_values_for_seeds_256_16(uint16* seeds, int seed_count)
-{
-	generate_alg2_values_for_seeds(&alg2_values_for_seeds_256_16, seeds, seed_count, 256, true);
-}
-
-void RNG::generate_alg2_values_for_seeds_512_8(uint16* seeds, int seed_count)
-{
-	generate_alg2_values_for_seeds(&alg2_values_for_seeds_512_8, seeds, seed_count, 512, false);
+	generate_alg2_values_for_seeds(out, seeds, seed_count, 128, false);
 }
 
 void RNG::_generate_alg2_values(uint8** rng_values, int bits, bool packing_16)
@@ -591,54 +525,9 @@ void RNG::generate_alg5_values_for_seeds(uint8** out, uint16* seeds, int seed_co
 	}
 }
 
-void RNG::generate_alg5_values_for_seeds_8_8(uint16* seeds, int seed_count)
+void RNG::generate_alg5_values_for_seeds_128_8(uint8_t** out, uint16* seeds, int seed_count)
 {
-	generate_alg5_values_for_seeds(&alg5_values_for_seeds_8_8, seeds, seed_count, 8, false);
-}
-
-void RNG::generate_alg5_values_for_seeds_32_8(uint16* seeds, int seed_count)
-{
-	generate_alg5_values_for_seeds((uint8**)&alg5_values_for_seeds_32_8, seeds, seed_count, 32, false);
-}
-
-void RNG::generate_alg5_values_for_seeds_32_16(uint16* seeds, int seed_count)
-{
-	generate_alg5_values_for_seeds((uint8**)&alg5_values_for_seeds_32_16, seeds, seed_count, 32, true);
-}
-
-void RNG::generate_alg5_values_for_seeds_64_8(uint16* seeds, int seed_count)
-{
-	generate_alg5_values_for_seeds((uint8**)&alg5_values_for_seeds_64_8, seeds, seed_count, 64, false);
-}
-
-void RNG::generate_alg5_values_for_seeds_64_16(uint16* seeds, int seed_count)
-{
-	generate_alg5_values_for_seeds((uint8**)&alg5_values_for_seeds_64_16, seeds, seed_count, 64, true);
-}
-
-void RNG::generate_alg5_values_for_seeds_128_8(uint16* seeds, int seed_count)
-{
-	generate_alg5_values_for_seeds(&alg5_values_for_seeds_128_8, seeds, seed_count, 128, false);
-}
-
-void RNG::generate_alg5_values_for_seeds_128_16(uint16* seeds, int seed_count)
-{
-	generate_alg5_values_for_seeds(&alg5_values_for_seeds_128_16, seeds, seed_count, 128, true);
-}
-
-void RNG::generate_alg5_values_for_seeds_256_8(uint16* seeds, int seed_count)
-{
-	generate_alg5_values_for_seeds(&alg5_values_for_seeds_256_8, seeds, seed_count, 256, false);
-}
-
-void RNG::generate_alg5_values_for_seeds_256_16(uint16* seeds, int seed_count)
-{
-	generate_alg5_values_for_seeds(&alg5_values_for_seeds_256_16, seeds, seed_count, 256, true);
-}
-
-void RNG::generate_alg5_values_for_seeds_512_8(uint16* seeds, int seed_count)
-{
-	generate_alg5_values_for_seeds(&alg5_values_for_seeds_512_8, seeds, seed_count, 512, false);
+	generate_alg5_values_for_seeds(out, seeds, seed_count, 128, false);
 }
 
 void RNG::_generate_alg5_values(uint8** rng_values, int bits, bool packing_16)
@@ -726,14 +615,9 @@ void RNG::generate_alg6_values_for_seeds(uint8** out, uint16* seeds, int seed_co
 	}
 }
 
-void RNG::generate_alg6_values_for_seeds_8(uint16* seeds, int seed_count)
+void RNG::generate_alg6_values_for_seeds_8(uint8_t** out, uint16* seeds, int seed_count)
 {
-	generate_alg6_values_for_seeds(&alg6_values_for_seeds_8, seeds, seed_count, false);
-}
-
-void RNG::generate_alg6_values_for_seeds_16(uint16* seeds, int seed_count)
-{
-	generate_alg6_values_for_seeds((uint8**)&alg6_values_for_seeds_16, seeds, seed_count, true);
+	generate_alg6_values_for_seeds(out, seeds, seed_count, false);
 }
 
 void RNG::_generate_alg6_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)

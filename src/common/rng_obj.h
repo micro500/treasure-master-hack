@@ -1,6 +1,7 @@
 #ifndef RNG_OBJ_H
 #define RNG_OBJ_H
 
+#include <stdint.h>
 #include "data_sizes.h"
 
 class RNG
@@ -27,8 +28,7 @@ public:
 	void generate_regular_rng_values_8();
 	void generate_regular_rng_values_128_8_shuffled();
 	void generate_regular_rng_values_for_seeds(uint8** out, uint16* seeds, int seed_count, bool packing_16);
-	void generate_regular_rng_values_for_seeds_8(uint16* seeds, int seed_count);
-	void generate_regular_rng_values_for_seeds_16(uint16* seeds, int seed_count);
+	void generate_regular_rng_values_for_seeds_8(uint8_t** out, uint16* seeds, int seed_count);
 	void generate_regular_rng_values_256_8_shuffled();
 	void generate_regular_rng_values_512_8_shuffled();
 	void generate_regular_rng_values_8_hi();
@@ -41,11 +41,12 @@ public:
 	void generate_expansion_values_8();
 	void generate_expansion_values_128_8_shuffled();
 	void generate_expansion_values_256_8_shuffled();
+	void _generate_expansion_values_for_seed(uint8* rng_values, uint16_t rng_seed, bool shuffle, int bits, bool packing_16);
+	void _generate_expansion_values_for_seed_8(uint8** rng_values, uint16_t rng_seed, bool shuffle, int bits);
 
 	void _generate_alg0_values_for_seed(uint8* out, uint16 seed, int entries, bool packing_16);
 	void generate_alg0_values_for_seeds(uint8** out, uint16* seeds, int seed_count, bool packing_16);
-	void generate_alg0_values_for_seeds_8(uint16* seeds, int seed_count);
-	void generate_alg0_values_for_seeds_16(uint16* seeds, int seed_count);
+	void generate_alg0_values_for_seeds_8(uint8_t** out, uint16* seeds, int seed_count);
 	void _generate_alg0_values(uint8** rng_values, bool shuffle, int bits, bool packing_16);
 	void generate_alg0_values_8();
 	void generate_alg0_values_128_8_shuffled();
@@ -55,16 +56,7 @@ public:
 
 	void _generate_alg2_values_for_seed(uint8* out, uint16 seed, int entries, int bits, bool packing_16);
 	void generate_alg2_values_for_seeds(uint8** out, uint16* seeds, int seed_count, int bits, bool packing_16);
-	void generate_alg2_values_for_seeds_8_8(uint16* seeds, int seed_count);
-	void generate_alg2_values_for_seeds_32_8(uint16* seeds, int seed_count);
-	void generate_alg2_values_for_seeds_32_16(uint16* seeds, int seed_count);
-	void generate_alg2_values_for_seeds_64_8(uint16* seeds, int seed_count);
-	void generate_alg2_values_for_seeds_64_16(uint16* seeds, int seed_count);
-	void generate_alg2_values_for_seeds_128_8(uint16* seeds, int seed_count);
-	void generate_alg2_values_for_seeds_128_16(uint16* seeds, int seed_count);
-	void generate_alg2_values_for_seeds_256_8(uint16* seeds, int seed_count);
-	void generate_alg2_values_for_seeds_256_16(uint16* seeds, int seed_count);
-	void generate_alg2_values_for_seeds_512_8(uint16* seeds, int seed_count);
+	void generate_alg2_values_for_seeds_128_8(uint8_t** out, uint16* seeds, int seed_count);
 	void _generate_alg2_values(uint8** rng_values, int bits, bool packing_16);
 	void generate_alg2_values_8_8();
 	void generate_alg2_values_32_8();
@@ -91,16 +83,7 @@ public:
 
 	void _generate_alg5_values_for_seed(uint8* out, uint16 seed, int entries, int bits, bool packing_16);
 	void generate_alg5_values_for_seeds(uint8** out, uint16* seeds, int seed_count, int bits, bool packing_16);
-	void generate_alg5_values_for_seeds_8_8(uint16* seeds, int seed_count);
-	void generate_alg5_values_for_seeds_32_8(uint16* seeds, int seed_count);
-	void generate_alg5_values_for_seeds_32_16(uint16* seeds, int seed_count);
-	void generate_alg5_values_for_seeds_64_8(uint16* seeds, int seed_count);
-	void generate_alg5_values_for_seeds_64_16(uint16* seeds, int seed_count);
-	void generate_alg5_values_for_seeds_128_8(uint16* seeds, int seed_count);
-	void generate_alg5_values_for_seeds_128_16(uint16* seeds, int seed_count);
-	void generate_alg5_values_for_seeds_256_8(uint16* seeds, int seed_count);
-	void generate_alg5_values_for_seeds_256_16(uint16* seeds, int seed_count);
-	void generate_alg5_values_for_seeds_512_8(uint16* seeds, int seed_count);
+	void generate_alg5_values_for_seeds_128_8(uint8_t** out, uint16* seeds, int seed_count);
 	void _generate_alg5_values(uint8** rng_values, int bits, bool packing_16);
 	void generate_alg5_values_8_8();
 	void generate_alg5_values_32_8();
@@ -115,8 +98,7 @@ public:
 
 	void _generate_alg6_values_for_seed(uint8* out, uint16 seed, int entries, bool packing_16);
 	void generate_alg6_values_for_seeds(uint8** out, uint16* seeds, int seed_count, bool packing_16);
-	void generate_alg6_values_for_seeds_8(uint16* seeds, int seed_count);
-	void generate_alg6_values_for_seeds_16(uint16* seeds, int seed_count);
+	void generate_alg6_values_for_seeds_8(uint8_t** out, uint16* seeds, int seed_count);
 	void _generate_alg6_values(uint8** rng_values, bool shuffle, int bits, bool packing_16);
 	void generate_alg6_values_8();
 	void generate_alg6_values_128_8_shuffled();

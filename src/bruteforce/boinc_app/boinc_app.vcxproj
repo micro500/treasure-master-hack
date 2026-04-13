@@ -110,6 +110,9 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;BOINCAPP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../common/;../cpu/;$(BOINC_DIR);$(BOINC_DIR)\api;$(BOINC_DIR)\lib;$(BOINC_DIR)\win_build</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,6 +131,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;BOINCAPP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../common/;../cpu/;$(BOINC_DIR);$(BOINC_DIR)\api;$(BOINC_DIR)\lib;$(BOINC_DIR)\win_build</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -149,6 +153,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;BOINCAPP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../common/;../cpu/;$(BOINC_DIR);$(BOINC_DIR)\api;$(BOINC_DIR)\lib;$(BOINC_DIR)\win_build</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -173,6 +178,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;BOINCAPP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../common/;../cpu/;$(BOINC_DIR);$(BOINC_DIR)\api;$(BOINC_DIR)\lib;$(BOINC_DIR)\win_build</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -193,6 +199,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../common/;../cpu/</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -213,6 +220,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../common/;../cpu/</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -228,6 +236,9 @@
     <ClInclude Include="..\..\common\rng_obj.h" />
     <ClInclude Include="..\..\common\tm_base.h" />
     <ClInclude Include="..\cpu\tm_avx_r128s_8.h" />
+    <ClInclude Include="..\cpu\tm_avx_r128s_map_8.h" />
+    <ClInclude Include="..\cpu\tm_avx_r128_map_8.h" />
+    <ClInclude Include="..\cpu\tm_avx_r256_map_8.h" />
     <ClInclude Include="sha256.h" />
   </ItemGroup>
   <ItemGroup>
@@ -241,6 +252,9 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release_Standalone|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug_Standalone|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="..\cpu\tm_avx_r128s_map_8.cpp" />
+    <ClCompile Include="..\cpu\tm_avx_r128_map_8.cpp" />
+    <ClCompile Include="..\cpu\tm_avx_r256_map_8.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="sha256.c" />
   </ItemGroup>

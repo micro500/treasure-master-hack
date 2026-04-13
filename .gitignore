@@ -8,6 +8,8 @@
 **/TM_test_cases_OUT.txt
 **/.vs/
 **/x64/
+src/bruteforce/packages/
+src/common/cnf_out/
 
 # Visual Studio auto-recovery files
 ~AutoRecover.*

@@ -21,18 +21,17 @@ class tm_avx512_r512s_8 : public TM_base
 public:
 	tm_avx512_r512s_8(RNG* rng);
 
-	virtual void load_data(uint8* new_data);
+	void load_data(uint8* new_data);
 	void fetch_data(uint8* new_data);
 
-	virtual void expand(uint32 key, uint32 data);
+	void expand(uint32 key, uint32 data);
 
-	virtual void run_alg(int algorithm_id, uint16* rng_seed, int iterations);
+	void run_alg(int algorithm_id, uint16* rng_seed, int iterations);
 
-	virtual void run_one_map(const key_schedule::key_schedule_entry& schedule_entry);
-
-	virtual void run_all_maps(const key_schedule& schedule_entries);
+	void run_all_maps(const key_schedule& schedule_entries);
 
 private:
+	void run_one_map(const key_schedule::key_schedule_entry& schedule_entry);
 	void initialize();
 	void alg_0(__m512i& working_code0, __m512i& working_code1, uint16* rng_seed, __m512i& mask_FE);
 	void alg_2(__m512i& working_code0, __m512i& working_code1, uint16* rng_seed, __m512i& mask_80, __m512i& mask_7F, __m512i& mask_FE, __m512i& mask_01);

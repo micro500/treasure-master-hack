@@ -1,28 +1,8 @@
-#include <stdio.h>
-#include <iostream>
 #include "data_sizes.h"
 #include "tm_base.h"
 
 TM_base::TM_base(RNG * rng_obj) : rng(rng_obj)
 {
-}
-
-void TM_base::print_working_code()
-{
-	uint8 data[128];
-	fetch_data(data);
-	for (int i = 0; i < 128; i++)
-	{
-		printf("%02X ", data[i]);
-	}
-	printf("\n");
-}
-
-void TM_base::run_bruteforce_data(uint32 key, uint32 data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size) {}
-
-void TM_base::run_bruteforce_hash_reduction(uint32 key, uint32 data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size)
-{
-	// TODO: implement hash reduction in concrete subclasses
 }
 
 uint8 TM_base::check_machine_code(uint8* data, int world)
@@ -57,7 +37,7 @@ uint8 TM_base::check_machine_code(uint8* data, int world)
 	uint8 valid_entries[6] = { 0,0,0,0,0,0 };
 	int last_entry = -1;
 
-	uint8 result = 0;
+	uint8 result = world;
 	uint8 next_entry_addr = entry_addrs[0];
 
 	for (int i = 0; i < code_length - 2; i++)
@@ -180,14 +160,6 @@ void TM_base::unshuffle_mem(uint8* src, uint8* dest, int bits, bool packing_16)
 		dest[i] = packing_load(src, shuffle_8(i, bits), packing_16);
 	}
 }
-
-void TM_base::decrypt_carnival_world() {}
-uint16 TM_base::calculate_carnival_world_checksum() { return 0; }
-uint16 TM_base::fetch_carnival_world_checksum_value() { return 0; }
-
-void TM_base::decrypt_other_world() {}
-uint16 TM_base::calculate_other_world_checksum() { return 0; }
-uint16 TM_base::fetch_other_world_checksum_value() { return 0; }
 
 uint8 TM_base::opcode_bytes_used[0x100] = { 1,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
 											2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,

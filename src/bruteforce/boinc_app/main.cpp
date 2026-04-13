@@ -3,6 +3,7 @@
 #include <string.h>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #ifdef BOINCAPP
 #ifdef _WIN32
@@ -20,7 +21,9 @@ extern "C" {
 
 #include "rng_obj.h"
 #include "key_schedule.h"
-#include "tm_avx_r128s_8.h"
+#include "tm_avx_r128s_map_8.h"
+#include "tm_avx_r128_map_8.h"
+//#include "tm_avx_r256_map_8.h"
 
 // -------------------------------------------------------------------
 // Constants
@@ -140,8 +143,10 @@ static int run(const Args& args)
 
 	// Build the key schedule for this key (constant for the whole workunit)
 	RNG rng;
-	key_schedule schedule(args.key_id, key_schedule::ALL_MAPS);
-	tm_avx_r128s_8 tm(&rng);
+	//key_schedule schedule(args.key_id, key_schedule::ALL_MAPS);
+	tm_avx_r128s_map_8 tm(&rng, args.key_id);
+	//tm_avx_r128_map_8 tm(&rng, args.key_id);
+	//tm_avx_r256_map_8 tm(&rng, args.key_id);
 
 	// Restore from checkpoint if present
 	uint32_t start_pos = 0;
@@ -155,6 +160,9 @@ static int run(const Args& args)
 	// -------------------------------------------------------------------
 	// Main processing loop
 	// -------------------------------------------------------------------
+#ifdef TIMING
+	auto t_start = std::chrono::steady_clock::now();
+#endif
 	for (uint32_t pos = start_pos; pos < args.workunit_size; pos += CHECK_INTERVAL) {
 		uint32_t key_size = CHECK_INTERVAL;
 		if (pos + key_size > args.workunit_size)
@@ -162,9 +170,7 @@ static int run(const Args& args)
 
 		uint32_t result_bytes = 0;
 		tm.run_bruteforce_boinc(
-			args.key_id,
 			args.range_start + pos,
-			schedule,
 			key_size,
 			noop_progress,
 			key_buf,
@@ -182,6 +188,16 @@ static int run(const Args& args)
 
 		uint32_t next_pos = pos + key_size;
 		double fraction = (double)next_pos / args.workunit_size;
+
+#ifdef TIMING
+		{
+			auto now = std::chrono::steady_clock::now();
+			double elapsed = std::chrono::duration<double>(now - t_start).count();
+			uint32_t processed = next_pos - start_pos;
+			fprintf(stderr, "[timing] %u / %u inputs | %.2fs | %.0f inputs/s\n",
+				next_pos, args.workunit_size, elapsed, processed / elapsed);
+		}
+#endif
 
 #ifdef BOINCAPP
 		boinc_fraction_done(fraction);
@@ -246,9 +262,7 @@ static int run(const Args& args)
 
 		challenges[i].lsb = challenge_lsb;
 		tm.compute_challenge_flags(
-			args.key_id,
 			challenge_lsb,
-			schedule,
 			challenges[i].carnival_flags,
 			challenges[i].other_flags
 		);

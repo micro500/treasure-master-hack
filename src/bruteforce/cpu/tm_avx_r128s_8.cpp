@@ -18,9 +18,15 @@
         _mm256_castpd_si256(_mm256_insertf128_pd(_mm256_castsi256_pd(_mm256_castsi128_si256(vl)), _mm_castsi128_pd(vh), 1))
 #endif
 
-tm_avx_r128s_8::tm_avx_r128s_8(RNG* rng_obj) : TM_base(rng_obj)
+tm_avx_r128s_8::tm_avx_r128s_8(RNG* rng_obj) : tm_avx_r128s_8(rng_obj, 0) {}
+
+tm_avx_r128s_8::tm_avx_r128s_8(RNG* rng_obj, const uint32_t key) : tm_avx_r128s_8(rng_obj, key, key_schedule(key, key_schedule::ALL_MAPS)) {}
+
+tm_avx_r128s_8::tm_avx_r128s_8(RNG* rng_obj, const uint32_t key, const key_schedule& schedule_entries) : TM_base(rng_obj)
 {
 	initialize();
+	this->key = key;
+	this->schedule_entries = schedule_entries;
 }
 
 __forceinline void tm_avx_r128s_8::initialize()

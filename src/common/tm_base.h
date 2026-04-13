@@ -1,6 +1,7 @@
 #ifndef TM_BASE_H
 #define TM_BASE_H
 #include <string>
+#include <optional>
 #include "alignment2.h"
 #include "data_sizes.h"
 #include "rng_obj.h"
@@ -35,33 +36,17 @@ class TM_base
 {
 public:
 	TM_base(RNG *rng);
+	virtual ~TM_base() = default;
 
-	virtual void load_data(uint8* new_data) = 0;
-	virtual void fetch_data(uint8* new_data) = 0;
+	virtual void run_bruteforce_boinc(uint32 key, uint32 start_data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size) {}
+	virtual void compute_challenge_flags(uint32 key, uint32 data, const key_schedule& schedule_entries, uint8& carnival_flags_out, uint8& other_flags_out) {}
 
-	virtual void expand(uint32 key, uint32 data) = 0;
-	virtual void decrypt_carnival_world();
-	virtual void decrypt_other_world();
-	virtual uint16 calculate_carnival_world_checksum();
-	virtual uint16 calculate_other_world_checksum();
-	virtual uint16 fetch_carnival_world_checksum_value();
-	virtual uint16 fetch_other_world_checksum_value();
-
-	virtual void run_alg(int algorithm_id, uint16 * rng_seed, int iterations) = 0;
-
-	virtual void run_one_map(const key_schedule::key_schedule_entry& schedule_entry) = 0;
-
-	virtual void run_all_maps(const key_schedule& schedule_entries) = 0;
-
-	virtual void run_bruteforce_data(uint32 key, uint32 data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size);
-
-	virtual void run_bruteforce_hash_reduction(uint32 key, uint32 data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size);
-
-	void print_working_code();
 	uint8 check_machine_code(uint8* data, int world);
 
 	RNG * rng;
 	std::string obj_name;
+	uint32_t key;
+	std::optional<key_schedule> schedule_entries;
 
 	void shuffle_mem(uint8* src, uint8* dest, int bits, bool packing_16);
 	void unshuffle_mem(uint8* src, uint8* dest, int bits, bool packing_16);
