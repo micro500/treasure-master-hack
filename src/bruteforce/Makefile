@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -I../common -Icpu -Igpu -std=c++17 -O2 -m64
+CFLAGS = -I../common -Icpu -Igpu -Iclasses_test -std=c++17 -O2 -m64
 AVXFLAGS = -mavx
 AVX2FLAGS = -mavx2
 AVX512FFLAGS = -mavx512f
@@ -88,7 +88,7 @@ test_gpu: key_schedule.o rng_obj.o alignment2.o tm_base.o opencl.o tm_opencl_seq
 	cp opencl_test/tm_seq.cl tm_seq.cl
 
 classes_test.o:
-	$(CC) $(CFLAGS) -c classes_test.cpp
+	$(CC) $(CFLAGS) -c classes_test/classes_test.cpp
 
 tm_avx_r128_8.o:
 	$(CC) $(CFLAGS) $(AVXFLAGS) -c cpu/tm_avx_r128_8.cpp
