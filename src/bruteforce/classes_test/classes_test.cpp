@@ -9,7 +9,7 @@
 #include "tm_avx_r128s_map_8.h"
 #include "tm_avx_r128_map_8.h"
 #include "tm_avx_r256_map_8.h"
-#include "tm_opencl_seq_test.h"
+//#include "tm_opencl_seq_test.h"
 
 // Shared RNG — all implementations use the same tables; each class
 // guards its own initialization with a static bool.
@@ -19,7 +19,7 @@ static RNG g_rng;
 // Test fixture
 // =========================================================
 
-using Implementations = ::testing::Types<tm_8/*, tm_32_8*/, tm_avx_r128_8, tm_avx_r128s_8, tm_avx_r128s_map_8, tm_avx_r128_map_8, tm_avx_r256_map_8, tm_opencl_seq_test>;
+using Implementations = ::testing::Types<tm_8/*, tm_32_8*/, tm_avx_r128_8, tm_avx_r128s_8, tm_avx_r128s_map_8, tm_avx_r128_map_8, tm_avx_r256_map_8, /*tm_opencl_seq_test*/>;
 
 struct ImplementationNames {
     template <typename T>

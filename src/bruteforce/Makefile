@@ -87,5 +87,26 @@ test_gpu: key_schedule.o rng_obj.o alignment2.o tm_base.o opencl.o tm_opencl_seq
 	$(CC) $(CFLAGS) -o test_gpu key_schedule.o rng_obj.o alignment2.o tm_base.o opencl.o tm_opencl_seq.o test_gpu.o $(OPENCL_LDFLAGS)
 	cp opencl_test/tm_seq.cl tm_seq.cl
 
+classes_test.o:
+	$(CC) $(CFLAGS) -c test_classes.cpp
+
+tm_avx_r128_8.o:
+	$(CC) $(CFLAGS) $(AVXFLAGS) -c cpu/tm_avx_r128_8.cpp
+
+tm_avx_r128s_8.o:
+	$(CC) $(CFLAGS) $(AVXFLAGS) -c cpu/tm_avx_r128s_8.cpp
+
+tm_avx_r128s_map_8.o:
+	$(CC) $(CFLAGS) $(AVXFLAGS) -c cpu/tm_avx_r128s_map_8.cpp
+
+tm_avx_r128_map_8.o:
+	$(CC) $(CFLAGS) $(AVXFLAGS) -c cpu/tm_avx_r128_map_8.cpp
+
+tm_avx_r256_map_8.o:
+	$(CC) $(CFLAGS) $(AVXFLAGS) -c cpu/tm_avx_r256_map_8.cpp
+
+classes_test: key_schedule.o rng_obj.o alignment2.o tm_base.o tm_avx_r128_8.o tm_avx_r128s_8.o tm_avx_r128s_map_8.o tm_avx_r128_map_8.o tm_avx_r256_map_8.o tm_8.o classes_test.o
+	$(CC) $(CFLAGS) -lgtest -lgtest_main -o classes_test tm_tester.o key_schedule.o rng_obj.o alignment2.o tm_base.o tm_avx_r128_8.o tm_avx_r128s_8.o tm_avx_r128s_map_8.o tm_avx_r128_map_8.o tm_avx_r256_map_8.o tm_8.o classes_test.o
+
 clean:
-	rm -f tm_tester.o key_schedule.o rng_obj.o alignment2.o tm_base.o tm_8.o tm_32_8.o tm_32_16.o tm_64_8.o tm_64_16.o tm_128_8.o tm_128_16.o tm_avx_8.o tm_avx_8_in_cpu.o tm_avx_8_in_cpu_shuffled.o tm_avx_16.o tm_avx_in_cpu.o tm_sse2_8_shuffled.o tm_avx2_8_in_cpu_shuffled.o tm_avx512_8_in_cpu_shuffled.o test_cpu.o opencl.o tm_opencl_seq.o test_gpu.o
+	rm -f tm_tester.o key_schedule.o rng_obj.o alignment2.o tm_base.o tm_8.o tm_32_8.o tm_32_16.o tm_64_8.o tm_64_16.o tm_128_8.o tm_128_16.o tm_avx_8.o tm_avx_8_in_cpu.o tm_avx_8_in_cpu_shuffled.o tm_avx_16.o tm_avx_in_cpu.o tm_sse2_8_shuffled.o tm_avx2_8_in_cpu_shuffled.o tm_avx512_8_in_cpu_shuffled.o test_cpu.o opencl.o tm_opencl_seq.o test_gpu.o classes_test.o
