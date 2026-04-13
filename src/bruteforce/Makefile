@@ -88,7 +88,7 @@ test_gpu: key_schedule.o rng_obj.o alignment2.o tm_base.o opencl.o tm_opencl_seq
 	cp opencl_test/tm_seq.cl tm_seq.cl
 
 classes_test.o:
-	$(CC) $(CFLAGS) -c test_classes.cpp
+	$(CC) $(CFLAGS) -c classes_test.cpp
 
 tm_avx_r128_8.o:
 	$(CC) $(CFLAGS) $(AVXFLAGS) -c cpu/tm_avx_r128_8.cpp
