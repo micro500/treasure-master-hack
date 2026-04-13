@@ -166,12 +166,17 @@ __forceinline void tm_32_8::alg_2(const uint16 rng_seed)
 	}
 }
 
-__forceinline void tm_32_8::alg_3(const uint16 rng_seed)
+__forceinline void tm_32_8::xor_alg(uint32* working_data, const uint8* values)
 {
 	for (int i = 0; i < 32; i++)
 	{
-		working_code_data[i] = working_code_data[i] ^ ((uint32*)rng->regular_rng_values_8)[(rng_seed * 128) / 4 + i];
+		working_data[i] = working_data[i] ^ ((uint32*)values)[i];
 	}
+}
+
+__forceinline void tm_32_8::alg_3(const uint16 rng_seed)
+{
+	xor_alg(working_code_data, &rng->regular_rng_values_8[rng_seed * 128]);
 }
 
 __forceinline void tm_32_8::alg_4(const uint16 rng_seed)
@@ -250,6 +255,104 @@ void tm_32_8::run_all_maps(const key_schedule& schedule_entries)
 	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
 	{
 		run_one_map(*it);
+	}
+}
+
+__forceinline void tm_32_8::_decrypt_carnival_world(uint8* working_data)
+{
+	xor_alg((uint32*)working_data, carnival_world_data);
+}
+
+__forceinline void tm_32_8::_decrypt_other_world(uint8* working_data)
+{
+	xor_alg((uint32*)working_data, other_world_data);
+}
+
+__forceinline bool tm_32_8::check_carnival_world_checksum(uint8* working_data)
+{
+	return _calculate_carnival_world_checksum(working_data) == _fetch_carnival_world_checksum_value(working_data);
+}
+
+__forceinline bool tm_32_8::check_other_world_checksum(uint8* working_data)
+{
+	return _calculate_other_world_checksum(working_data) == _fetch_other_world_checksum_value(working_data);
+}
+
+__forceinline uint16 tm_32_8::_calculate_carnival_world_checksum(uint8* working_data)
+{
+	return calculate_masked_checksum(working_data, carnival_world_checksum_mask);
+}
+
+__forceinline uint16 tm_32_8::fetch_checksum_value(uint8* working_data, int code_length)
+{
+	return working_data[reverse_offset(code_length - 1)] << 8 | working_data[reverse_offset(code_length - 2)];
+}
+
+__forceinline uint16 tm_32_8::_fetch_carnival_world_checksum_value(uint8* working_data)
+{
+	return fetch_checksum_value(working_data, CARNIVAL_WORLD_CODE_LENGTH);
+}
+
+__forceinline uint16 tm_32_8::fetch_carnival_world_checksum_value()
+{
+	return _fetch_carnival_world_checksum_value((uint8*)working_code_data);
+}
+
+__forceinline uint16 tm_32_8::_fetch_other_world_checksum_value(uint8* working_data)
+{
+	return fetch_checksum_value(working_data, OTHER_WORLD_CODE_LENGTH);
+}
+
+__forceinline uint16 tm_32_8::fetch_other_world_checksum_value()
+{
+	return _fetch_other_world_checksum_value((uint8*)working_code_data);
+}
+
+__forceinline uint16 tm_32_8::_calculate_other_world_checksum(uint8* working_data)
+{
+	return calculate_masked_checksum(working_data, other_world_checksum_mask);
+}
+
+__forceinline uint16 tm_32_8::calculate_other_world_checksum()
+{
+	return _calculate_other_world_checksum((uint8*)working_code_data);
+}
+
+__forceinline uint16 tm_32_8::calculate_masked_checksum(uint8* working_data, uint8* mask)
+{
+	uint16 sum = 0;
+	for (int i = 0; i < 128; i++)
+	{
+		sum += working_data[i] & mask[i];
+	}
+	return sum;
+}
+
+
+
+void tm_32_8::test_expand_and_map(uint32 key, uint32 data, const key_schedule& schedule, uint8* result_out)
+{
+	expand(key, data);
+	run_all_maps(schedule);
+	fetch_data(result_out);
+}
+
+bool tm_32_8::test_pipeline_validate(uint32 key, uint32 data, const key_schedule& schedule, int world)
+{
+	expand(key, data);
+	run_all_maps(schedule);
+	uint32 decrypted[32];
+	for (int i = 0; i < 32; i++)
+		decrypted[i] = working_code_data[i];
+	if (world == CARNIVAL_WORLD)
+	{
+		_decrypt_carnival_world((uint8*)decrypted);
+		return check_carnival_world_checksum((uint8*)decrypted);
+	}
+	else
+	{
+		_decrypt_other_world((uint8*)decrypted);
+		return check_other_world_checksum((uint8*)decrypted);
 	}
 }
 
