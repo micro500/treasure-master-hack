@@ -17,7 +17,7 @@ public:
 	void run_full_process(uint32 key, uint32 data, const key_schedule& schedule_entries);
 	void run_results_process(uint32 key, uint32 data, const key_schedule& schedule_entries, uint32 amount_to_run, uint8* result_data, uint32 result_max_size, uint32* result_size);
 
-private:
+//private:
 	TM_base * UUT;
 };
 #endif // TM_TESTER_H

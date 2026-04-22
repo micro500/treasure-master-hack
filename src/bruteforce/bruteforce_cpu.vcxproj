@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClCompile Include="bruteforce_main.cpp" />
     <ClCompile Include="cpu\tm_avx_r128s_8.cpp" />
+    <ClCompile Include="cpu\tm_ssse3_r128s_8.cpp" />
+    <ClCompile Include="cpu\tm_ssse3_m128_8.cpp" />
     <ClCompile Include="..\common\alignment2.cpp" />
     <ClCompile Include="..\common\key_schedule.cpp" />
     <ClCompile Include="..\common\rng_obj.cpp" />

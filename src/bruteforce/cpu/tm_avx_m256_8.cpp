@@ -1,15 +1,3 @@
-#include <mmintrin.h>  //MMX
-#include <xmmintrin.h> //SSE
-#include <emmintrin.h> //SSE2
-#include <pmmintrin.h> //SSE3
-#include <tmmintrin.h> //SSSE3
-#include <smmintrin.h> //SSE4.1
-#include <nmmintrin.h> //SSE4.2
-//#include <ammintrin.h> //SSE4A
-#include <immintrin.h> //AVX
-//#include <zmmintrin.h> //AVX512
-
-#include "data_sizes.h"
 #include "tm_avx_m256_8.h"
 
 #if defined(__GNUC__)
@@ -17,9 +5,15 @@
         _mm256_castpd_si256(_mm256_insertf128_pd(_mm256_castsi256_pd(_mm256_castsi128_si256(vl)), _mm_castsi128_pd(vh), 1))
 #endif
 
-tm_avx_m256_8::tm_avx_m256_8(RNG* rng_obj) : TM_base(rng_obj)
+tm_avx_m256_8::tm_avx_m256_8(RNG* rng_obj) : tm_avx_m256_8(rng_obj, 0) {}
+
+tm_avx_m256_8::tm_avx_m256_8(RNG* rng_obj, const uint32_t key) : tm_avx_m256_8(rng_obj, key, key_schedule(key, key_schedule::ALL_MAPS)) {}
+
+tm_avx_m256_8::tm_avx_m256_8(RNG* rng_obj, const uint32_t key, const key_schedule& schedule_entries) : TM_base(rng_obj)
 {
 	initialize();
+	this->key = key;
+	this->schedule_entries = schedule_entries;
 }
 
 __forceinline void tm_avx_m256_8::initialize()
@@ -32,13 +26,10 @@ __forceinline void tm_avx_m256_8::initialize()
 		rng->generate_seed_forward_128();
 
 		rng->generate_regular_rng_values_8();
-		rng->generate_regular_rng_values_8_lo();
-		rng->generate_regular_rng_values_8_hi();
 
 		rng->generate_alg0_values_8();
 		rng->generate_alg2_values_256_8();
-		rng->generate_alg4_values_8_lo();
-		rng->generate_alg4_values_8_hi();
+		rng->generate_alg4_values_8();
 		rng->generate_alg5_values_256_8();
 		rng->generate_alg6_values_8();
 
@@ -47,344 +38,493 @@ __forceinline void tm_avx_m256_8::initialize()
 	obj_name = "tm_avx_m256_8";
 }
 
-void tm_avx_m256_8::expand(uint32 key, uint32 data)
+void tm_avx_m256_8::load_data(uint8_t* new_data)
 {
-	uint8* x = (uint8*)working_code_data;
+	for (int i = 0; i < 128; i++)
+		working_code_data[i] = new_data[i];
+}
+
+void tm_avx_m256_8::fetch_data(uint8_t* new_data)
+{
+	for (int i = 0; i < 128; i++)
+		new_data[i] = working_code_data[i];
+}
+
+__forceinline void tm_avx_m256_8::_expand_code(uint32_t data)
+{
+	uint8_t* x = working_code_data;
 	for (int i = 0; i < 128; i += 8)
 	{
-		x[i] = (key >> 24) & 0xFF;
-		x[i + 1] = (key >> 16) & 0xFF;
-		x[i + 2] = (key >> 8) & 0xFF;
-		x[i + 3] = key & 0xFF;
-
-		x[i + 4] = (data >> 24) & 0xFF;
-		x[i + 5] = (data >> 16) & 0xFF;
-		x[i + 6] = (data >> 8) & 0xFF;
-		x[i + 7] = data & 0xFF;
+		x[i]   = (key >> 24) & 0xFF;
+		x[i+1] = (key >> 16) & 0xFF;
+		x[i+2] = (key >> 8)  & 0xFF;
+		x[i+3] = key & 0xFF;
+		x[i+4] = (data >> 24) & 0xFF;
+		x[i+5] = (data >> 16) & 0xFF;
+		x[i+6] = (data >> 8)  & 0xFF;
+		x[i+7] = data & 0xFF;
 	}
-
-	uint16 rng_seed = (key >> 16) & 0xFFFF;
-	for (int i = 0; i < 128; i++)
-	{
-		x[i] += rng->expansion_values_8[rng_seed * 128 + i];
-		x[i] = x[i] & 0xFF;
-	}
+	uint16_t rng_seed = static_cast<uint16_t>((key >> 16) & 0xFFFF);
+	add_alg(&rng_seed, rng->expansion_values_8);
 }
 
-
-void tm_avx_m256_8::load_data(uint8* new_data)
+__forceinline void tm_avx_m256_8::add_alg(uint16_t* rng_seed, uint8_t* rng_start)
 {
-	for (int i = 0; i < 128; i++)
-	{
-		((uint8*)working_code_data)[i] = new_data[i];
-	}
-}
-
-void tm_avx_m256_8::fetch_data(uint8* new_data)
-{
-	for (int i = 0; i < 128; i++)
-	{
-		new_data[i] = ((uint8*)working_code_data)[i];
-	}
-}
-
-void tm_avx_m256_8::run_alg(int algorithm_id, uint16* rng_seed, int iterations)
-{
-	if (algorithm_id == 0)
-	{
-		for (int j = 0; j < iterations; j++)
-		{
-			alg_0(rng_seed);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
-		}
-	}
-	else if (algorithm_id == 1)
-	{
-		for (int j = 0; j < iterations; j++)
-		{
-			alg_1(rng_seed);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
-		}
-	}
-	else if (algorithm_id == 2)
-	{
-		for (int j = 0; j < iterations; j++)
-		{
-			alg_2(rng_seed);
-			*rng_seed = rng->seed_forward_1[*rng_seed];
-		}
-	}
-	else if (algorithm_id == 3)
-	{
-		for (int j = 0; j < iterations; j++)
-		{
-			alg_3(rng_seed);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
-		}
-	}
-	else if (algorithm_id == 4)
-	{
-		for (int j = 0; j < iterations; j++)
-		{
-			alg_4(rng_seed);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
-		}
-	}
-	else if (algorithm_id == 5)
-	{
-		for (int j = 0; j < iterations; j++)
-		{
-			alg_5(rng_seed);
-			*rng_seed = rng->seed_forward_1[*rng_seed];
-		}
-	}
-	else if (algorithm_id == 6)
-	{
-		for (int j = 0; j < iterations; j++)
-		{
-			alg_6(rng_seed);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
-		}
-	}
-	else if (algorithm_id == 7)
-	{
-		for (int j = 0; j < iterations; j++)
-		{
-			alg_7();
-		}
-	}
-}
-
-__forceinline void tm_avx_m256_8::alg_0(uint16 *rng_seed)
-{
-	__m256i mask_FE = _mm256_set1_epi16(0xFEFE);
-
-	for (int i = 0; i < 4; i++)
-	{
-		__m128i cur_val_lo = _mm_loadu_si128((__m128i*)(working_code_data + i * 32));
-		cur_val_lo = _mm_slli_epi16(cur_val_lo, 1);
-
-		__m128i cur_val_hi = _mm_loadu_si128((__m128i*)(working_code_data + i * 32 + 16));
-		cur_val_hi = _mm_slli_epi16(cur_val_hi, 1);
-
-		__m256i cur_val = _mm256_set_m128i(cur_val_hi, cur_val_lo);
-		cur_val = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(mask_FE)));
-
-		__m256i rng_val = _mm256_load_si256((__m256i*)(rng->alg0_values_8 + (*rng_seed * 128) + (i * 32)));
-
-		cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(rng_val)));
-
-		_mm256_store_si256((__m256i*)(working_code_data + i * 32), cur_val);
-	}
-}
-
-__forceinline void tm_avx_m256_8::alg_1(uint16* rng_seed)
-{
-	add_alg(rng->regular_rng_values_8_lo, rng->regular_rng_values_8_hi, rng_seed);
-}
-
-__forceinline void tm_avx_m256_8::alg_2(uint16* rng_seed)
-{
-	__m256i carry = _mm256_load_si256((__m256i*)(rng->alg2_values_256_8 + (*rng_seed * 32)));
-	for (int i = 3; i >= 0; i--)
-	{
-		__m256i cur_val = _mm256_load_si256((__m256i*)(working_code_data + i * 32));
-		__m128i cur_val_lo = _mm256_castsi256_si128(cur_val);
-		cur_val = _mm256_castpd_si256(_mm256_permute2f128_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(cur_val), 1));
-		__m128i cur_val_hi = _mm256_castsi256_si128(cur_val);
-
-		__m256i next_carry = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(_mm256_set_m128i(_mm_slli_si128(cur_val_lo, 15), cur_val_lo)), _mm256_castsi256_pd(_mm256_set_epi16(0x0100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))));
-
-		// Fetch extra carry and apply it to carry
-		__m128i temp_lo = _mm_srli_si128(cur_val_lo, 1);
-		temp_lo = _mm_or_si128(temp_lo, _mm_slli_si128(cur_val_hi, 15));
-		__m128i temp_hi = _mm_srli_si128(cur_val_hi, 1);
-		__m256i cur_val_srl = _mm256_set_m128i(temp_hi, temp_lo);
-		__m256i temp256 = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(cur_val_srl), _mm256_castsi256_pd(_mm256_set_epi16(0, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100))));
-		carry = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(carry), _mm256_castsi256_pd(temp256)));
-
-
-		temp_lo = _mm_srli_epi16(cur_val_lo, 1);
-		temp_hi = _mm_srli_epi16(cur_val_hi, 1);
-		temp256 = _mm256_set_m128i(temp_hi, temp_lo);
-		__m256i part1 = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(temp256), _mm256_castsi256_pd(_mm256_set_epi16(0x007F, 0x007F, 0x007F, 0x007F, 0x007F, 0x007F, 0x007F, 0x007F, 0x007F, 0x007F, 0x007F, 0x007F, 0x007F, 0x007F, 0x007F, 0x007F))));
-
-		temp_lo = _mm_slli_epi16(cur_val_lo, 1);
-		temp_hi = _mm_slli_epi16(cur_val_hi, 1);
-		temp256 = _mm256_set_m128i(temp_hi, temp_lo);
-		__m256i part2 = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(temp256), _mm256_castsi256_pd(_mm256_set_epi16(0xFE00, 0xFE00, 0xFE00, 0xFE00, 0xFE00, 0xFE00, 0xFE00, 0xFE00, 0xFE00, 0xFE00, 0xFE00, 0xFE00, 0xFE00, 0xFE00, 0xFE00, 0xFE00))));
-
-		__m256i part3 = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(cur_val_srl), _mm256_castsi256_pd(_mm256_set_epi16(0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080))));
-
-		cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(part1), _mm256_castsi256_pd(part2)));
-		cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(part3)));
-		cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(carry)));
-
-		_mm256_store_si256((__m256i*)(working_code_data + i * 32), cur_val);
-
-		carry = next_carry;
-	}
-}
-
-__forceinline void tm_avx_m256_8::alg_3(uint16* rng_seed)
-{
-	const uint8* rng_start = rng->regular_rng_values_8 + (*rng_seed * 128);
+	rng_start = rng_start + (*rng_seed) * 128;
 	for (int i = 0; i < 4; i++)
 	{
 		__m256i cur_val = _mm256_load_si256((__m256i*)(working_code_data + i * 32));
-		__m256i rng_val = _mm256_load_si256((__m256i*)(rng_start + (i * 32)));
+		__m256i rng_val = _mm256_load_si256((__m256i*)(rng_start + i * 32));
+		__m128i sum_lo = _mm_add_epi8(_mm256_castsi256_si128(cur_val), _mm256_castsi256_si128(rng_val));
+		__m128i sum_hi = _mm_add_epi8(_mm256_extractf128_si256(cur_val, 1), _mm256_extractf128_si256(rng_val, 1));
+		_mm256_store_si256((__m256i*)(working_code_data + i * 32), _mm256_set_m128i(sum_hi, sum_lo));
+	}
+}
+
+__forceinline void tm_avx_m256_8::xor_alg(uint8_t* values)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		__m256i cur_val = _mm256_load_si256((__m256i*)(working_code_data + i * 32));
+		__m256i rng_val = _mm256_load_si256((__m256i*)(values + i * 32));
 		cur_val = _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(rng_val)));
-
 		_mm256_store_si256((__m256i*)(working_code_data + i * 32), cur_val);
 	}
 }
 
-__forceinline void tm_avx_m256_8::alg_4(uint16* rng_seed)
+__forceinline void tm_avx_m256_8::alg_0(uint16_t* rng_seed)
 {
-	add_alg(rng->alg4_values_8_lo, rng->alg4_values_8_hi, rng_seed);
+	uint8_t* rng_start = rng->alg0_values_8 + (*rng_seed) * 128;
+	for (int i = 0; i < 4; i++)
+	{
+		__m256i cur_val = _mm256_load_si256((__m256i*)(working_code_data + i * 32));
+		__m128i lo = _mm256_castsi256_si128(cur_val);
+		__m128i hi = _mm256_extractf128_si256(cur_val, 1);
+		lo = _mm_slli_epi16(lo, 1);
+		hi = _mm_slli_epi16(hi, 1);
+		cur_val = _mm256_set_m128i(hi, lo);
+		cur_val = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(mask_FE)));
+		__m256i rng_val = _mm256_load_si256((__m256i*)(rng_start + i * 32));
+		cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(rng_val)));
+		_mm256_store_si256((__m256i*)(working_code_data + i * 32), cur_val);
+	}
 }
 
-__forceinline void tm_avx_m256_8::alg_5(uint16* rng_seed)
+__forceinline void tm_avx_m256_8::alg_2_sub(__m256i& cur_val, __m256i& carry)
 {
-	__m256i carry = _mm256_load_si256((__m256i*)(rng->alg5_values_256_8 + (*rng_seed * 32)));
+	__m128i cur_val_lo = _mm256_castsi256_si128(cur_val);
+	__m128i cur_val_hi = _mm256_extractf128_si256(cur_val, 1);
+
+	__m256i next_carry = _mm256_castpd_si256(_mm256_and_pd(
+		_mm256_castsi256_pd(_mm256_set_m128i(_mm_slli_si128(cur_val_lo, 15), cur_val_lo)),
+		_mm256_castsi256_pd(mask_top_01)));
+
+	__m128i temp_lo = _mm_or_si128(_mm_srli_si128(cur_val_lo, 1), _mm_slli_si128(cur_val_hi, 15));
+	__m128i temp_hi = _mm_srli_si128(cur_val_hi, 1);
+	__m256i cur_val_srl = _mm256_set_m128i(temp_hi, temp_lo);
+
+	carry = _mm256_castpd_si256(_mm256_or_pd(
+		_mm256_castsi256_pd(carry),
+		_mm256_castsi256_pd(_mm256_castpd_si256(_mm256_and_pd(
+			_mm256_castsi256_pd(cur_val_srl),
+			_mm256_castsi256_pd(_mm256_set_epi16(
+				0, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100,
+				0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100)))))));
+
+	__m256i part1 = _mm256_castpd_si256(_mm256_and_pd(
+		_mm256_castsi256_pd(_mm256_set_m128i(_mm_srli_epi16(cur_val_hi, 1), _mm_srli_epi16(cur_val_lo, 1))),
+		_mm256_castsi256_pd(_mm256_set1_epi16(0x007F))));
+
+	__m256i part2 = _mm256_castpd_si256(_mm256_and_pd(
+		_mm256_castsi256_pd(_mm256_set_m128i(_mm_slli_epi16(cur_val_hi, 1), _mm_slli_epi16(cur_val_lo, 1))),
+		_mm256_castsi256_pd(_mm256_set1_epi16(static_cast<int16_t>(0xFE00)))));
+
+	__m256i part3 = _mm256_castpd_si256(_mm256_and_pd(
+		_mm256_castsi256_pd(cur_val_srl),
+		_mm256_castsi256_pd(_mm256_set1_epi16(0x0080))));
+
+	cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(part1), _mm256_castsi256_pd(part2)));
+	cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(part3)));
+	cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(carry)));
+	carry = next_carry;
+}
+
+__forceinline void tm_avx_m256_8::alg_2(uint16_t* rng_seed)
+{
+	__m256i carry = _mm256_load_si256((__m256i*)(rng->alg2_values_256_8 + (*rng_seed) * 32));
 	for (int i = 3; i >= 0; i--)
 	{
 		__m256i cur_val = _mm256_load_si256((__m256i*)(working_code_data + i * 32));
-		__m128i cur_val_lo = _mm256_castsi256_si128(cur_val);
-		cur_val = _mm256_castpd_si256(_mm256_permute2f128_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(cur_val), 1));
-		__m128i cur_val_hi = _mm256_castsi256_si128(cur_val);
-
-		// Maybe 128-bit mask it, then reinterpret-cast it to 256 and permute it?
-		__m256i next_carry = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(_mm256_set_m128i(_mm_slli_si128(cur_val_lo, 15), cur_val_lo)), _mm256_castsi256_pd(_mm256_set_epi16(0x8000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))));
-
-		// Fetch extra carry and apply it to carry
-		__m128i temp_lo = _mm_srli_si128(cur_val_lo, 1);
-		temp_lo = _mm_or_si128(temp_lo, _mm_slli_si128(cur_val_hi, 15));
-		__m128i temp_hi = _mm_srli_si128(cur_val_hi, 1);
-		__m256i cur_val_srl = _mm256_set_m128i(temp_hi, temp_lo);
-		__m256i temp256 = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(cur_val_srl), _mm256_castsi256_pd(_mm256_set_epi16(0, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000))));
-		carry = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(carry), _mm256_castsi256_pd(temp256)));
-
-
-		temp_lo = _mm_srli_epi16(cur_val_lo, 1);
-		temp_hi = _mm_srli_epi16(cur_val_hi, 1);
-		temp256 = _mm256_set_m128i(temp_hi, temp_lo);
-		__m256i part1 = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(temp256), _mm256_castsi256_pd(_mm256_set_epi16(0x7F00, 0x7F00, 0x7F00, 0x7F00, 0x7F00, 0x7F00, 0x7F00, 0x7F00, 0x7F00, 0x7F00, 0x7F00, 0x7F00, 0x7F00, 0x7F00, 0x7F00, 0x7F00))));
-
-		temp_lo = _mm_slli_epi16(cur_val_lo, 1);
-		temp_hi = _mm_slli_epi16(cur_val_hi, 1);
-		temp256 = _mm256_set_m128i(temp_hi, temp_lo);
-		__m256i part2 = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(temp256), _mm256_castsi256_pd(_mm256_set_epi16(0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE, 0x00FE))));
-
-		__m256i part3 = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(cur_val_srl), _mm256_castsi256_pd(_mm256_set_epi16(0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001))));
-
-		cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(part1), _mm256_castsi256_pd(part2)));
-		cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(part3)));
-		cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(carry)));
-
+		alg_2_sub(cur_val, carry);
 		_mm256_store_si256((__m256i*)(working_code_data + i * 32), cur_val);
-
-		carry = next_carry;
 	}
 }
 
-__forceinline void tm_avx_m256_8::alg_6(uint16* rng_seed)
+__forceinline void tm_avx_m256_8::alg_3(uint16_t* rng_seed)
 {
-	__m256i mask_7F = _mm256_set1_epi16(0x7F7F);
+	xor_alg(rng->regular_rng_values_8 + (*rng_seed) * 128);
+}
+
+__forceinline void tm_avx_m256_8::alg_5_sub(__m256i& cur_val, __m256i& carry)
+{
+	__m128i cur_val_lo = _mm256_castsi256_si128(cur_val);
+	__m128i cur_val_hi = _mm256_extractf128_si256(cur_val, 1);
+
+	__m256i next_carry = _mm256_castpd_si256(_mm256_and_pd(
+		_mm256_castsi256_pd(_mm256_set_m128i(_mm_slli_si128(cur_val_lo, 15), cur_val_lo)),
+		_mm256_castsi256_pd(mask_top_80)));
+
+	__m128i temp_lo = _mm_or_si128(_mm_srli_si128(cur_val_lo, 1), _mm_slli_si128(cur_val_hi, 15));
+	__m128i temp_hi = _mm_srli_si128(cur_val_hi, 1);
+	__m256i cur_val_srl = _mm256_set_m128i(temp_hi, temp_lo);
+
+	carry = _mm256_castpd_si256(_mm256_or_pd(
+		_mm256_castsi256_pd(carry),
+		_mm256_castsi256_pd(_mm256_castpd_si256(_mm256_and_pd(
+			_mm256_castsi256_pd(cur_val_srl),
+			_mm256_castsi256_pd(_mm256_set_epi16(
+				0, static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000),
+				static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000),
+				static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000),
+				static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000))))))));
+
+	__m256i part1 = _mm256_castpd_si256(_mm256_and_pd(
+		_mm256_castsi256_pd(_mm256_set_m128i(_mm_srli_epi16(cur_val_hi, 1), _mm_srli_epi16(cur_val_lo, 1))),
+		_mm256_castsi256_pd(_mm256_set1_epi16(0x7F00))));
+
+	__m256i part2 = _mm256_castpd_si256(_mm256_and_pd(
+		_mm256_castsi256_pd(_mm256_set_m128i(_mm_slli_epi16(cur_val_hi, 1), _mm_slli_epi16(cur_val_lo, 1))),
+		_mm256_castsi256_pd(_mm256_set1_epi16(0x00FE))));
+
+	__m256i part3 = _mm256_castpd_si256(_mm256_and_pd(
+		_mm256_castsi256_pd(cur_val_srl),
+		_mm256_castsi256_pd(_mm256_set1_epi16(0x0001))));
+
+	cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(part1), _mm256_castsi256_pd(part2)));
+	cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(part3)));
+	cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(carry)));
+	carry = next_carry;
+}
+
+__forceinline void tm_avx_m256_8::alg_5(uint16_t* rng_seed)
+{
+	__m256i carry = _mm256_load_si256((__m256i*)(rng->alg5_values_256_8 + (*rng_seed) * 32));
+	for (int i = 3; i >= 0; i--)
+	{
+		__m256i cur_val = _mm256_load_si256((__m256i*)(working_code_data + i * 32));
+		alg_5_sub(cur_val, carry);
+		_mm256_store_si256((__m256i*)(working_code_data + i * 32), cur_val);
+	}
+}
+
+__forceinline void tm_avx_m256_8::alg_6(uint16_t* rng_seed)
+{
+	uint8_t* rng_start = rng->alg6_values_8 + (*rng_seed) * 128;
 	for (int i = 0; i < 4; i++)
 	{
-		__m128i cur_val_lo = _mm_loadu_si128((__m128i*)(working_code_data + i * 32));
-		cur_val_lo = _mm_srli_epi16(cur_val_lo, 1);
-
-		__m128i cur_val_hi = _mm_loadu_si128((__m128i*)(working_code_data + i * 32 + 16));
-		cur_val_hi = _mm_srli_epi16(cur_val_hi, 1);
-
-		__m256i cur_val = _mm256_set_m128i(cur_val_hi, cur_val_lo);
+		__m256i cur_val = _mm256_load_si256((__m256i*)(working_code_data + i * 32));
+		__m128i lo = _mm256_castsi256_si128(cur_val);
+		__m128i hi = _mm256_extractf128_si256(cur_val, 1);
+		lo = _mm_srli_epi16(lo, 1);
+		hi = _mm_srli_epi16(hi, 1);
+		cur_val = _mm256_set_m128i(hi, lo);
 		cur_val = _mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(mask_7F)));
-
-		__m256i rng_val = _mm256_load_si256((__m256i*)(rng->alg6_values_8 + (*rng_seed * 128) + (i * 32)));
-
+		__m256i rng_val = _mm256_load_si256((__m256i*)(rng_start + i * 32));
 		cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(rng_val)));
-
 		_mm256_store_si256((__m256i*)(working_code_data + i * 32), cur_val);
 	}
 }
 
 __forceinline void tm_avx_m256_8::alg_7()
 {
-	__m256i mask = _mm256_set1_epi16(0xFFFF);
-
-	_mm256_store_si256((__m256i*)(working_code_data), _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(_mm256_load_si256((__m256i*)(working_code_data))), _mm256_castsi256_pd(mask))));
-	_mm256_store_si256((__m256i*)(working_code_data + 32), _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(_mm256_load_si256((__m256i*)(working_code_data + 32))), _mm256_castsi256_pd(mask))));
-	_mm256_store_si256((__m256i*)(working_code_data + 64), _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(_mm256_load_si256((__m256i*)(working_code_data + 64))), _mm256_castsi256_pd(mask))));
-	_mm256_store_si256((__m256i*)(working_code_data + 96), _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(_mm256_load_si256((__m256i*)(working_code_data + 96))), _mm256_castsi256_pd(mask))));
-
-}
-
-__forceinline void tm_avx_m256_8::add_alg(const uint8* addition_values_lo, const uint8* addition_values_hi, uint16 * rng_seed)
-{
-	__m128i mask_lo = _mm_set_epi8(0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0);
-	__m128i mask_hi = _mm_set_epi8(0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF);
-
 	for (int i = 0; i < 4; i++)
 	{
-		__m128i cur_val_lo = _mm_loadu_si128((__m128i*)(working_code_data + i * 32));
-		__m128i cur_val_hi = _mm_loadu_si128((__m128i*)(working_code_data + i * 32 + 16));
-		__m128i rng_val_lo_lo = _mm_loadu_si128((__m128i*)(addition_values_lo + (*rng_seed * 128) + (i * 32)));
-		__m128i rng_val_lo_hi = _mm_loadu_si128((__m128i*)(addition_values_lo + (*rng_seed * 128) + (i * 32) + 16));
-		__m128i rng_val_hi_lo = _mm_loadu_si128((__m128i*)(addition_values_hi + (*rng_seed * 128) + (i * 32)));
-		__m128i rng_val_hi_hi = _mm_loadu_si128((__m128i*)(addition_values_hi + (*rng_seed * 128) + (i * 32) + 16));
-
-		__m128i sum_lo_lo = _mm_and_si128(_mm_add_epi16(_mm_and_si128(cur_val_lo, mask_lo), rng_val_lo_lo), mask_lo);
-		__m128i sum_lo_hi = _mm_and_si128(_mm_add_epi16(_mm_and_si128(cur_val_lo, mask_hi), rng_val_hi_lo), mask_hi);
-
-		__m128i sum_hi_lo = _mm_and_si128(_mm_add_epi16(_mm_and_si128(cur_val_hi, mask_lo), rng_val_lo_hi), mask_lo);
-		__m128i sum_hi_hi = _mm_and_si128(_mm_add_epi16(_mm_and_si128(cur_val_hi, mask_hi), rng_val_hi_hi), mask_hi);
-
-		__m256i sum_lo = _mm256_set_m128i(sum_hi_lo, sum_lo_lo);
-		__m256i sum_hi = _mm256_set_m128i(sum_hi_hi, sum_lo_hi);
-
-		__m256i cur_val = _mm256_castpd_si256(_mm256_or_pd(_mm256_castsi256_pd(sum_lo), _mm256_castsi256_pd(sum_hi)));
-
+		__m256i cur_val = _mm256_load_si256((__m256i*)(working_code_data + i * 32));
+		cur_val = _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(cur_val), _mm256_castsi256_pd(mask_FF)));
 		_mm256_store_si256((__m256i*)(working_code_data + i * 32), cur_val);
 	}
 }
 
-void tm_avx_m256_8::run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
+__forceinline void tm_avx_m256_8::_run_alg(int algorithm_id, uint16_t* rng_seed)
 {
-	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
-	uint16 nibble_selector = schedule_entry.nibble_selector;
-
-	// Next, the working code is processed with the same steps 16 times:
-	for (int i = 0; i < 16; i++)
+	if (algorithm_id == 0)
 	{
-		// Get the highest bit of the nibble selector to use as a flag
-		unsigned char nibble = (nibble_selector >> 15) & 0x01;
-		// Shift the nibble selector up one bit
-		nibble_selector = nibble_selector << 1;
-
-		// If the flag is a 1, get the high nibble of the current byte
-		// Otherwise use the low nibble
-		unsigned char current_byte = (uint8)working_code_data[i];
-
-		if (nibble == 1)
-		{
-			current_byte = current_byte >> 4;
-		}
-
-		// Mask off only 3 bits
-		unsigned char alg_id = (current_byte >> 1) & 0x07;
-
-		run_alg(alg_id, &rng_seed, 1);
+		alg_0(rng_seed);
+		*rng_seed = rng->seed_forward_128[*rng_seed];
+	}
+	else if (algorithm_id == 1 || algorithm_id == 4)
+	{
+		uint8_t* rng_start = (algorithm_id == 4) ? rng->alg4_values_8 : rng->regular_rng_values_8;
+		add_alg(rng_seed, rng_start);
+		*rng_seed = rng->seed_forward_128[*rng_seed];
+	}
+	else if (algorithm_id == 2)
+	{
+		alg_2(rng_seed);
+		*rng_seed = rng->seed_forward_1[*rng_seed];
+	}
+	else if (algorithm_id == 3)
+	{
+		alg_3(rng_seed);
+		*rng_seed = rng->seed_forward_128[*rng_seed];
+	}
+	else if (algorithm_id == 5)
+	{
+		alg_5(rng_seed);
+		*rng_seed = rng->seed_forward_1[*rng_seed];
+	}
+	else if (algorithm_id == 6)
+	{
+		alg_6(rng_seed);
+		*rng_seed = rng->seed_forward_128[*rng_seed];
+	}
+	else if (algorithm_id == 7)
+	{
+		alg_7();
 	}
 }
 
-void tm_avx_m256_8::run_all_maps(const key_schedule& schedule_entries)
+__forceinline void tm_avx_m256_8::_run_one_map(const key_schedule::key_schedule_entry& schedule_entry)
 {
-	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries.entries.begin(); it != schedule_entries.entries.end(); it++)
+	uint16_t rng_seed = static_cast<uint16_t>((schedule_entry.rng1 << 8) | schedule_entry.rng2);
+	uint16_t nibble_selector = schedule_entry.nibble_selector;
+
+	for (int i = 0; i < 16; i++)
 	{
-		run_one_map(*it);
+		uint8_t nibble = static_cast<uint8_t>((nibble_selector >> 15) & 0x01);
+		nibble_selector = static_cast<uint16_t>(nibble_selector << 1);
+
+		uint8_t current_byte = working_code_data[i];
+		if (nibble == 1)
+			current_byte = static_cast<uint8_t>(current_byte >> 4);
+
+		uint8_t algorithm_id = static_cast<uint8_t>((current_byte >> 1) & 0x07);
+		_run_alg(algorithm_id, &rng_seed);
 	}
+}
+
+__forceinline void tm_avx_m256_8::_run_all_maps()
+{
+	for (auto it = schedule_entries->entries.begin(); it != schedule_entries->entries.end(); it++)
+		_run_one_map(*it);
+}
+
+__forceinline void tm_avx_m256_8::_decrypt_carnival_world()
+{
+	xor_alg(carnival_world_data);
+}
+
+__forceinline void tm_avx_m256_8::_decrypt_other_world()
+{
+	xor_alg(other_world_data);
+}
+
+__forceinline void tm_avx_m256_8::mid_sum(__m128i& sum, __m256i& working_code, __m256i& sum_mask, __m128i& lo_mask)
+{
+	__m256i temp_masked = _mm256_castpd_si256(_mm256_and_pd(
+		_mm256_castsi256_pd(working_code), _mm256_castsi256_pd(sum_mask)));
+	__m128i temp_lo = _mm256_castsi256_si128(temp_masked);
+	__m128i temp_hi = _mm256_extractf128_si256(temp_masked, 1);
+	sum = _mm_add_epi16(sum, _mm_and_si128(temp_lo, lo_mask));
+	sum = _mm_add_epi16(sum, _mm_srli_epi16(temp_lo, 8));
+	sum = _mm_add_epi16(sum, _mm_and_si128(temp_hi, lo_mask));
+	sum = _mm_add_epi16(sum, _mm_srli_epi16(temp_hi, 8));
+}
+
+__forceinline uint16_t tm_avx_m256_8::masked_checksum(uint8_t* mask)
+{
+	__m128i sum = _mm_setzero_si128();
+	__m128i lo_mask = _mm_set1_epi16(0x00FF);
+	for (int i = 0; i < 4; i++)
+	{
+		__m256i cur_val = _mm256_load_si256((__m256i*)(working_code_data + i * 32));
+		__m256i sum_mask = _mm256_load_si256((__m256i*)(mask + i * 32));
+		mid_sum(sum, cur_val, sum_mask, lo_mask);
+	}
+	int code_sum = _mm_extract_epi16(sum, 0) +
+		_mm_extract_epi16(sum, 1) +
+		_mm_extract_epi16(sum, 2) +
+		_mm_extract_epi16(sum, 3) +
+		_mm_extract_epi16(sum, 4) +
+		_mm_extract_epi16(sum, 5) +
+		_mm_extract_epi16(sum, 6) +
+		_mm_extract_epi16(sum, 7);
+	return static_cast<uint16_t>(code_sum);
+}
+
+__forceinline uint16_t tm_avx_m256_8::_calculate_carnival_world_checksum()
+{
+	return masked_checksum(carnival_world_checksum_mask);
+}
+
+__forceinline uint16_t tm_avx_m256_8::_calculate_other_world_checksum()
+{
+	return masked_checksum(other_world_checksum_mask);
+}
+
+__forceinline uint16_t tm_avx_m256_8::fetch_checksum_value(uint8_t code_length)
+{
+	uint8_t checksum_low = working_code_data[127 - code_length];
+	uint8_t checksum_hi = working_code_data[127 - (code_length + 1)];
+	return static_cast<uint16_t>((checksum_hi << 8) | checksum_low);
+}
+
+__forceinline uint16_t tm_avx_m256_8::_fetch_carnival_world_checksum_value()
+{
+	return fetch_checksum_value(CARNIVAL_WORLD_CODE_LENGTH - 2);
+}
+
+__forceinline uint16_t tm_avx_m256_8::_fetch_other_world_checksum_value()
+{
+	return fetch_checksum_value(OTHER_WORLD_CODE_LENGTH - 2);
+}
+
+__forceinline bool tm_avx_m256_8::check_carnival_world_checksum()
+{
+	return _calculate_carnival_world_checksum() == _fetch_carnival_world_checksum_value();
+}
+
+__forceinline bool tm_avx_m256_8::check_other_world_checksum()
+{
+	return _calculate_other_world_checksum() == _fetch_other_world_checksum_value();
+}
+
+template<bool CHECK_CHECKSUM, int WORLD>
+std::optional<uint8_t> tm_avx_m256_8::_decrypt_check()
+{
+	ALIGNED(32) uint8_t saved[128];
+	_mm256_store_si256((__m256i*)saved,       _mm256_load_si256((__m256i*)working_code_data));
+	_mm256_store_si256((__m256i*)(saved+32),  _mm256_load_si256((__m256i*)(working_code_data+32)));
+	_mm256_store_si256((__m256i*)(saved+64),  _mm256_load_si256((__m256i*)(working_code_data+64)));
+	_mm256_store_si256((__m256i*)(saved+96),  _mm256_load_si256((__m256i*)(working_code_data+96)));
+
+	if constexpr (WORLD == CARNIVAL_WORLD)
+		_decrypt_carnival_world();
+	else
+		_decrypt_other_world();
+
+	if constexpr (CHECK_CHECKSUM)
+	{
+		bool ok = (WORLD == CARNIVAL_WORLD) ? check_carnival_world_checksum() : check_other_world_checksum();
+		if (!ok)
+		{
+			_mm256_store_si256((__m256i*)working_code_data,      _mm256_load_si256((__m256i*)saved));
+			_mm256_store_si256((__m256i*)(working_code_data+32), _mm256_load_si256((__m256i*)(saved+32)));
+			_mm256_store_si256((__m256i*)(working_code_data+64), _mm256_load_si256((__m256i*)(saved+64)));
+			_mm256_store_si256((__m256i*)(working_code_data+96), _mm256_load_si256((__m256i*)(saved+96)));
+			return std::nullopt;
+		}
+	}
+
+	auto result = check_machine_code(working_code_data, WORLD);
+	_mm256_store_si256((__m256i*)working_code_data,      _mm256_load_si256((__m256i*)saved));
+	_mm256_store_si256((__m256i*)(working_code_data+32), _mm256_load_si256((__m256i*)(saved+32)));
+	_mm256_store_si256((__m256i*)(working_code_data+64), _mm256_load_si256((__m256i*)(saved+64)));
+	_mm256_store_si256((__m256i*)(working_code_data+96), _mm256_load_si256((__m256i*)(saved+96)));
+	return result;
+}
+
+template<bool CHECK_CHECKSUMS>
+__forceinline void tm_avx_m256_8::_run_bruteforce(uint32_t data, uint8_t* result_data, uint32_t* result_size)
+{
+	_expand_code(data);
+	_run_all_maps();
+
+	auto carnival_flags = _decrypt_check<CHECK_CHECKSUMS, CARNIVAL_WORLD>();
+	if constexpr (CHECK_CHECKSUMS)
+	{
+		if (carnival_flags.has_value())
+		{
+			*((uint32_t*)(&result_data[*result_size])) = data;
+			result_data[*result_size + 4] = *carnival_flags;
+			*result_size += 5;
+			return;
+		}
+	}
+
+	auto other_flags = _decrypt_check<CHECK_CHECKSUMS, OTHER_WORLD>();
+	if constexpr (CHECK_CHECKSUMS)
+	{
+		if (other_flags.has_value())
+		{
+			*((uint32_t*)(&result_data[*result_size])) = data;
+			result_data[*result_size + 4] = *other_flags;
+			*result_size += 5;
+			return;
+		}
+	}
+	else
+	{
+		result_data[*result_size] = carnival_flags.value();
+		result_data[*result_size + 1] = other_flags.value();
+		*result_size += 2;
+	}
+}
+
+void tm_avx_m256_8::run_bruteforce_boinc(uint32_t start_data, uint32_t amount_to_run, void(*report_progress)(double), uint8_t* result_data, uint32_t result_max_size, uint32_t* result_size)
+{
+	for (uint32_t i = 0; i < amount_to_run; i++)
+	{
+		if ((result_max_size - *result_size) < 5)
+			return;
+		_run_bruteforce<true>(start_data + i, result_data, result_size);
+		report_progress(static_cast<double>(i + 1) / static_cast<double>(amount_to_run));
+	}
+}
+
+void tm_avx_m256_8::compute_challenge_flags(uint32_t data, uint8_t& carnival_flags_out, uint8_t& other_flags_out)
+{
+	uint8_t result_data[2];
+	uint32_t result_pos = 0;
+	_run_bruteforce<false>(data, result_data, &result_pos);
+	carnival_flags_out = result_data[0];
+	other_flags_out = result_data[1];
+}
+
+void tm_avx_m256_8::test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed)
+{
+	load_data(data);
+	_run_alg(algorithm_id, rng_seed);
+	fetch_data(data);
+}
+
+void tm_avx_m256_8::test_algorithm_n(int algorithm_id, uint8_t* data, uint16_t* rng_seed, int iterations)
+{
+	load_data(data);
+	for (int i = 0; i < iterations; i++)
+		_run_alg(algorithm_id, rng_seed);
+	fetch_data(data);
+}
+
+void tm_avx_m256_8::test_expansion(uint32_t data, uint8_t* result_out)
+{
+	_expand_code(data);
+	fetch_data(result_out);
+}
+
+void tm_avx_m256_8::test_bruteforce_data(uint32_t data, uint8_t* result_out)
+{
+	_expand_code(data);
+	_run_all_maps();
+	fetch_data(result_out);
+}
+
+bool tm_avx_m256_8::test_bruteforce_checksum(uint32_t data, int world)
+{
+	_expand_code(data);
+	_run_all_maps();
+	if (world == CARNIVAL_WORLD)
+		return _decrypt_check<true, CARNIVAL_WORLD>().has_value();
+	else
+		return _decrypt_check<true, OTHER_WORLD>().has_value();
 }
 
 bool tm_avx_m256_8::initialized = false;
+
+alignas(32) const __m256i tm_avx_m256_8::mask_FF = _mm256_set1_epi16(static_cast<int16_t>(0xFFFF));
+alignas(32) const __m256i tm_avx_m256_8::mask_FE = _mm256_set1_epi16(static_cast<int16_t>(0xFEFE));
+alignas(32) const __m256i tm_avx_m256_8::mask_7F = _mm256_set1_epi16(0x7F7F);
+alignas(32) const __m256i tm_avx_m256_8::mask_80 = _mm256_set1_epi16(static_cast<int16_t>(0x8080));
+alignas(32) const __m256i tm_avx_m256_8::mask_01 = _mm256_set1_epi16(0x0101);
+alignas(32) const __m256i tm_avx_m256_8::mask_top_01 = _mm256_set_epi16(0x0100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+alignas(32) const __m256i tm_avx_m256_8::mask_top_80 = _mm256_set_epi16(static_cast<int16_t>(0x8000), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);

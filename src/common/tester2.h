@@ -373,9 +373,15 @@ void run_full_speed_test(tm_tester tester, int iterations)
 	uint32 key = 0x2CA5B42D;
 	key_schedule schedule_data(key, key_schedule::ALL_MAPS);
 
+	((tm_avx_r128s_map_8*)tester.UUT)->generate_map_rng(schedule_data);
+
 	auto start = clock::now();
 	for (int i = 0; i < iterations; i++)
 	{
+		if ((i%1000000) == 0)
+		{
+			std::cout << i << "\n";
+		}
 		tester.run_full_process(key, i, schedule_data);
 	}
 	auto end = clock::now();

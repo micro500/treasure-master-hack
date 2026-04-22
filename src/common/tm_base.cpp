@@ -1,14 +1,13 @@
-#include "data_sizes.h"
 #include "tm_base.h"
 
-TM_base::TM_base(RNG * rng_obj) : rng(rng_obj)
+TM_base::TM_base(RNG* rng_obj) : rng(rng_obj), key(0), schedule_entries(std::nullopt), carnival_world_data_shuffled(), carnival_world_checksum_mask_shuffled(), other_world_data_shuffled(), other_world_checksum_mask_shuffled(), working_code_data()
 {
 }
 
-uint8 TM_base::check_machine_code(uint8* data, int world)
+uint8_t TM_base::check_machine_code(uint8_t* data, int world)
 {
-	uint8 code_length;
-	uint8 entry_addrs[6];
+	uint8_t code_length;
+	uint8_t entry_addrs[6];
 	if (world == CARNIVAL_WORLD)
 	{
 		code_length = CARNIVAL_WORLD_CODE_LENGTH;
@@ -32,13 +31,13 @@ uint8 TM_base::check_machine_code(uint8* data, int world)
 		entry_addrs[5] = 0xFF;
 	}
 
-	uint8 active_entries[6] = { 0,0,0,0,0,0 };
-	uint8 hit_entries[6] = { 0,0,0,0,0,0 };
-	uint8 valid_entries[6] = { 0,0,0,0,0,0 };
+	uint8_t active_entries[6] = { 0,0,0,0,0,0 };
+	uint8_t hit_entries[6] = { 0,0,0,0,0,0 };
+	uint8_t valid_entries[6] = { 0,0,0,0,0,0 };
 	int last_entry = -1;
 
-	uint8 result = world;
-	uint8 next_entry_addr = entry_addrs[0];
+	uint8_t result = static_cast<uint8_t>(world);
+	uint8_t next_entry_addr = entry_addrs[0];
 
 	for (int i = 0; i < code_length - 2; i++)
 	{
@@ -55,7 +54,7 @@ uint8 TM_base::check_machine_code(uint8* data, int world)
 			next_entry_addr = entry_addrs[last_entry + 1];
 		}
 
-		uint8 opcode = data[reverse_offset(i)];
+		uint8_t opcode = data[reverse_offset(i)];
 
 		// illegal/jam: cancel all active, do not mark valid
 		// jump: mark all valid, then cancel all active
@@ -116,7 +115,7 @@ uint8 TM_base::check_machine_code(uint8* data, int world)
 		{
 			for (int j = entry_addrs[i]; j < code_length - 2; j++)
 			{
-				uint8 opcode = data[reverse_offset(j)];
+				uint8_t opcode = data[reverse_offset(j)];
 				if ((opcode_type[opcode] & OP_JAM) || (opcode_type[opcode] & OP_ILLEGAL))
 				{
 					all_entries_valid = false;
@@ -145,7 +144,7 @@ uint8 TM_base::check_machine_code(uint8* data, int world)
 	return result;
 }
 
-void TM_base::shuffle_mem(uint8* src, uint8* dest, int bits, bool packing_16)
+void TM_base::shuffle_mem(uint8_t* src, uint8_t* dest, int bits, bool packing_16)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -153,7 +152,7 @@ void TM_base::shuffle_mem(uint8* src, uint8* dest, int bits, bool packing_16)
 	}
 }
 
-void TM_base::unshuffle_mem(uint8* src, uint8* dest, int bits, bool packing_16)
+void TM_base::unshuffle_mem(uint8_t* src, uint8_t* dest, int bits, bool packing_16)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -161,7 +160,7 @@ void TM_base::unshuffle_mem(uint8* src, uint8* dest, int bits, bool packing_16)
 	}
 }
 
-uint8 TM_base::opcode_bytes_used[0x100] = { 1,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
+uint8_t TM_base::opcode_bytes_used[0x100] = { 1,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
 											2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,
 											3,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
 											2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0,
@@ -178,11 +177,11 @@ uint8 TM_base::opcode_bytes_used[0x100] = { 1,2,0,0,2,2,2,0,1,2,1,0,3,3,3,0,
 											2,2,2,0,2,2,2,0,1,2,1,0,3,3,3,0,
 											2,2,0,0,2,2,2,0,1,3,1,0,2,3,3,0 };
 
-uint8 TM_base::opcode_type[0x100] = { 0, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_NOP2, 0, OP_NOP2, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, OP_NOP2, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_ILLEGAL, 0, OP_ILLEGAL, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL };
+uint8_t TM_base::opcode_type[0x100] = { 0, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, OP_NOP2, 0, OP_NOP2, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, OP_NOP2, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_ILLEGAL, 0, OP_ILLEGAL, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP, OP_ILLEGAL, 0, 0, 0, OP_ILLEGAL, OP_JUMP, 0, OP_JAM, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL, 0, 0, OP_NOP2, OP_ILLEGAL, OP_NOP2, 0, 0, OP_ILLEGAL };
 
 
 
-ALIGNED(64) uint8 TM_base::carnival_world_data[128] = 
+ALIGNED(64) uint8_t TM_base::carnival_world_data[128] = 
 {   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x3D, 0x5E, 0xA1, 0xA6, 0xC8, 0x23,
 	0xD7, 0x6E, 0x3F, 0x7C, 0xD2, 0x46, 0x1B, 0x9F, 0xAB, 0xD2,
@@ -197,7 +196,7 @@ ALIGNED(64) uint8 TM_base::carnival_world_data[128] =
 	0x5A, 0x0B, 0x2A, 0x3C, 0x09, 0xFA, 0xA3, 0x59, 0x3C, 0xA1,
 	0xF0, 0x90, 0x4F, 0x46, 0x9E, 0xD1, 0xD7, 0xF4 };
 
-ALIGNED(64) uint8 TM_base::carnival_world_checksum_mask[128] =
+ALIGNED(64) uint8_t TM_base::carnival_world_checksum_mask[128] =
 {   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -212,7 +211,7 @@ ALIGNED(64) uint8 TM_base::carnival_world_checksum_mask[128] =
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
-ALIGNED(64) uint8 TM_base::other_world_data[128] = 
+ALIGNED(64) uint8_t TM_base::other_world_data[128] = 
 {   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -227,7 +226,7 @@ ALIGNED(64) uint8 TM_base::other_world_data[128] =
 	0x2D, 0x6E, 0x36, 0x93, 0x1C, 0x1A, 0x52, 0x03, 0x18, 0xE4,
 	0x5E, 0xB1, 0xC1, 0xBD, 0x44, 0xFB, 0xF1, 0x50 };
 
-ALIGNED(64) uint8 TM_base::other_world_checksum_mask[128] = 
+ALIGNED(64) uint8_t TM_base::other_world_checksum_mask[128] = 
 {   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

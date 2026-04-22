@@ -1,23 +1,17 @@
-#include <stdio.h>
-#include <mmintrin.h>  //MMX
-#include <xmmintrin.h> //SSE
-#include <emmintrin.h> //SSE2
-#include <pmmintrin.h> //SSE3
-#include <tmmintrin.h> //SSSE3
-#include <smmintrin.h> //SSE4.1
-#include <nmmintrin.h> //SSE4.2
-//#include <ammintrin.h> //SSE4A
-#include <immintrin.h> //AVX
-//#include <zmmintrin.h> //AVX512
-
-#include "data_sizes.h"
 #include "tm_avx_r128_8.h"
 
 tm_avx_r128_8::tm_avx_r128_8(RNG* rng_obj) : tm_avx_r128_8(rng_obj, 0) {}
 
 tm_avx_r128_8::tm_avx_r128_8(RNG* rng_obj, const uint32_t key) : tm_avx_r128_8(rng_obj, key, key_schedule(key, key_schedule::ALL_MAPS)) {}
 
-tm_avx_r128_8::tm_avx_r128_8(RNG* rng_obj, const uint32_t key, const key_schedule& schedule_entries) : TM_base(rng_obj)
+tm_avx_r128_8::tm_avx_r128_8(RNG* rng_obj, const uint32_t key, const key_schedule& schedule_entries) : TM_base(rng_obj),
+	mask_FF(_mm_set1_epi8(static_cast<int8_t>(0xFF))),
+	mask_FE(_mm_set1_epi8(static_cast<int8_t>(0xFE))),
+	mask_7F(_mm_set1_epi8(0x7F)),
+	mask_80(_mm_set1_epi8(static_cast<int8_t>(0x80))),
+	mask_01(_mm_set1_epi8(0x01)),
+	mask_top_01(_mm_set_epi16(0x0100, 0, 0, 0, 0, 0, 0, 0)),
+	mask_top_80(_mm_set_epi16(static_cast<int16_t>(0x8000), 0, 0, 0, 0, 0, 0, 0))
 {
 	initialize();
 	this->key = key;
@@ -46,7 +40,7 @@ __forceinline void tm_avx_r128_8::initialize()
 	obj_name = "tm_avx_r128_8";
 }
 
-__forceinline void tm_avx_r128_8::_load_from_mem(WC_ARGS)
+__forceinline void tm_avx_r128_8::_load_from_mem(WC_ARGS_128)
 {
 	wc0 = _mm_load_si128((__m128i*)(working_code_data));
 	wc1 = _mm_load_si128((__m128i*)(working_code_data + 16));
@@ -58,7 +52,7 @@ __forceinline void tm_avx_r128_8::_load_from_mem(WC_ARGS)
 	wc7 = _mm_load_si128((__m128i*)(working_code_data + 112));
 }
 
-__forceinline void tm_avx_r128_8::_store_to_mem(WC_ARGS)
+__forceinline void tm_avx_r128_8::_store_to_mem(WC_ARGS_128)
 {
 	_mm_store_si128((__m128i*)(working_code_data), wc0);
 	_mm_store_si128((__m128i*)(working_code_data + 16), wc1);
@@ -70,11 +64,11 @@ __forceinline void tm_avx_r128_8::_store_to_mem(WC_ARGS)
 	_mm_store_si128((__m128i*)(working_code_data + 112), wc7);
 }
 
-__forceinline void tm_avx_r128_8::_expand_code(uint32 data, WC_ARGS)
+__forceinline void tm_avx_r128_8::_expand_code(uint32_t data, WC_ARGS_128)
 {
 	// Build 16-byte pattern: [K0,K1,K2,K3,D0,D1,D2,D3] repeated twice
-	uint64 x = ((uint64)key << 32) | data;
-	__m128i a = _mm_cvtsi64_si128(x);
+	uint64_t x = ((uint64_t)key << 32) | data;
+	__m128i a = _mm_cvtsi64_si128(static_cast<int64_t>(x));
 	// Reverse byte order twice: bytes 7..0 then 7..0 of x to fill 128 bits
 	__m128i nat_mask = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7);
 	__m128i pattern = _mm_shuffle_epi8(a, nat_mask);
@@ -88,13 +82,13 @@ __forceinline void tm_avx_r128_8::_expand_code(uint32 data, WC_ARGS)
 	wc6 = pattern;
 	wc7 = pattern;
 
-	uint8* rng_start = rng->expansion_values_8;
-	uint16 rng_seed = (key >> 16) & 0xFFFF;
+	uint8_t* rng_start = rng->expansion_values_8;
+	uint16_t rng_seed = (key >> 16) & 0xFFFF;
 
-	add_alg(WC_PASS, &rng_seed, rng_start);
+	add_alg(WC_PASS_128, &rng_seed, rng_start);
 }
 
-void tm_avx_r128_8::load_data(uint8* new_data)
+void tm_avx_r128_8::load_data(uint8_t* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -102,7 +96,7 @@ void tm_avx_r128_8::load_data(uint8* new_data)
 	}
 }
 
-void tm_avx_r128_8::fetch_data(uint8* new_data)
+void tm_avx_r128_8::fetch_data(uint8_t* new_data)
 {
 	for (int i = 0; i < 128; i++)
 	{
@@ -110,54 +104,54 @@ void tm_avx_r128_8::fetch_data(uint8* new_data)
 	}
 }
 
-__forceinline void tm_avx_r128_8::_run_alg(WC_ARGS, int algorithm_id, uint16* rng_seed)
+__forceinline void tm_avx_r128_8::_run_alg(WC_ARGS_128, int algorithm_id, uint16_t* rng_seed)
 {
 	if (algorithm_id == 0)
 	{
-		alg_0(WC_PASS, rng_seed);
+		alg_0(WC_PASS_128, rng_seed);
 		*rng_seed = rng->seed_forward_128[*rng_seed];
 	}
 	else if (algorithm_id == 1 || algorithm_id == 4)
 	{
-		uint8* rng_start = rng->regular_rng_values_8;
+		uint8_t* rng_start = rng->regular_rng_values_8;
 
 		if (algorithm_id == 4)
 		{
 			rng_start = rng->alg4_values_8;
 		}
 
-		add_alg(WC_PASS, rng_seed, rng_start);
+		add_alg(WC_PASS_128, rng_seed, rng_start);
 		*rng_seed = rng->seed_forward_128[*rng_seed];
 	}
 	else if (algorithm_id == 2)
 	{
-		alg_2(WC_PASS, rng_seed);
+		alg_2(WC_PASS_128, rng_seed);
 		*rng_seed = rng->seed_forward_1[*rng_seed];
 	}
 	else if (algorithm_id == 3)
 	{
-		alg_3(WC_PASS, rng_seed);
+		alg_3(WC_PASS_128, rng_seed);
 		*rng_seed = rng->seed_forward_128[*rng_seed];
 	}
 	else if (algorithm_id == 5)
 	{
-		alg_5(WC_PASS, rng_seed);
+		alg_5(WC_PASS_128, rng_seed);
 		*rng_seed = rng->seed_forward_1[*rng_seed];
 	}
 	else if (algorithm_id == 6)
 	{
-		alg_6(WC_PASS, rng_seed);
+		alg_6(WC_PASS_128, rng_seed);
 		*rng_seed = rng->seed_forward_128[*rng_seed];
 	}
 	else if (algorithm_id == 7)
 	{
-		alg_7(WC_PASS);
+		alg_7(WC_PASS_128);
 	}
 }
 
-__forceinline void tm_avx_r128_8::alg_0(WC_ARGS, uint16* rng_seed)
+__forceinline void tm_avx_r128_8::alg_0(WC_ARGS_128, uint16_t* rng_seed)
 {
-	uint8* rng_start = rng->alg0_values_8 + (*rng_seed) * 128;
+	uint8_t* rng_start = rng->alg0_values_8 + (*rng_seed) * 128;
 
 	wc0 = _mm_slli_epi16(wc0, 1);
 	wc0 = _mm_and_si128(wc0, mask_FE);
@@ -216,7 +210,7 @@ __forceinline void tm_avx_r128_8::alg_2_sub(__m128i& wc, __m128i& carry)
 
 	// new odd byte (high of each word): (b[2k+1] << 1) | carry_k
 	__m128i new_hi = _mm_or_si128(
-		_mm_and_si128(_mm_slli_epi16(wc, 1), _mm_set1_epi16(0xFE00)),
+		_mm_and_si128(_mm_slli_epi16(wc, 1), _mm_set1_epi16(static_cast<int16_t>(0xFE00))),
 		carry_in);
 
 	// carry_out: bit0(b[0]) (low byte of word 0) placed at byte 15 bit 0
@@ -226,14 +220,14 @@ __forceinline void tm_avx_r128_8::alg_2_sub(__m128i& wc, __m128i& carry)
 
 	wc = _mm_or_si128(
 		_mm_and_si128(new_lo, _mm_set1_epi16(0x00FF)),
-		_mm_and_si128(new_hi, _mm_set1_epi16(0xFF00)));
+		_mm_and_si128(new_hi, _mm_set1_epi16(static_cast<int16_t>(0xFF00))));
 }
 
-__forceinline void tm_avx_r128_8::alg_2(WC_ARGS, uint16* rng_seed)
+__forceinline void tm_avx_r128_8::alg_2(WC_ARGS_128, uint16_t* rng_seed)
 {
 	// Initial carry: bit0 of scalar seed byte, placed at byte 15 bit 0
 	__m128i carry = _mm_and_si128(
-		_mm_set1_epi8(rng->alg2_values_8_8[*rng_seed]),
+		_mm_set1_epi8(static_cast<int8_t>(rng->alg2_values_8_8[*rng_seed])),
 		mask_top_01);
 
 	alg_2_sub(wc7, carry);
@@ -246,10 +240,10 @@ __forceinline void tm_avx_r128_8::alg_2(WC_ARGS, uint16* rng_seed)
 	alg_2_sub(wc0, carry);
 }
 
-__forceinline void tm_avx_r128_8::alg_3(WC_ARGS, uint16* rng_seed)
+__forceinline void tm_avx_r128_8::alg_3(WC_ARGS_128, uint16_t* rng_seed)
 {
-	uint8* rng_start = rng->regular_rng_values_8 + (*rng_seed) * 128;
-	xor_alg(WC_PASS, rng_start);
+	uint8_t* rng_start = rng->regular_rng_values_8 + (*rng_seed) * 128;
+	xor_alg(WC_PASS_128, rng_start);
 }
 
 // alg_5_sub: symmetric to alg_2_sub but for left-shift carry semantics.
@@ -283,14 +277,14 @@ __forceinline void tm_avx_r128_8::alg_5_sub(__m128i& wc, __m128i& carry)
 
 	wc = _mm_or_si128(
 		_mm_and_si128(new_lo, _mm_set1_epi16(0x00FF)),
-		_mm_and_si128(new_hi, _mm_set1_epi16(0xFF00)));
+		_mm_and_si128(new_hi, _mm_set1_epi16(static_cast<int16_t>(0xFF00))));
 }
 
-__forceinline void tm_avx_r128_8::alg_5(WC_ARGS, uint16* rng_seed)
+__forceinline void tm_avx_r128_8::alg_5(WC_ARGS_128, uint16_t* rng_seed)
 {
 	// Initial carry: bit7 of scalar seed byte, placed at byte 15 bit 7
 	__m128i carry = _mm_and_si128(
-		_mm_set1_epi8(rng->alg5_values_8_8[*rng_seed]),
+		_mm_set1_epi8(static_cast<int8_t>(rng->alg5_values_8_8[*rng_seed])),
 		mask_top_80);
 
 	alg_5_sub(wc7, carry);
@@ -303,9 +297,9 @@ __forceinline void tm_avx_r128_8::alg_5(WC_ARGS, uint16* rng_seed)
 	alg_5_sub(wc0, carry);
 }
 
-__forceinline void tm_avx_r128_8::alg_6(WC_ARGS, uint16* rng_seed)
+__forceinline void tm_avx_r128_8::alg_6(WC_ARGS_128, uint16_t* rng_seed)
 {
-	uint8* rng_start = rng->alg6_values_8 + (*rng_seed) * 128;
+	uint8_t* rng_start = rng->alg6_values_8 + (*rng_seed) * 128;
 
 	wc0 = _mm_srli_epi16(wc0, 1);
 	wc0 = _mm_and_si128(wc0, mask_7F);
@@ -340,7 +334,7 @@ __forceinline void tm_avx_r128_8::alg_6(WC_ARGS, uint16* rng_seed)
 	wc7 = _mm_or_si128(wc7, _mm_load_si128((__m128i*)(rng_start + 112)));
 }
 
-__forceinline void tm_avx_r128_8::alg_7(WC_ARGS)
+__forceinline void tm_avx_r128_8::alg_7(WC_ARGS_128)
 {
 	wc0 = _mm_xor_si128(wc0, mask_FF);
 	wc1 = _mm_xor_si128(wc1, mask_FF);
@@ -352,7 +346,7 @@ __forceinline void tm_avx_r128_8::alg_7(WC_ARGS)
 	wc7 = _mm_xor_si128(wc7, mask_FF);
 }
 
-__forceinline void tm_avx_r128_8::add_alg(WC_ARGS, uint16* rng_seed, uint8* rng_start)
+__forceinline void tm_avx_r128_8::add_alg(WC_ARGS_128, uint16_t* rng_seed, uint8_t* rng_start)
 {
 	rng_start = rng_start + (*rng_seed) * 128;
 	wc0 = _mm_add_epi8(wc0, _mm_load_si128((__m128i*)(rng_start)));
@@ -365,7 +359,7 @@ __forceinline void tm_avx_r128_8::add_alg(WC_ARGS, uint16* rng_seed, uint8* rng_
 	wc7 = _mm_add_epi8(wc7, _mm_load_si128((__m128i*)(rng_start + 112)));
 }
 
-__forceinline void tm_avx_r128_8::xor_alg(WC_ARGS, uint8* values)
+__forceinline void tm_avx_r128_8::xor_alg(WC_ARGS_128, uint8_t* values)
 {
 	wc0 = _mm_xor_si128(wc0, _mm_load_si128((__m128i*)values));
 	wc1 = _mm_xor_si128(wc1, _mm_load_si128((__m128i*)(values + 16)));
@@ -377,49 +371,49 @@ __forceinline void tm_avx_r128_8::xor_alg(WC_ARGS, uint8* values)
 	wc7 = _mm_xor_si128(wc7, _mm_load_si128((__m128i*)(values + 112)));
 }
 
-__forceinline void tm_avx_r128_8::_run_one_map(WC_ARGS, const key_schedule::key_schedule_entry& schedule_entry)
+__forceinline void tm_avx_r128_8::_run_one_map(WC_ARGS_128, const key_schedule::key_schedule_entry& schedule_entry)
 {
-	uint16 rng_seed = (schedule_entry.rng1 << 8) | schedule_entry.rng2;
-	uint16 nibble_selector = schedule_entry.nibble_selector;
+	uint16_t rng_seed = static_cast<uint16_t>((schedule_entry.rng1 << 8) | schedule_entry.rng2);
+	uint16_t nibble_selector = schedule_entry.nibble_selector;
 
 	for (int i = 0; i < 16; i++)
 	{
 		// Natural layout: bytes 0..15 are in wc0, so store only wc0 to read byte i
 		_mm_store_si128((__m128i*)(working_code_data), wc0);
 
-		unsigned char nibble = (nibble_selector >> 15) & 0x01;
-		nibble_selector = nibble_selector << 1;
+		uint8_t nibble = static_cast<uint8_t>((nibble_selector >> 15) & 0x01);
+		nibble_selector = static_cast<uint16_t>(nibble_selector << 1);
 
-		unsigned char current_byte = working_code_data[i];
+		uint8_t current_byte = working_code_data[i];
 
 		if (nibble == 1)
 		{
-			current_byte = current_byte >> 4;
+			current_byte = static_cast<uint8_t>(current_byte >> 4);
 		}
 
-		unsigned char algorithm_id = (current_byte >> 1) & 0x07;
+		uint8_t algorithm_id = static_cast<uint8_t>((current_byte >> 1) & 0x07);
 
-		_run_alg(WC_PASS, algorithm_id, &rng_seed);
+		_run_alg(WC_PASS_128, algorithm_id, &rng_seed);
 	}
 }
 
-__forceinline void tm_avx_r128_8::_run_all_maps(WC_ARGS)
+__forceinline void tm_avx_r128_8::_run_all_maps(WC_ARGS_128)
 {
 	for (std::vector<key_schedule::key_schedule_entry>::const_iterator it = schedule_entries->entries.begin(); it != schedule_entries->entries.end(); it++)
 	{
 		key_schedule::key_schedule_entry schedule_entry = *it;
-		_run_one_map(WC_PASS, schedule_entry);
+		_run_one_map(WC_PASS_128, schedule_entry);
 	}
 }
 
-__forceinline void tm_avx_r128_8::_decrypt_carnival_world(WC_ARGS)
+__forceinline void tm_avx_r128_8::_decrypt_carnival_world(WC_ARGS_128)
 {
-	xor_alg(WC_PASS, carnival_world_data);
+	xor_alg(WC_PASS_128, carnival_world_data);
 }
 
-__forceinline void tm_avx_r128_8::_decrypt_other_world(WC_ARGS)
+__forceinline void tm_avx_r128_8::_decrypt_other_world(WC_ARGS_128)
 {
-	xor_alg(WC_PASS, other_world_data);
+	xor_alg(WC_PASS_128, other_world_data);
 }
 
 __forceinline void tm_avx_r128_8::mid_sum(__m128i& sum, __m128i& working_code, __m128i& sum_mask, __m128i& lo_mask)
@@ -433,7 +427,7 @@ __forceinline void tm_avx_r128_8::mid_sum(__m128i& sum, __m128i& working_code, _
 	sum = _mm_add_epi16(sum, temp1_lo_hi);
 }
 
-__forceinline uint16 tm_avx_r128_8::masked_checksum(WC_ARGS, uint8* mask)
+__forceinline uint16_t tm_avx_r128_8::masked_checksum(WC_ARGS_128, uint8_t* mask)
 {
 	__m128i sum = _mm_setzero_si128();
 	__m128i lo_mask = _mm_set1_epi16(0x00FF);
@@ -462,7 +456,7 @@ __forceinline uint16 tm_avx_r128_8::masked_checksum(WC_ARGS, uint8* mask)
 	sum_mask = _mm_load_si128((__m128i*)(mask + 112));
 	mid_sum(sum, wc7, sum_mask, lo_mask);
 
-	uint16 code_sum = _mm_extract_epi16(sum, 0) +
+	int code_sum = _mm_extract_epi16(sum, 0) +
 		_mm_extract_epi16(sum, 1) +
 		_mm_extract_epi16(sum, 2) +
 		_mm_extract_epi16(sum, 3) +
@@ -471,20 +465,20 @@ __forceinline uint16 tm_avx_r128_8::masked_checksum(WC_ARGS, uint8* mask)
 		_mm_extract_epi16(sum, 6) +
 		_mm_extract_epi16(sum, 7);
 
-	return code_sum;
+	return static_cast<uint16_t>(code_sum);
 }
 
-__forceinline uint16 tm_avx_r128_8::_calculate_carnival_world_checksum(WC_ARGS)
+__forceinline uint16_t tm_avx_r128_8::_calculate_carnival_world_checksum(WC_ARGS_128)
 {
-	return masked_checksum(WC_PASS, carnival_world_checksum_mask);
+	return masked_checksum(WC_PASS_128, carnival_world_checksum_mask);
 }
 
-__forceinline uint16 tm_avx_r128_8::_calculate_other_world_checksum(WC_ARGS)
+__forceinline uint16_t tm_avx_r128_8::_calculate_other_world_checksum(WC_ARGS_128)
 {
-	return masked_checksum(WC_PASS, other_world_checksum_mask);
+	return masked_checksum(WC_PASS_128, other_world_checksum_mask);
 }
 
-__forceinline uint16 tm_avx_r128_8::fetch_checksum_value(WC_ARGS, uint8 code_length)
+__forceinline uint16_t tm_avx_r128_8::fetch_checksum_value(WC_ARGS_128, uint8_t code_length)
 {
 	// Store wc0..wc3 (covers bytes 0..63, which contain both checksum positions)
 	_mm_store_si128((__m128i*)(working_code_data), wc0);
@@ -495,41 +489,41 @@ __forceinline uint16 tm_avx_r128_8::fetch_checksum_value(WC_ARGS, uint8 code_len
 	// Natural layout: byte i is at working_code_data[i] with no shuffle
 	unsigned char checksum_low = working_code_data[127 - code_length];
 	unsigned char checksum_hi = working_code_data[127 - (code_length + 1)];
-	return (checksum_hi << 8) | checksum_low;
+	return static_cast<uint16_t>((checksum_hi << 8) | checksum_low);
 }
 
-__forceinline uint16 tm_avx_r128_8::_fetch_carnival_world_checksum_value(WC_ARGS)
+__forceinline uint16_t tm_avx_r128_8::_fetch_carnival_world_checksum_value(WC_ARGS_128)
 {
-	return fetch_checksum_value(WC_PASS, CARNIVAL_WORLD_CODE_LENGTH - 2);
+	return fetch_checksum_value(WC_PASS_128, CARNIVAL_WORLD_CODE_LENGTH - 2);
 }
 
-__forceinline uint16 tm_avx_r128_8::_fetch_other_world_checksum_value(WC_ARGS)
+__forceinline uint16_t tm_avx_r128_8::_fetch_other_world_checksum_value(WC_ARGS_128)
 {
-	return fetch_checksum_value(WC_PASS, OTHER_WORLD_CODE_LENGTH - 2);
+	return fetch_checksum_value(WC_PASS_128, OTHER_WORLD_CODE_LENGTH - 2);
 }
 
-__forceinline bool tm_avx_r128_8::check_carnival_world_checksum(WC_ARGS)
+__forceinline bool tm_avx_r128_8::check_carnival_world_checksum(WC_ARGS_128)
 {
-	return _calculate_carnival_world_checksum(WC_PASS) == _fetch_carnival_world_checksum_value(WC_PASS);
+	return _calculate_carnival_world_checksum(WC_PASS_128) == _fetch_carnival_world_checksum_value(WC_PASS_128);
 }
 
-__forceinline bool tm_avx_r128_8::check_other_world_checksum(WC_ARGS)
+__forceinline bool tm_avx_r128_8::check_other_world_checksum(WC_ARGS_128)
 {
-	return _calculate_other_world_checksum(WC_PASS) == _fetch_other_world_checksum_value(WC_PASS);
+	return _calculate_other_world_checksum(WC_PASS_128) == _fetch_other_world_checksum_value(WC_PASS_128);
 }
 
 template<bool CHECK_CHECKSUM, int WORLD>
-std::optional<uint8> tm_avx_r128_8::_decrypt_check(WC_ARGS)
+__forceinline std::optional<uint8_t> tm_avx_r128_8::_decrypt_check(WC_ARGS_128)
 {
-	WCXOR_VARS;
-	WCXOR_COPY;
+	WC_XOR_VARS_128;
+	WC_COPY_XOR_128;
 	if constexpr (WORLD == CARNIVAL_WORLD)
 	{
-		_decrypt_carnival_world(WCXOR_PASS);
+		_decrypt_carnival_world(WC_XOR_PASS_128);
 
 		if constexpr (CHECK_CHECKSUM)
 		{
-			if (!check_carnival_world_checksum(WCXOR_PASS))
+			if (!check_carnival_world_checksum(WC_XOR_PASS_128))
 			{
 				return std::nullopt;
 			}
@@ -537,34 +531,34 @@ std::optional<uint8> tm_avx_r128_8::_decrypt_check(WC_ARGS)
 	}
 	else
 	{
-		_decrypt_other_world(WCXOR_PASS);
+		_decrypt_other_world(WC_XOR_PASS_128);
 
 		if constexpr (CHECK_CHECKSUM)
 		{
-			if (!check_other_world_checksum(WCXOR_PASS))
+			if (!check_other_world_checksum(WC_XOR_PASS_128))
 			{
 				return std::nullopt;
 			}
 		}
 	}
 
-	_store_to_mem(WCXOR_PASS);
+	_store_to_mem(WC_XOR_PASS_128);
 	return check_machine_code(working_code_data, WORLD);
 }
 
 template<bool CHECK_CHECKSUMS>
-__forceinline void tm_avx_r128_8::_run_bruteforce(WC_ARGS, uint32 data, uint8* result_data, uint32* result_size)
+__forceinline void tm_avx_r128_8::_run_bruteforce(WC_ARGS_128, uint32_t data, uint8_t* result_data, uint32_t* result_size)
 {
-	_expand_code(data, WC_PASS);
+	_expand_code(data, WC_PASS_128);
 
-	_run_all_maps(WC_PASS);
+	_run_all_maps(WC_PASS_128);
 
-	auto carnival_flags = _decrypt_check<CHECK_CHECKSUMS, CARNIVAL_WORLD>(WC_PASS);
+	auto carnival_flags = _decrypt_check<CHECK_CHECKSUMS, CARNIVAL_WORLD>(WC_PASS_128);
 	if constexpr (CHECK_CHECKSUMS)
 	{
 		if (carnival_flags.has_value())
 		{
-			*((uint32*)(&result_data[*result_size])) = data;
+			*((uint32_t*)(&result_data[*result_size])) = data;
 			result_data[*result_size + 4] = *carnival_flags;
 			*result_size += 5;
 
@@ -572,12 +566,12 @@ __forceinline void tm_avx_r128_8::_run_bruteforce(WC_ARGS, uint32 data, uint8* r
 		}
 	}
 
-	auto other_flags = _decrypt_check<CHECK_CHECKSUMS, OTHER_WORLD>(WC_PASS);
+	auto other_flags = _decrypt_check<CHECK_CHECKSUMS, OTHER_WORLD>(WC_PASS_128);
 	if constexpr (CHECK_CHECKSUMS)
 	{
 		if (other_flags.has_value())
 		{
-			*((uint32*)(&result_data[*result_size])) = data;
+			*((uint32_t*)(&result_data[*result_size])) = data;
 			result_data[*result_size + 4] = *other_flags;
 			*result_size += 5;
 
@@ -592,86 +586,89 @@ __forceinline void tm_avx_r128_8::_run_bruteforce(WC_ARGS, uint32 data, uint8* r
 	}
 }
 
-void tm_avx_r128_8::run_bruteforce_boinc(uint32 start_data, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size)
+void tm_avx_r128_8::run_bruteforce_boinc(uint32_t start_data, uint32_t amount_to_run, void(*report_progress)(double), uint8_t* result_data, uint32_t result_max_size, uint32_t* result_size)
 {
-	WC_VARS;
+	WC_VARS_128;
 
-	for (uint32 i = 0; i < amount_to_run; i++)
+	for (uint32_t i = 0; i < amount_to_run; i++)
 	{
 		if ((result_max_size - *result_size) < 5)
 		{
 			return;
 		}
-		uint32 data = start_data + i;
+		uint32_t data = start_data + i;
 
-		_run_bruteforce<true>(WC_PASS, data, result_data, result_size);
+		_run_bruteforce<true>(WC_PASS_128, data, result_data, result_size);
 
-		report_progress((float)(i + 1) / amount_to_run);
+		report_progress(static_cast<double>(i + 1) / static_cast<double>(amount_to_run));
 	}
 }
 
-void tm_avx_r128_8::compute_challenge_flags(uint32 data, uint8& carnival_flags_out, uint8& other_flags_out)
+void tm_avx_r128_8::compute_challenge_flags(uint32_t data, uint8_t& carnival_flags_out, uint8_t& other_flags_out)
 {
-	WC_VARS;
+	WC_VARS_128;
 
-	uint8 result_data[2];
-	uint32 result_pos = 0;
+	uint8_t result_data[2];
+	uint32_t result_pos = 0;
 
-	_run_bruteforce<false>(WC_PASS, data, result_data, &result_pos);
+	_run_bruteforce<false>(WC_PASS_128, data, result_data, &result_pos);
 
 	carnival_flags_out = result_data[0];
 	other_flags_out = result_data[1];
 }
 
-void tm_avx_r128_8::test_algorithm(int algorithm_id, uint8_t* data, uint16* rng_seed)
+void tm_avx_r128_8::test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed)
 {
-	WC_VARS;
+	WC_VARS_128;
 	load_data(data);
-	_load_from_mem(WC_PASS);
-	_run_alg(WC_PASS, algorithm_id, rng_seed);
-	_store_to_mem(WC_PASS);
+	_load_from_mem(WC_PASS_128);
+	_run_alg(WC_PASS_128, algorithm_id, rng_seed);
+	_store_to_mem(WC_PASS_128);
 	fetch_data(data);
 }
 
-void tm_avx_r128_8::test_expansion(uint32_t data, uint8* result_out)
+void tm_avx_r128_8::test_algorithm_n(int algorithm_id, uint8_t* data, uint16_t* rng_seed, int iterations)
 {
-	WC_VARS;
-	_expand_code(data, WC_PASS);
-	_store_to_mem(WC_PASS);
+	WC_VARS_128;
+	load_data(data);
+	_load_from_mem(WC_PASS_128);
+	for (int i = 0; i < iterations; i++)
+		_run_alg(WC_PASS_128, algorithm_id, rng_seed);
+	_store_to_mem(WC_PASS_128);
+	fetch_data(data);
+}
+
+void tm_avx_r128_8::test_expansion(uint32_t data, uint8_t* result_out)
+{
+	WC_VARS_128;
+	_expand_code(data, WC_PASS_128);
+	_store_to_mem(WC_PASS_128);
 	fetch_data(result_out);
 }
 
-void tm_avx_r128_8::test_bruteforce_data(uint32 data, uint8* result_out)
+void tm_avx_r128_8::test_bruteforce_data(uint32_t data, uint8_t* result_out)
 {
-	WC_VARS;
-	_expand_code(data, WC_PASS);
-	_run_all_maps(WC_PASS);
-	_store_to_mem(WC_PASS);
+	WC_VARS_128;
+	_expand_code(data, WC_PASS_128);
+	_run_all_maps(WC_PASS_128);
+	_store_to_mem(WC_PASS_128);
 	fetch_data(result_out);
 }
 
-bool tm_avx_r128_8::test_bruteforce_checksum(uint32 data, int world)
+bool tm_avx_r128_8::test_bruteforce_checksum(uint32_t data, int world)
 {
-	WC_VARS;
-	_expand_code(data, WC_PASS);
-	_run_all_maps(WC_PASS);
+	WC_VARS_128;
+	_expand_code(data, WC_PASS_128);
+	_run_all_maps(WC_PASS_128);
 
 	if (world == CARNIVAL_WORLD)
 	{
-		return _decrypt_check<true, CARNIVAL_WORLD>(WC_PASS).has_value();
+		return _decrypt_check<true, CARNIVAL_WORLD>(WC_PASS_128).has_value();
 	}
 	else
 	{
-		return _decrypt_check<true, OTHER_WORLD>(WC_PASS).has_value();
+		return _decrypt_check<true, OTHER_WORLD>(WC_PASS_128).has_value();
 	}
 }
 
 bool tm_avx_r128_8::initialized = false;
-
-alignas(16) const __m128i tm_avx_r128_8::mask_FF = _mm_set1_epi16(0xFFFF);
-alignas(16) const __m128i tm_avx_r128_8::mask_FE = _mm_set1_epi16(0xFEFE);
-alignas(16) const __m128i tm_avx_r128_8::mask_7F = _mm_set1_epi16(0x7F7F);
-alignas(16) const __m128i tm_avx_r128_8::mask_80 = _mm_set1_epi16(0x8080);
-alignas(16) const __m128i tm_avx_r128_8::mask_01 = _mm_set1_epi16(0x0101);
-alignas(16) const __m128i tm_avx_r128_8::mask_top_01 = _mm_set_epi16(0x0100, 0, 0, 0, 0, 0, 0, 0);
-alignas(16) const __m128i tm_avx_r128_8::mask_top_80 = _mm_set_epi16(0x8000, 0, 0, 0, 0, 0, 0, 0);

@@ -1,0 +1,94 @@
+#ifndef TM_AVX512BW_R512S_MAP_8_H
+#define TM_AVX512BW_R512S_MAP_8_H
+#include <optional>
+#include "simd.h"
+#include "alignment2.h"
+#include "rng_obj.h"
+#include "tm_base.h"
+
+class tm_avx512bw_r512s_map_8 : public TM_base
+{
+public:
+	tm_avx512bw_r512s_map_8(RNG* rng);
+	tm_avx512bw_r512s_map_8(RNG* rng, uint32_t key);
+	tm_avx512bw_r512s_map_8(RNG* rng, const uint32_t key, const key_schedule& schedule_entries);
+
+	~tm_avx512bw_r512s_map_8();
+
+	void test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed) override;
+	void test_algorithm_n(int algorithm_id, uint8_t* data, uint16_t* rng_seed, int iterations) override;
+	void test_expansion(uint32_t data, uint8_t* result_out) override;
+	void test_bruteforce_data(uint32_t data, uint8_t* result_out) override;
+	bool test_bruteforce_checksum(uint32_t data, int world) override;
+	void run_bruteforce_boinc(uint32_t start_data, uint32_t amount_to_run, void(*report_progress)(double), uint8_t* result_data, uint32_t result_max_size, uint32_t* result_size) override;
+	void compute_challenge_flags(uint32_t data, uint8_t& carnival_flags_out, uint8_t& other_flags_out) override;
+
+private:
+	void generate_map_rng();
+	void initialize();
+	void load_data(uint8_t* new_data);
+	void fetch_data(uint8_t* new_data);
+
+	void _load_deinterleave(const uint8_t* block_start, __m512i& r0, __m512i& r1);
+
+	void alg_0(WC_ARGS_512, const uint8_t* block_start);
+	void alg_1(WC_ARGS_512, const uint8_t* block_start);
+	void alg_2(WC_ARGS_512, uint8_t carry_byte);
+	void alg_3(WC_ARGS_512, const uint8_t* block_start);
+	void alg_4(WC_ARGS_512, const uint8_t* block_start);
+	void alg_5(WC_ARGS_512, uint8_t carry_byte);
+	void alg_6(WC_ARGS_512, const uint8_t* block_start);
+	void alg_7(WC_ARGS_512);
+	void alg_2_sub(__m512i& working_a, __m512i& working_b, __m512i& carry);
+	void alg_5_sub(__m512i& working_a, __m512i& working_b, __m512i& carry);
+
+	void _load_from_mem(WC_ARGS_512);
+	void _store_to_mem(WC_ARGS_512);
+
+	void _expand_code(uint32_t data, WC_ARGS_512);
+
+	void _run_alg(WC_ARGS_512, int algorithm_id, uint16_t* local_pos,
+	              const uint8_t* reg_base, const uint8_t* alg0_base,
+	              const uint8_t* alg6_base);
+	void _run_one_map(WC_ARGS_512, int map_idx);
+	void _run_all_maps(WC_ARGS_512);
+
+	template<bool CHECK_CHECKSUM, int WORLD>
+	std::optional<uint8_t> _decrypt_check(WC_ARGS_512);
+
+	template<bool CHECK_CHECKSUMS>
+	void _run_bruteforce(WC_ARGS_512, uint32_t data, uint8_t* result_data, uint32_t* result_size);
+
+	void _decrypt_carnival_world(WC_ARGS_512);
+	void _decrypt_other_world(WC_ARGS_512);
+
+	uint16_t _calculate_carnival_world_checksum(WC_ARGS_512);
+	uint16_t _calculate_other_world_checksum(WC_ARGS_512);
+
+	uint16_t _fetch_carnival_world_checksum_value(WC_ARGS_512);
+	uint16_t _fetch_other_world_checksum_value(WC_ARGS_512);
+	bool check_carnival_world_checksum(WC_ARGS_512);
+	bool check_other_world_checksum(WC_ARGS_512);
+
+	uint16_t masked_checksum(WC_ARGS_512, uint8_t* mask);
+	uint16_t fetch_checksum_value(WC_ARGS_512, uint8_t code_length);
+	void xor_alg(WC_ARGS_512, uint8_t* values);
+
+	uint8_t* expansion_values_for_seed_128_8;
+	uint8_t* regular_rng_values_for_seeds_512_8_shuffled;
+	uint8_t* alg0_values_for_seeds_512_8_shuffled;
+	uint8_t* alg6_values_for_seeds_512_8_shuffled;
+
+	const alignas(64) __m512i mask_FF;
+	const alignas(64) __m512i mask_FE;
+	const alignas(64) __m512i mask_7F;
+	const alignas(64) __m512i mask_80;
+	const alignas(64) __m512i mask_01;
+	const alignas(64) __m512i mask_top_01;
+	const alignas(64) __m512i mask_top_80;
+
+	ALIGNED(64) uint8_t working_code_data[128];
+
+	static bool initialized;
+};
+#endif // TM_AVX512BW_R512S_MAP_8_H

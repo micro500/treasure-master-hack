@@ -3,7 +3,7 @@
 
 void * aligned_malloc(int byte_count, int align_size)
 {
-	uint8 * raw = new uint8[byte_count + align_size + sizeof(void*)];
+	uint8_t * raw = new uint8_t[byte_count + align_size + sizeof(void*)];
 	uintptr_t ptr = (uintptr_t)raw + sizeof(void*);
 	uintptr_t aligned = (ptr + align_size - 1) & ~((uintptr_t)(align_size - 1));
 	((void**)aligned)[-1] = raw;
@@ -13,40 +13,35 @@ void * aligned_malloc(int byte_count, int align_size)
 void aligned_free(void* ptr)
 {
 	if (ptr)
-		delete[] (uint8*)(((void**)ptr)[-1]);
+		delete[] (uint8_t*)(((void**)ptr)[-1]);
 }
 
-int shuffle_8(int offset, int bits)
+uint8_t* packing_alloc(int size, bool packing_16, int align_size)
 {
-	return (offset / (bits / 4)) * (bits / 4) + (offset % 2) * (bits / 8) + ((offset / 2) % (bits / 8));
+	return (uint8_t*)aligned_malloc(size * (packing_16 ? 2 : 1), align_size);
 }
 
-uint8* packing_alloc(int size, bool packing_16, int align_size)
-{
-	return (uint8*)aligned_malloc(size * (packing_16 ? 2 : 1), align_size);
-}
-
-void packing_store(uint8* dest, int offset, uint8 value, bool packing_16)
+void packing_store(uint8_t* dest, int offset, uint8_t value, bool packing_16)
 {
 	if (packing_16)
 	{
-		((uint16*)dest)[offset] = value;
+		((uint16_t*)dest)[offset] = value;
 	}
 	else
 	{
-		((uint8*)dest)[offset] = value;
+		((uint8_t*)dest)[offset] = value;
 	}
 }
 
-uint8 packing_load(uint8* src, int offset, bool packing_16)
+uint8_t packing_load(uint8_t* src, int offset, bool packing_16)
 {
 	if (packing_16)
 	{
-		return ((uint16*)src)[offset] & 0xFF;
+		return static_cast<uint8_t>((reinterpret_cast<uint16_t*>(src))[offset] & 0xFF);
 	}
 	else
 	{
-		return ((uint8*)src)[offset];
+		return src[offset];
 	}
 }
 

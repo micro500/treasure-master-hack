@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdint.h>
-#include "data_sizes.h"
 #include "alignment2.h"
 #include "rng_obj.h"
 
@@ -14,7 +13,7 @@ RNG::RNG()
 
 void RNG::generate_rng_table()
 {
-	rng_table = new uint16[256 * 256];
+	rng_table = new uint16_t[256 * 256];
 	for (int i = 0; i <= 0xFF; i++)
 	{
 		for (int j = 0; j <= 0xFF; j++)
@@ -22,7 +21,7 @@ void RNG::generate_rng_table()
 			unsigned int rngA = i;
 			unsigned int rngB = j;
 
-			uint8 carry = 0;
+			uint8_t carry = 0;
 
 			rngB = (rngB + rngA) & 0xFF;
 
@@ -42,30 +41,30 @@ void RNG::generate_rng_table()
 			carry = rngB > 0xFF ? 1 : 0;
 			rngB = rngB & 0xFF;
 
-			rng_table[(i * 0x100) + j] = (rngA << 8) | rngB;
+			rng_table[(i * 0x100) + j] = static_cast<uint16_t>((rngA << 8) | rngB);
 		}
 	}
 }
 
-uint8 RNG::run_rng(uint16 * rng_seed)
+uint8_t RNG::run_rng(uint16_t * rng_seed)
 {
-	uint16 result = rng_table[*rng_seed];
+	uint16_t result = rng_table[*rng_seed];
 	*rng_seed = result;
 
-	return ((result >> 8) ^ (result)) & 0xFF;
+	return static_cast<uint8_t>(((result >> 8) ^ (result)) & 0xFF);
 }
 
-void RNG::_generate_regular_rng_values_for_seed(uint8* out, uint16 seed, int entries, bool packing_16)
+void RNG::_generate_regular_rng_values_for_seed(uint8_t* out, uint16_t seed, int entries, bool packing_16)
 {
-	uint16 rng_seed = seed;
+	uint16_t rng_seed = seed;
 	for (int j = 0; j < entries; j++)
 	{
-		uint8 val = run_rng(&rng_seed);
+		uint8_t val = run_rng(&rng_seed);
 		packing_store(out, entries - 1 - j, val, packing_16);
 	}
 }
 
-void RNG::generate_regular_rng_values_for_seeds(uint8** out, uint16* seeds, int seed_count, bool packing_16)
+void RNG::generate_regular_rng_values_for_seeds(uint8_t** out, uint16_t* seeds, int seed_count, bool packing_16)
 {
 	const int entries = 2048;
 	int stride = entries * (packing_16 ? 2 : 1);
@@ -77,12 +76,12 @@ void RNG::generate_regular_rng_values_for_seeds(uint8** out, uint16* seeds, int 
 	}
 }
 
-void RNG::generate_regular_rng_values_for_seeds_8(uint8_t** out, uint16* seeds, int seed_count)
+void RNG::generate_regular_rng_values_for_seeds_8(uint8_t** out, uint16_t* seeds, int seed_count)
 {
 	generate_regular_rng_values_for_seeds(out, seeds, seed_count, false);
 }
 
-void RNG::_generate_regular_rng_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)
+void RNG::_generate_regular_rng_values(uint8_t** rng_values, bool shuffle, int bits, bool packing_16)
 {
 	if (*rng_values == nullptr)
 	{
@@ -91,12 +90,12 @@ void RNG::_generate_regular_rng_values(uint8** rng_values, bool shuffle, int bit
 
 		for (int i = 0; i < 0x10000; i++)
 		{
-			uint8* seed_out = *rng_values + i * stride;
-			_generate_regular_rng_values_for_seed(seed_out, (uint16)i, 128, packing_16);
+			uint8_t* seed_out = *rng_values + i * stride;
+			_generate_regular_rng_values_for_seed(seed_out, (uint16_t)i, 128, packing_16);
 
 			if (shuffle)
 			{
-				uint8 temp[128];
+				uint8_t temp[128];
 				for (int k = 0; k < 128; k++)
 					temp[k] = packing_load(seed_out, k, packing_16);
 				for (int k = 0; k < 128; k++)
@@ -107,7 +106,7 @@ void RNG::_generate_regular_rng_values(uint8** rng_values, bool shuffle, int bit
 }
 
 
-void RNG::_split(uint8** rng_values, bool hi)
+void RNG::_split(uint8_t** rng_values, bool hi)
 {
 	for (int i = 0; i < 0x10000; i++)
 	{
@@ -125,7 +124,7 @@ void RNG::_split(uint8** rng_values, bool hi)
 	}
 }
 
-void RNG::_generate_regular_rng_values_8_split(uint8** rng_values, bool shuffle, int bits, bool hi)
+void RNG::_generate_regular_rng_values_8_split(uint8_t** rng_values, bool shuffle, int bits, bool hi)
 {
 	if (*rng_values == nullptr)
 	{
@@ -176,10 +175,10 @@ void RNG::generate_regular_rng_values_256_8_shuffled_lo()
 
 void RNG::generate_regular_rng_values_16()
 {
-	_generate_regular_rng_values((uint8**)&regular_rng_values_16, false, -1, true);
+	_generate_regular_rng_values((uint8_t**)&regular_rng_values_16, false, -1, true);
 }
 
-void RNG::_generate_expansion_values_for_seed(uint8* rng_values, uint16_t rng_seed, bool shuffle, int bits, bool packing_16)
+void RNG::_generate_expansion_values_for_seed(uint8_t* rng_values, uint16_t rng_seed, bool shuffle, int bits, bool packing_16)
 {
 	uint8_t temp_values[8];
 	for (int j = 0; j < 16; j++)
@@ -192,7 +191,7 @@ void RNG::_generate_expansion_values_for_seed(uint8* rng_values, uint16_t rng_se
 			}
 			else
 			{
-				temp_values[k] = temp_values[k] + run_rng(&rng_seed);
+				temp_values[k] = static_cast<uint8_t>(temp_values[k] + run_rng(&rng_seed));
 			}
 
 			int offset = j * 8 + k;
@@ -206,17 +205,17 @@ void RNG::_generate_expansion_values_for_seed(uint8* rng_values, uint16_t rng_se
 }
 
 
-void RNG::_generate_expansion_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)
+void RNG::_generate_expansion_values(uint8_t** rng_values, bool shuffle, int bits, bool packing_16)
 {
 	if (*rng_values == nullptr)
 	{
 		*rng_values = packing_alloc(0x10000 * 128, packing_16);
 
-		uint16 rng_seed;
+		uint16_t rng_seed;
 
 		for (int i = 0; i < 0x10000; i++)
 		{
-			rng_seed = i;
+			rng_seed = static_cast<uint16_t>(i);
 			_generate_expansion_values_for_seed(*rng_values + rng_seed * 128 * (packing_16 ? 2 : 1), rng_seed, shuffle, bits, packing_16);
 		}
 	}
@@ -237,7 +236,12 @@ void RNG::generate_expansion_values_256_8_shuffled()
 	_generate_expansion_values(&expansion_values_256_8_shuffled, true, 256, false);
 }
 
-void RNG::_generate_expansion_values_for_seed_8(uint8** rng_values, uint16_t rng_seed, bool shuffle, int bits)
+void RNG::generate_expansion_values_512_8_shuffled()
+{
+	_generate_expansion_values(&expansion_values_512_8_shuffled, true, 512, false);
+}
+
+void RNG::_generate_expansion_values_for_seed_8(uint8_t** rng_values, uint16_t rng_seed, bool shuffle, int bits)
 {
 	aligned_free(*rng_values);
 	*rng_values = packing_alloc(128, false);
@@ -246,17 +250,17 @@ void RNG::_generate_expansion_values_for_seed_8(uint8** rng_values, uint16_t rng
 }
 
 
-void RNG::_generate_alg0_values_for_seed(uint8* out, uint16 seed, int entries, bool packing_16)
+void RNG::_generate_alg0_values_for_seed(uint8_t* out, uint16_t seed, int entries, bool packing_16)
 {
-	uint16 rng_seed = seed;
+	uint16_t rng_seed = seed;
 	for (int j = 0; j < entries; j++)
 	{
-		uint8 val = (run_rng(&rng_seed) >> 7) & 0x01;
+		uint8_t val = static_cast<uint8_t>((run_rng(&rng_seed) >> 7) & 0x01);
 		packing_store(out, entries - 1 - j, val, packing_16);
 	}
 }
 
-void RNG::generate_alg0_values_for_seeds(uint8** out, uint16* seeds, int seed_count, bool packing_16)
+void RNG::generate_alg0_values_for_seeds(uint8_t** out, uint16_t* seeds, int seed_count, bool packing_16)
 {
 	const int entries = 2048;
 	int stride = entries * (packing_16 ? 2 : 1);
@@ -268,12 +272,12 @@ void RNG::generate_alg0_values_for_seeds(uint8** out, uint16* seeds, int seed_co
 	}
 }
 
-void RNG::generate_alg0_values_for_seeds_8(uint8_t** out, uint16* seeds, int seed_count)
+void RNG::generate_alg0_values_for_seeds_8(uint8_t** out, uint16_t* seeds, int seed_count)
 {
 	generate_alg0_values_for_seeds(out, seeds, seed_count, false);
 }
 
-void RNG::_generate_alg0_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)
+void RNG::_generate_alg0_values(uint8_t** rng_values, bool shuffle, int bits, bool packing_16)
 {
 	if (*rng_values == nullptr)
 	{
@@ -282,12 +286,12 @@ void RNG::_generate_alg0_values(uint8** rng_values, bool shuffle, int bits, bool
 
 		for (int i = 0; i < 0x10000; i++)
 		{
-			uint8* seed_out = *rng_values + i * stride;
-			_generate_alg0_values_for_seed(seed_out, (uint16)i, 128, packing_16);
+			uint8_t* seed_out = *rng_values + i * stride;
+			_generate_alg0_values_for_seed(seed_out, (uint16_t)i, 128, packing_16);
 
 			if (shuffle)
 			{
-				uint8 temp[128];
+				uint8_t temp[128];
 				for (int k = 0; k < 128; k++)
 					temp[k] = packing_load(seed_out, k, packing_16);
 				for (int k = 0; k < 128; k++)
@@ -319,49 +323,49 @@ void RNG::generate_alg0_values_512_8_shuffled()
 
 void RNG::generate_alg0_values_16()
 {
-	_generate_alg0_values((uint8**)&alg0_values_16, false, -1, true);
+	_generate_alg0_values((uint8_t**)&alg0_values_16, false, -1, true);
 }
 
-void RNG::_generate_alg2_values_for_seed(uint8* out, uint16 seed, int entries, int bits, bool packing_16)
+void RNG::_generate_alg2_values_for_seed(uint8_t* out, uint16_t seed, int entries, int bits, bool packing_16)
 {
 	int bytes = bits / 8;
-	uint16 rng_seed = seed;
+	uint16_t rng_seed = seed;
 	for (int j = 0; j < entries; j++)
 	{
-		uint8* entry = out + (entries - 1 - j) * bytes;
+		uint8_t* entry = out + (entries - 1 - j) * bytes;
 		for (int k = 0; k < bytes; k++)
 			entry[k] = 0;
-		entry[bytes - 1 + (packing_16 ? -1 : 0)] = (run_rng(&rng_seed) & 0x80) >> 7;
+		entry[bytes - 1 + (packing_16 ? -1 : 0)] = static_cast<uint8_t>((run_rng(&rng_seed) & 0x80) >> 7);
 	}
 }
 
-void RNG::generate_alg2_values_for_seeds(uint8** out, uint16* seeds, int seed_count, int bits, bool packing_16)
+void RNG::generate_alg2_values_for_seeds(uint8_t** out, uint16_t* seeds, int seed_count, int bits, bool packing_16)
 {
 	const int entries = 2048;
 	int bytes = bits / 8;
 	int stride = entries * bytes;
 	aligned_free(*out);
-	*out = (uint8*)aligned_malloc(seed_count * stride, stride);
+	*out = (uint8_t*)aligned_malloc(seed_count * stride, stride);
 	for (int i = 0; i < seed_count; i++)
 	{
 		_generate_alg2_values_for_seed(*out + i * stride, seeds[i], entries, bits, packing_16);
 	}
 }
 
-void RNG::generate_alg2_values_for_seeds_128_8(uint8_t** out, uint16* seeds, int seed_count)
+void RNG::generate_alg2_values_for_seeds_128_8(uint8_t** out, uint16_t* seeds, int seed_count)
 {
 	generate_alg2_values_for_seeds(out, seeds, seed_count, 128, false);
 }
 
-void RNG::_generate_alg2_values(uint8** rng_values, int bits, bool packing_16)
+void RNG::_generate_alg2_values(uint8_t** rng_values, int bits, bool packing_16)
 {
 	if (*rng_values == nullptr)
 	{
 		int bytes = bits / 8;
-		*rng_values = (uint8*)aligned_malloc(0x10000 * bytes, 64);
+		*rng_values = (uint8_t*)aligned_malloc(0x10000 * bytes, 64);
 		for (int i = 0; i < 0x10000; i++)
 		{
-			_generate_alg2_values_for_seed(*rng_values + i * bytes, (uint16)i, 1, bits, packing_16);
+			_generate_alg2_values_for_seed(*rng_values + i * bytes, (uint16_t)i, 1, bits, packing_16);
 		}
 	}
 }
@@ -373,22 +377,22 @@ void RNG::generate_alg2_values_8_8()
 
 void RNG::generate_alg2_values_32_8()
 {
-	_generate_alg2_values((uint8**)&alg2_values_32_8, 32, false);
+	_generate_alg2_values((uint8_t**)&alg2_values_32_8, 32, false);
 }
 
 void RNG::generate_alg2_values_32_16()
 {
-	_generate_alg2_values((uint8**)&alg2_values_32_16, 32, true);
+	_generate_alg2_values((uint8_t**)&alg2_values_32_16, 32, true);
 }
 
 void RNG::generate_alg2_values_64_8()
 {
-	_generate_alg2_values((uint8**)&alg2_values_64_8, 64, false);
+	_generate_alg2_values((uint8_t**)&alg2_values_64_8, 64, false);
 }
 
 void RNG::generate_alg2_values_64_16()
 {
-	_generate_alg2_values((uint8**)&alg2_values_64_16, 64, true);
+	_generate_alg2_values((uint8_t**)&alg2_values_64_16, 64, true);
 }
 
 void RNG::generate_alg2_values_128_8()
@@ -416,7 +420,7 @@ void RNG::generate_alg2_values_512_8()
 	_generate_alg2_values(&alg2_values_512_8, 512, false);
 }
 
-void RNG::_generate_alg4_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)
+void RNG::_generate_alg4_values(uint8_t** rng_values, bool shuffle, int bits, bool packing_16)
 {
 	if (*rng_values == nullptr)
 	{
@@ -425,17 +429,17 @@ void RNG::_generate_alg4_values(uint8** rng_values, bool shuffle, int bits, bool
 
 		for (int i = 0; i < 0x10000; i++)
 		{
-			uint16 rng_seed = (uint16)i;
-			uint8* seed_out = *rng_values + i * stride;
+			uint16_t rng_seed = (uint16_t)i;
+			uint8_t* seed_out = *rng_values + i * stride;
 			for (int j = 0; j < 128; j++)
 			{
-				uint8 val = (run_rng(&rng_seed) ^ 0xFF) + 1;
+				uint8_t val = static_cast<uint8_t>((run_rng(&rng_seed) ^ 0xFF) + 1);
 				packing_store(seed_out, 127 - j, val, packing_16);
 			}
 
 			if (shuffle)
 			{
-				uint8 temp[128];
+				uint8_t temp[128];
 				for (int k = 0; k < 128; k++)
 					temp[k] = packing_load(seed_out, k, packing_16);
 				for (int k = 0; k < 128; k++)
@@ -445,7 +449,7 @@ void RNG::_generate_alg4_values(uint8** rng_values, bool shuffle, int bits, bool
 	}
 }
 
-void RNG::_generate_alg4_values_8_split(uint8** rng_values, bool shuffle, int bits, bool hi)
+void RNG::_generate_alg4_values_8_split(uint8_t** rng_values, bool shuffle, int bits, bool hi)
 {
 	if (*rng_values == nullptr)
 	{
@@ -496,49 +500,49 @@ void RNG::generate_alg4_values_256_8_shuffled_lo()
 
 void RNG::generate_alg4_values_16()
 {
-	_generate_alg4_values((uint8**)&alg4_values_16, false, -1, true);
+	_generate_alg4_values((uint8_t**)&alg4_values_16, false, -1, true);
 }
 
-void RNG::_generate_alg5_values_for_seed(uint8* out, uint16 seed, int entries, int bits, bool packing_16)
+void RNG::_generate_alg5_values_for_seed(uint8_t* out, uint16_t seed, int entries, int bits, bool packing_16)
 {
 	int bytes = bits / 8;
-	uint16 rng_seed = seed;
+	uint16_t rng_seed = seed;
 	for (int j = 0; j < entries; j++)
 	{
-		uint8* entry = out + (entries - 1 - j) * bytes;
+		uint8_t* entry = out + (entries - 1 - j) * bytes;
 		for (int k = 0; k < bytes; k++)
 			entry[k] = 0;
-		entry[bytes - 1 + (packing_16 ? -1 : 0)] = run_rng(&rng_seed) & 0x80;
+		entry[bytes - 1 + (packing_16 ? -1 : 0)] = static_cast<uint8_t>(run_rng(&rng_seed) & 0x80);
 	}
 }
 
-void RNG::generate_alg5_values_for_seeds(uint8** out, uint16* seeds, int seed_count, int bits, bool packing_16)
+void RNG::generate_alg5_values_for_seeds(uint8_t** out, uint16_t* seeds, int seed_count, int bits, bool packing_16)
 {
 	const int entries = 2048;
 	int bytes = bits / 8;
 	int stride = entries * bytes;
 	aligned_free(*out);
-	*out = (uint8*)aligned_malloc(seed_count * stride, stride);
+	*out = (uint8_t*)aligned_malloc(seed_count * stride, stride);
 	for (int i = 0; i < seed_count; i++)
 	{
 		_generate_alg5_values_for_seed(*out + i * stride, seeds[i], entries, bits, packing_16);
 	}
 }
 
-void RNG::generate_alg5_values_for_seeds_128_8(uint8_t** out, uint16* seeds, int seed_count)
+void RNG::generate_alg5_values_for_seeds_128_8(uint8_t** out, uint16_t* seeds, int seed_count)
 {
 	generate_alg5_values_for_seeds(out, seeds, seed_count, 128, false);
 }
 
-void RNG::_generate_alg5_values(uint8** rng_values, int bits, bool packing_16)
+void RNG::_generate_alg5_values(uint8_t** rng_values, int bits, bool packing_16)
 {
 	if (*rng_values == nullptr)
 	{
 		int bytes = bits / 8;
-		*rng_values = (uint8*)aligned_malloc(0x10000 * bytes, 64);
+		*rng_values = (uint8_t*)aligned_malloc(0x10000 * bytes, 64);
 		for (int i = 0; i < 0x10000; i++)
 		{
-			_generate_alg5_values_for_seed(*rng_values + i * bytes, (uint16)i, 1, bits, packing_16);
+			_generate_alg5_values_for_seed(*rng_values + i * bytes, (uint16_t)i, 1, bits, packing_16);
 		}
 	}
 }
@@ -550,22 +554,22 @@ void RNG::generate_alg5_values_8_8()
 
 void RNG::generate_alg5_values_32_8()
 {
-	_generate_alg5_values((uint8**)&alg5_values_32_8, 32, false);
+	_generate_alg5_values((uint8_t**)&alg5_values_32_8, 32, false);
 }
 
 void RNG::generate_alg5_values_32_16()
 {
-	_generate_alg5_values((uint8**)&alg5_values_32_16, 32, true);
+	_generate_alg5_values((uint8_t**)&alg5_values_32_16, 32, true);
 }
 
 void RNG::generate_alg5_values_64_8()
 {
-	_generate_alg5_values((uint8**)&alg5_values_64_8, 64, false);
+	_generate_alg5_values((uint8_t**)&alg5_values_64_8, 64, false);
 }
 
 void RNG::generate_alg5_values_64_16()
 {
-	_generate_alg5_values((uint8**)&alg5_values_64_16, 64, true);
+	_generate_alg5_values((uint8_t**)&alg5_values_64_16, 64, true);
 }
 
 void RNG::generate_alg5_values_128_8()
@@ -593,17 +597,17 @@ void RNG::generate_alg5_values_512_8()
 	_generate_alg5_values(&alg5_values_512_8, 512, false);
 }
 
-void RNG::_generate_alg6_values_for_seed(uint8* out, uint16 seed, int entries, bool packing_16)
+void RNG::_generate_alg6_values_for_seed(uint8_t* out, uint16_t seed, int entries, bool packing_16)
 {
-	uint16 rng_seed = seed;
+	uint16_t rng_seed = seed;
 	for (int j = 0; j < entries; j++)
 	{
-		uint8 val = run_rng(&rng_seed) & 0x80;
+		uint8_t val = static_cast<uint8_t>(run_rng(&rng_seed) & 0x80);
 		packing_store(out, j, val, packing_16);
 	}
 }
 
-void RNG::generate_alg6_values_for_seeds(uint8** out, uint16* seeds, int seed_count, bool packing_16)
+void RNG::generate_alg6_values_for_seeds(uint8_t** out, uint16_t* seeds, int seed_count, bool packing_16)
 {
 	const int entries = 2048;
 	int stride = entries * (packing_16 ? 2 : 1);
@@ -615,12 +619,12 @@ void RNG::generate_alg6_values_for_seeds(uint8** out, uint16* seeds, int seed_co
 	}
 }
 
-void RNG::generate_alg6_values_for_seeds_8(uint8_t** out, uint16* seeds, int seed_count)
+void RNG::generate_alg6_values_for_seeds_8(uint8_t** out, uint16_t* seeds, int seed_count)
 {
 	generate_alg6_values_for_seeds(out, seeds, seed_count, false);
 }
 
-void RNG::_generate_alg6_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)
+void RNG::_generate_alg6_values(uint8_t** rng_values, bool shuffle, int bits, bool packing_16)
 {
 	if (*rng_values == nullptr)
 	{
@@ -629,12 +633,12 @@ void RNG::_generate_alg6_values(uint8** rng_values, bool shuffle, int bits, bool
 
 		for (int i = 0; i < 0x10000; i++)
 		{
-			uint8* seed_out = *rng_values + i * stride;
-			_generate_alg6_values_for_seed(seed_out, (uint16)i, 128, packing_16);
+			uint8_t* seed_out = *rng_values + i * stride;
+			_generate_alg6_values_for_seed(seed_out, (uint16_t)i, 128, packing_16);
 
 			if (shuffle)
 			{
-				uint8 temp[128];
+				uint8_t temp[128];
 				for (int k = 0; k < 128; k++)
 					temp[k] = packing_load(seed_out, k, packing_16);
 				for (int k = 0; k < 128; k++)
@@ -666,29 +670,29 @@ void RNG::generate_alg6_values_8()
 
 void RNG::generate_alg6_values_16()
 {
-	_generate_alg6_values((uint8**)&alg6_values_16, false, -1, true);
+	_generate_alg6_values((uint8_t**)&alg6_values_16, false, -1, true);
 }
 
-void RNG::_generate_alg06_values(uint8** rng_values, bool shuffle, int bits, bool packing_16)
+void RNG::_generate_alg06_values(uint8_t** rng_values, bool shuffle, int bits, bool packing_16)
 {
 	if (*rng_values == nullptr)
 	{
 		*rng_values = packing_alloc(0x10000 * 128, packing_16);
 
-		uint16 rng_seed;
+		uint16_t rng_seed;
 		for (int i = 0; i < 0x10000; i++)
 		{
 			for (int j = 0; j < 128; j++)
 			{
 				packing_store(*rng_values, i * 128 + j, 0, packing_16);
 			}
-			rng_seed = i;
+			rng_seed = static_cast<uint16_t>(i);
 			for (int j = 0; j < 128; j++)
 			{
-				uint8 rng_res = run_rng(&rng_seed);
+				uint8_t rng_res = run_rng(&rng_seed);
 
-				uint8 alg0_val = (rng_res >> 7) & 0x01;
-				uint8 alg6_val = rng_res & 0x80;
+				uint8_t alg0_val = static_cast<uint8_t>((rng_res >> 7) & 0x01);
+				uint8_t alg6_val = static_cast<uint8_t>(rng_res & 0x80);
 
 				int alg0_offset = (127 - j);
 				int alg6_offset = j;
@@ -698,11 +702,11 @@ void RNG::_generate_alg06_values(uint8** rng_values, bool shuffle, int bits, boo
 					alg6_offset = shuffle_8(alg6_offset, bits);
 				}
 
-				uint8 old_val = packing_load(*rng_values, i * 128 + alg0_offset, packing_16);
-				packing_store(*rng_values, i * 128 + alg0_offset, old_val | alg0_val, packing_16);
+				uint8_t old_val = packing_load(*rng_values, i * 128 + alg0_offset, packing_16);
+				packing_store(*rng_values, i * 128 + alg0_offset, static_cast<uint8_t>(old_val | alg0_val), packing_16);
 
 				old_val = packing_load(*rng_values, i * 128 + alg6_offset, packing_16);
-				packing_store(*rng_values, i * 128 + alg6_offset, old_val | alg6_val, packing_16);
+				packing_store(*rng_values, i * 128 + alg6_offset, static_cast<uint8_t>(old_val | alg6_val), packing_16);
 			}
 		}
 	}
@@ -710,17 +714,17 @@ void RNG::_generate_alg06_values(uint8** rng_values, bool shuffle, int bits, boo
 
 void RNG::generate_alg06_values_8()
 {
-	_generate_alg06_values((uint8**)&alg06_values_8, false, -1, false);
+	_generate_alg06_values((uint8_t**)&alg06_values_8, false, -1, false);
 }
 
 void RNG::generate_alg06_values_128_8_shuffled()
 {
-	_generate_alg06_values((uint8**)&alg06_values_128_8_shuffled, true, 128, false);
+	_generate_alg06_values((uint8_t**)&alg06_values_128_8_shuffled, true, 128, false);
 }
 
 void RNG::generate_seed_forward_1()
 {
-	seed_forward_1 = new uint16[256 * 256];
+	seed_forward_1 = new uint16_t[256 * 256];
 	for (int i = 0; i < 0x10000; i++)
 	{
 		seed_forward_1[i] = rng_table[i];
@@ -729,11 +733,11 @@ void RNG::generate_seed_forward_1()
 
 void RNG::generate_seed_forward_128()
 {
-	seed_forward_128 = new uint16[256 * 256];
-	uint16 rng_seed;
+	seed_forward_128 = new uint16_t[256 * 256];
+	uint16_t rng_seed;
 	for (int i = 0; i < 0x10000; i++)
 	{
-		rng_seed = i;
+		rng_seed = static_cast<uint16_t>(i);
 		for (int j = 0; j < 128; j++)
 		{
 			rng_seed = rng_table[rng_seed];
@@ -746,12 +750,12 @@ void RNG::generate_seed_forward()
 {
 	if (seed_forward == nullptr)
 	{
-		seed_forward = new uint16[256 * 256 * 2048];
-		uint16 rng_seed;
+		seed_forward = new uint16_t[256 * 256 * 2048];
+		uint16_t rng_seed;
 		for (int i = 0; i < 0x10000; i++)
 		{
-			uint16* cur_seed_ptr = &(seed_forward[i * 2048]);
-			rng_seed = i;
+			uint16_t* cur_seed_ptr = &(seed_forward[i * 2048]);
+			rng_seed = static_cast<uint16_t>(i);
 			for (int j = 0; j < 2048; j++)
 			{
 				cur_seed_ptr[j] = rng_seed;
@@ -778,17 +782,17 @@ void RNG::generate_rng_seq_tables()
 	// Only the 3 pure cycles need 127-entry wrap-around padding.
 	// Max size: 65536 + 3*127 = 65917 entries.
 
-	const uint32 MAX_SEQ_SIZE = 65536 + 3 * 127;
-	rng_seq_table = (uint16*)aligned_malloc(MAX_SEQ_SIZE * sizeof(uint16), 64);
-	rng_pos_table = (uint32*)aligned_malloc(0x10000 * sizeof(uint32), 64);
+	const uint32_t MAX_SEQ_SIZE = 65536 + 3 * 127;
+	rng_seq_table = (uint16_t*)aligned_malloc(MAX_SEQ_SIZE * sizeof(uint16_t), 64);
+	rng_pos_table = (uint32_t*)aligned_malloc(0x10000 * sizeof(uint32_t), 64);
 
 	bool visited[0x10000] = {};
-	uint32 write_pos = 0;
+	uint32_t write_pos = 0;
 
 	// 1. Z1 tail: walk forward from 0x2143 until we reach 0xAA6D (Z0's entry point).
 	//    No padding needed — Z0 follows immediately, so reads naturally continue into it.
 	{
-		uint16 cur = 0x2143;
+		uint16_t cur = 0x2143;
 		while (cur != 0xAA6D)
 		{
 			rng_pos_table[cur] = write_pos;
@@ -800,54 +804,54 @@ void RNG::generate_rng_seq_tables()
 
 	// 2. Z0 cycle: start from 0xAA6D so it's contiguous with the Z1 tail above.
 	{
-		uint32 z0_base = write_pos;
-		uint16 cur = 0xAA6D;
+		uint32_t z0_base = write_pos;
+		uint16_t cur = 0xAA6D;
 		do {
 			rng_pos_table[cur] = write_pos;
 			rng_seq_table[write_pos++] = rng_table[cur];
 			visited[cur] = true;
 			cur = rng_table[cur];
 		} while (cur != 0xAA6D);
-		uint32 z0_len = write_pos - z0_base;
-		for (uint32 i = 0; i < 127; i++)
+		uint32_t z0_len = write_pos - z0_base;
+		for (uint32_t i = 0; i < 127; i++)
 			rng_seq_table[write_pos++] = rng_seq_table[z0_base + (i % z0_len)];
 	}
 
 	// 3. X cycle: start from 0x000F.
 	{
-		uint32 x_base = write_pos;
-		uint16 cur = 0x000F;
+		uint32_t x_base = write_pos;
+		uint16_t cur = 0x000F;
 		do {
 			rng_pos_table[cur] = write_pos;
 			rng_seq_table[write_pos++] = rng_table[cur];
 			visited[cur] = true;
 			cur = rng_table[cur];
 		} while (cur != 0x000F);
-		uint32 x_len = write_pos - x_base;
-		for (uint32 i = 0; i < 127; i++)
+		uint32_t x_len = write_pos - x_base;
+		for (uint32_t i = 0; i < 127; i++)
 			rng_seq_table[write_pos++] = rng_seq_table[x_base + (i % x_len)];
 	}
 
 	// 4. Y cycle: start from 0x0004.
 	{
-		uint32 y_base = write_pos;
-		uint16 cur = 0x0004;
+		uint32_t y_base = write_pos;
+		uint16_t cur = 0x0004;
 		do {
 			rng_pos_table[cur] = write_pos;
 			rng_seq_table[write_pos++] = rng_table[cur];
 			visited[cur] = true;
 			cur = rng_table[cur];
 		} while (cur != 0x0004);
-		uint32 y_len = write_pos - y_base;
-		for (uint32 i = 0; i < 127; i++)
+		uint32_t y_len = write_pos - y_base;
+		for (uint32_t i = 0; i < 127; i++)
 			rng_seq_table[write_pos++] = rng_seq_table[y_base + (i % y_len)];
 	}
 
 	rng_seq_table_size = write_pos;
 
 	// Verify all 65536 seeds were covered.
-	uint32 missed = 0;
-	for (uint32 s = 0; s < 0x10000; s++)
+	uint32_t missed = 0;
+	for (uint32_t s = 0; s < 0x10000; s++)
 	{
 		if (!visited[s])
 		{
@@ -933,73 +937,72 @@ void RNG::cleanup()
 	aligned_free(rng_pos_table); rng_pos_table = nullptr;
 }
 
-uint16* RNG::rng_table = nullptr;
-uint16* RNG::rng_seq_table      = nullptr;
-uint32* RNG::rng_pos_table      = nullptr;
-uint32  RNG::rng_seq_table_size = 0;
+uint16_t* RNG::rng_table = nullptr;
+uint16_t* RNG::rng_seq_table      = nullptr;
+uint32_t* RNG::rng_pos_table      = nullptr;
+uint32_t  RNG::rng_seq_table_size = 0;
 
-uint8* RNG::regular_rng_values_8 = nullptr;
-uint8* RNG::regular_rng_values_128_8_shuffled = nullptr;
-uint8* RNG::regular_rng_values_256_8_shuffled = nullptr;
-uint8* RNG::regular_rng_values_512_8_shuffled = nullptr;
-uint8* RNG::regular_rng_values_8_hi = nullptr;
-uint8* RNG::regular_rng_values_256_8_shuffled_hi = nullptr;
-uint8* RNG::regular_rng_values_8_lo = nullptr;
-uint8* RNG::regular_rng_values_256_8_shuffled_lo = nullptr;
-uint16* RNG:: regular_rng_values_16 = nullptr;
+uint8_t* RNG::regular_rng_values_8 = nullptr;
+uint8_t* RNG::regular_rng_values_128_8_shuffled = nullptr;
+uint8_t* RNG::regular_rng_values_256_8_shuffled = nullptr;
+uint8_t* RNG::regular_rng_values_512_8_shuffled = nullptr;
+uint8_t* RNG::regular_rng_values_8_hi = nullptr;
+uint8_t* RNG::regular_rng_values_256_8_shuffled_hi = nullptr;
+uint8_t* RNG::regular_rng_values_8_lo = nullptr;
+uint8_t* RNG::regular_rng_values_256_8_shuffled_lo = nullptr;
+uint16_t* RNG:: regular_rng_values_16 = nullptr;
 
-uint8* RNG::expansion_values_8 = nullptr;
-uint8* RNG::expansion_values_128_8_shuffled = nullptr;
-uint8* RNG::expansion_values_256_8_shuffled = nullptr;
+uint8_t* RNG::expansion_values_8 = nullptr;
+uint8_t* RNG::expansion_values_128_8_shuffled = nullptr;
+uint8_t* RNG::expansion_values_256_8_shuffled = nullptr;
+uint8_t* RNG::expansion_values_512_8_shuffled = nullptr;
 
-uint16* RNG::seed_forward = nullptr;
-uint16* RNG::seed_forward_1 = nullptr;
-uint16* RNG::seed_forward_128 = nullptr;
+uint16_t* RNG::seed_forward = nullptr;
+uint16_t* RNG::seed_forward_1 = nullptr;
+uint16_t* RNG::seed_forward_128 = nullptr;
 
+uint8_t* RNG::alg0_values_8 = nullptr;
+uint8_t* RNG::alg0_values_128_8_shuffled = nullptr;
+uint8_t* RNG::alg0_values_256_8_shuffled = nullptr;
+uint8_t* RNG::alg0_values_512_8_shuffled = nullptr;
+uint16_t* RNG::alg0_values_16 = nullptr;
 
-uint8* RNG::alg0_values_8 = nullptr;
-uint8* RNG::alg0_values_128_8_shuffled = nullptr;
-uint8* RNG::alg0_values_256_8_shuffled = nullptr;
-uint8* RNG::alg0_values_512_8_shuffled = nullptr;
-uint16* RNG::alg0_values_16 = nullptr;
+uint8_t* RNG::alg2_values_8_8 = nullptr;
+uint32_t* RNG::alg2_values_32_8 = nullptr;
+uint32_t* RNG::alg2_values_32_16 = nullptr;
+uint64_t* RNG::alg2_values_64_8 = nullptr;
+uint64_t* RNG::alg2_values_64_16 = nullptr;
+uint8_t* RNG::alg2_values_128_8 = nullptr;
+uint8_t* RNG::alg2_values_128_16 = nullptr;
+uint8_t* RNG::alg2_values_256_8 = nullptr;
+uint8_t* RNG::alg2_values_256_16 = nullptr;
+uint8_t* RNG::alg2_values_512_8 = nullptr;
 
-uint8* RNG::alg2_values_8_8 = nullptr;
-uint32* RNG::alg2_values_32_8 = nullptr;
-uint32* RNG::alg2_values_32_16 = nullptr;
-uint64* RNG::alg2_values_64_8 = nullptr;
-uint64* RNG::alg2_values_64_16 = nullptr;
-uint8* RNG::alg2_values_128_8 = nullptr;
-uint8* RNG::alg2_values_128_16 = nullptr;
-uint8* RNG::alg2_values_256_8 = nullptr;
-uint8* RNG::alg2_values_256_16 = nullptr;
-uint8* RNG::alg2_values_512_8 = nullptr;
+uint8_t* RNG::alg4_values_8 = nullptr;
+uint8_t* RNG::alg4_values_8_hi = nullptr;
+uint8_t* RNG::alg4_values_128_8_shuffled = nullptr;
+uint8_t* RNG::alg4_values_256_8_shuffled = nullptr;
+uint8_t* RNG::alg4_values_512_8_shuffled = nullptr;
+uint8_t* RNG::alg4_values_256_8_shuffled_hi = nullptr;
+uint8_t* RNG::alg4_values_8_lo = nullptr;
+uint8_t* RNG::alg4_values_256_8_shuffled_lo = nullptr;
+uint16_t* RNG::alg4_values_16 = nullptr;
 
-uint8* RNG::alg4_values_8 = nullptr;
-uint8* RNG::alg4_values_8_hi = nullptr;
-uint8* RNG::alg4_values_128_8_shuffled = nullptr;
-uint8* RNG::alg4_values_256_8_shuffled = nullptr;
-uint8* RNG::alg4_values_512_8_shuffled = nullptr;
-uint8* RNG::alg4_values_256_8_shuffled_hi = nullptr;
-uint8* RNG::alg4_values_8_lo = nullptr;
-uint8* RNG::alg4_values_256_8_shuffled_lo = nullptr;
-uint16* RNG::alg4_values_16 = nullptr;
+uint8_t* RNG::alg5_values_8_8 = nullptr;
+uint32_t* RNG::alg5_values_32_8 = nullptr;
+uint32_t* RNG::alg5_values_32_16 = nullptr;
+uint64_t* RNG::alg5_values_64_8 = nullptr;
+uint64_t* RNG::alg5_values_64_16 = nullptr;
+uint8_t* RNG::alg5_values_128_8 = nullptr;
+uint8_t* RNG::alg5_values_128_16 = nullptr;
+uint8_t* RNG::alg5_values_256_8 = nullptr;
+uint8_t* RNG::alg5_values_256_16 = nullptr;
+uint8_t* RNG::alg5_values_512_8 = nullptr;
 
-uint8* RNG::alg5_values_8_8 = nullptr;
-uint32* RNG::alg5_values_32_8 = nullptr;
-uint32* RNG::alg5_values_32_16 = nullptr;
-uint64* RNG::alg5_values_64_8 = nullptr;
-uint64* RNG::alg5_values_64_16 = nullptr;
-uint8* RNG::alg5_values_128_8 = nullptr;
-uint8* RNG::alg5_values_128_16 = nullptr;
-uint8* RNG::alg5_values_256_8 = nullptr;
-uint8* RNG::alg5_values_256_16 = nullptr;
-uint8* RNG::alg5_values_512_8 = nullptr;
-
-uint8* RNG::alg6_values_8 = nullptr;
-uint8* RNG::alg6_values_128_8_shuffled = nullptr;
-uint8* RNG::alg6_values_256_8_shuffled = nullptr;
-uint8* RNG::alg6_values_512_8_shuffled = nullptr;
-uint16* RNG::alg6_values_16 = nullptr;
-
-uint8* RNG::alg06_values_8 = nullptr;
-uint8* RNG::alg06_values_128_8_shuffled = nullptr;
+uint8_t* RNG::alg6_values_8 = nullptr;
+uint8_t* RNG::alg6_values_128_8_shuffled = nullptr;
+uint8_t* RNG::alg6_values_256_8_shuffled = nullptr;
+uint8_t* RNG::alg6_values_512_8_shuffled = nullptr;
+uint16_t* RNG::alg6_values_16 = nullptr;
+uint8_t* RNG::alg06_values_8 = nullptr;
+uint8_t* RNG::alg06_values_128_8_shuffled = nullptr;

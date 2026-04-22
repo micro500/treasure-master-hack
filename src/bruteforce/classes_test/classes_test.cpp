@@ -4,11 +4,45 @@
 #include "key_schedule.h"
 #include "tm_8.h"
 #include "tm_32_8.h"
+#include "tm_64_8.h"
 #include "tm_avx_r128_8.h"
 #include "tm_avx_r128s_8.h"
 #include "tm_avx_r128s_map_8.h"
 #include "tm_avx_r128_map_8.h"
 #include "tm_avx_r256_map_8.h"
+#include "tm_avx2_r256_map_8.h"
+#include "tm_avx2_r256s_map_8.h"
+#include "tm_avx2_r256s_8.h"
+#include "tm_avx2_r256_8.h"
+#include "tm_avx2_m256_8.h"
+#include "tm_avx2_m256s_8.h"
+#include "tm_avx2_m256_map_8.h"
+#include "tm_avx2_m256s_map_8.h"
+#include "tm_avx512bw_r512_8.h"
+#include "tm_avx512bw_r512s_8.h"
+#include "tm_avx512bw_r512_map_8.h"
+#include "tm_avx512bw_r512s_map_8.h"
+#include "tm_avx512vl_r128_8.h"
+#include "tm_avx512vl_r128s_8.h"
+#include "tm_avx512vl_r128_map_8.h"
+#include "tm_avx512vl_r128s_map_8.h"
+#include "tm_avx512vl_r256_8.h"
+#include "tm_avx512vl_r256s_8.h"
+#include "tm_avx512vl_r256_map_8.h"
+#include "tm_avx512vl_r256s_map_8.h"
+#include "tm_avx512bwvl_r512_8.h"
+#include "tm_avx512bwvl_r512s_8.h"
+#include "tm_avx512bwvl_r512_map_8.h"
+#include "tm_avx512bwvl_r512s_map_8.h"
+#include "tm_avx_m256_8.h"
+#include "tm_ssse3_r128_8.h"
+#include "tm_ssse3_r128s_8.h"
+#include "tm_ssse3_r128_map_8.h"
+#include "tm_ssse3_r128s_map_8.h"
+#include "tm_ssse3_m128_8.h"
+#include "tm_ssse3_m128s_8.h"
+#include "tm_ssse3_m128_map_8.h"
+#include "tm_ssse3_m128s_map_8.h"
 //#include "tm_opencl_seq_test.h"
 
 // Shared RNG — all implementations use the same tables; each class
@@ -19,18 +53,52 @@ static RNG g_rng;
 // Test fixture
 // =========================================================
 
-using Implementations = ::testing::Types<tm_8/*, tm_32_8*/, tm_avx_r128_8, tm_avx_r128s_8, tm_avx_r128s_map_8, tm_avx_r128_map_8, tm_avx_r256_map_8/*, *tm_opencl_seq_test*/>;
+using Implementations = ::testing::Types<tm_8, tm_32_8, tm_64_8, tm_avx_r128_8, tm_avx_r128s_8, tm_avx_r128s_map_8, tm_avx_r128_map_8, tm_avx_r256_map_8, tm_avx2_r256_map_8, tm_avx2_r256s_map_8, tm_avx2_r256s_8, tm_avx2_r256_8, tm_avx2_m256_8, tm_avx2_m256s_8, tm_avx2_m256_map_8, tm_avx2_m256s_map_8, tm_avx_m256_8, tm_ssse3_r128_8, tm_ssse3_r128s_8, tm_ssse3_r128_map_8, tm_ssse3_r128s_map_8, tm_ssse3_m128_8, tm_ssse3_m128s_8, tm_ssse3_m128_map_8, tm_ssse3_m128s_map_8, tm_avx512bw_r512_8, tm_avx512bw_r512s_8, tm_avx512bw_r512_map_8, tm_avx512bw_r512s_map_8, tm_avx512vl_r128_8, tm_avx512vl_r128s_8, tm_avx512vl_r128_map_8, tm_avx512vl_r128s_map_8, tm_avx512vl_r256_8, tm_avx512vl_r256s_8, tm_avx512vl_r256_map_8, tm_avx512vl_r256s_map_8, tm_avx512bwvl_r512_8, tm_avx512bwvl_r512s_8, tm_avx512bwvl_r512_map_8, tm_avx512bwvl_r512s_map_8>;
 
 struct ImplementationNames {
     template <typename T>
     static std::string GetName(int i) {
         if (std::is_same<T, tm_8>()) return "tm_8";
         if (std::is_same<T, tm_32_8>()) return "tm_32_8";
+        if (std::is_same<T, tm_64_8>()) return "tm_64_8";
         if (std::is_same<T, tm_avx_r128_8>()) return "tm_avx_r128_8";
         if (std::is_same<T, tm_avx_r128s_8>()) return "tm_avx_r128s_8";
         if (std::is_same<T, tm_avx_r128s_map_8>()) return "tm_avx_r128s_map_8";
         if (std::is_same<T, tm_avx_r128_map_8>()) return "tm_avx_r128_map_8";
         if (std::is_same<T, tm_avx_r256_map_8>()) return "tm_avx_r256_map_8";
+        if (std::is_same<T, tm_avx2_r256_map_8>()) return "tm_avx2_r256_map_8";
+        if (std::is_same<T, tm_avx2_r256s_map_8>()) return "tm_avx2_r256s_map_8";
+        if (std::is_same<T, tm_avx2_r256s_8>()) return "tm_avx2_r256s_8";
+        if (std::is_same<T, tm_avx2_r256_8>()) return "tm_avx2_r256_8";
+        if (std::is_same<T, tm_avx2_m256_8>()) return "tm_avx2_m256_8";
+        if (std::is_same<T, tm_avx2_m256s_8>()) return "tm_avx2_m256s_8";
+        if (std::is_same<T, tm_avx2_m256_map_8>()) return "tm_avx2_m256_map_8";
+        if (std::is_same<T, tm_avx2_m256s_map_8>()) return "tm_avx2_m256s_map_8";
+        if (std::is_same<T, tm_avx512bw_r512_8>()) return "tm_avx512bw_r512_8";
+        if (std::is_same<T, tm_avx512bw_r512s_8>()) return "tm_avx512bw_r512s_8";
+        if (std::is_same<T, tm_avx512bw_r512_map_8>()) return "tm_avx512bw_r512_map_8";
+        if (std::is_same<T, tm_avx512bw_r512s_map_8>()) return "tm_avx512bw_r512s_map_8";
+        if (std::is_same<T, tm_avx_m256_8>()) return "tm_avx_m256_8";
+        if (std::is_same<T, tm_ssse3_r128_8>()) return "tm_ssse3_r128_8";
+        if (std::is_same<T, tm_ssse3_r128s_8>()) return "tm_ssse3_r128s_8";
+        if (std::is_same<T, tm_ssse3_r128_map_8>()) return "tm_ssse3_r128_map_8";
+        if (std::is_same<T, tm_ssse3_r128s_map_8>()) return "tm_ssse3_r128s_map_8";
+        if (std::is_same<T, tm_ssse3_m128_8>()) return "tm_ssse3_m128_8";
+        if (std::is_same<T, tm_ssse3_m128s_8>()) return "tm_ssse3_m128s_8";
+        if (std::is_same<T, tm_ssse3_m128_map_8>()) return "tm_ssse3_m128_map_8";
+        if (std::is_same<T, tm_ssse3_m128s_map_8>()) return "tm_ssse3_m128s_map_8";
+        if (std::is_same<T, tm_avx512vl_r128_8>()) return "tm_avx512vl_r128_8";
+        if (std::is_same<T, tm_avx512vl_r128s_8>()) return "tm_avx512vl_r128s_8";
+        if (std::is_same<T, tm_avx512vl_r128_map_8>()) return "tm_avx512vl_r128_map_8";
+        if (std::is_same<T, tm_avx512vl_r128s_map_8>()) return "tm_avx512vl_r128s_map_8";
+        if (std::is_same<T, tm_avx512vl_r256_8>()) return "tm_avx512vl_r256_8";
+        if (std::is_same<T, tm_avx512vl_r256s_8>()) return "tm_avx512vl_r256s_8";
+        if (std::is_same<T, tm_avx512vl_r256_map_8>()) return "tm_avx512vl_r256_map_8";
+        if (std::is_same<T, tm_avx512vl_r256s_map_8>()) return "tm_avx512vl_r256s_map_8";
+        if (std::is_same<T, tm_avx512bwvl_r512_8>()) return "tm_avx512bwvl_r512_8";
+        if (std::is_same<T, tm_avx512bwvl_r512s_8>()) return "tm_avx512bwvl_r512s_8";
+        if (std::is_same<T, tm_avx512bwvl_r512_map_8>()) return "tm_avx512bwvl_r512_map_8";
+        if (std::is_same<T, tm_avx512bwvl_r512s_map_8>()) return "tm_avx512bwvl_r512s_map_8";
         //if (std::is_same<T, tm_opencl_seq_test>()) return "tm_opencl_seq_test";
 
         return std::to_string(i);
@@ -58,13 +126,13 @@ TYPED_TEST_SUITE(TmTest, Implementations, ImplementationNames);
 // =========================================================
 template<typename T>
 static void run_alg_test(T& impl, int alg_id,
-    const uint8* input, uint16 seed_in,
-    const uint8* expected, uint16 expected_seed_out)
+    const uint8_t* input, uint16_t seed_in,
+    const uint8_t* expected, uint16_t expected_seed_out)
 {
-    uint8 output[128];
+    uint8_t output[128];
     for (int i = 0; i < 128; i++)
         output[i] = input[i];
-    uint16 seed = seed_in;
+    uint16_t seed = seed_in;
     impl.test_algorithm(alg_id, output, &seed);
     for (int i = 0; i < 128; i++)
         EXPECT_EQ(output[i], expected[i]) << "byte " << i;
@@ -153,7 +221,7 @@ TYPED_TEST(TmTest, Alg7_V1) {
 // =========================================================
 TYPED_TEST(TmTest, Expansion_V0) {
     this->init(expansion_v0_key);
-    uint8 out[128];
+    uint8_t out[128];
     this->impl->test_expansion(expansion_v0_data, out);
     for (int i = 0; i < 128; i++)
         EXPECT_EQ(out[i], expansion_v0_out[i]) << "byte " << i;
@@ -161,7 +229,7 @@ TYPED_TEST(TmTest, Expansion_V0) {
 
 TYPED_TEST(TmTest, Expansion_V1) {
     this->init(expansion_v1_key);
-    uint8 out[128];
+    uint8_t out[128];
     this->impl->test_expansion(expansion_v1_data, out);
     for (int i = 0; i < 128; i++)
         EXPECT_EQ(out[i], expansion_v1_out[i]) << "byte " << i;
@@ -173,7 +241,7 @@ TYPED_TEST(TmTest, Expansion_V1) {
 // =========================================================
 TYPED_TEST(TmTest, Pipeline_V0) {
     this->init(pipeline_v0_key);
-    uint8 out[128];
+    uint8_t out[128];
     this->impl->test_bruteforce_data(pipeline_v0_data, out);
     for (int i = 0; i < 128; i++)
         EXPECT_EQ(out[i], pipeline_v0_out[i]) << "byte " << i;
@@ -181,7 +249,7 @@ TYPED_TEST(TmTest, Pipeline_V0) {
 
 TYPED_TEST(TmTest, Pipeline_V1) {
     this->init(pipeline_v1_key);
-    uint8 out[128];
+    uint8_t out[128];
     this->impl->test_bruteforce_data(pipeline_v1_data, out);
     for (int i = 0; i < 128; i++)
         EXPECT_EQ(out[i], pipeline_v1_out[i]) << "byte " << i;

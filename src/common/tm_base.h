@@ -3,13 +3,56 @@
 #include <string>
 #include <optional>
 #include "alignment2.h"
-#include "data_sizes.h"
 #include "rng_obj.h"
 #include "key_schedule.h"
 
 #ifdef __unix__
 #define __forceinline __attribute__((always_inline)) inline
 #endif
+
+#define WC_LIST_128(T, ...) T wc##__VA_ARGS__##0, T wc##__VA_ARGS__##1, T wc##__VA_ARGS__##2, T wc##__VA_ARGS__##3, T wc##__VA_ARGS__##4, T wc##__VA_ARGS__##5, T wc##__VA_ARGS__##6, T wc##__VA_ARGS__##7
+#define WC_LIST_256(T, ...) T wc##__VA_ARGS__##0, T wc##__VA_ARGS__##1, T wc##__VA_ARGS__##2, T wc##__VA_ARGS__##3
+#define WC_LIST_512(T, ...) T wc##__VA_ARGS__##0, T wc##__VA_ARGS__##1
+
+#define WC_PASS_128       WC_LIST_128(,)
+#define WC_PASS_256       WC_LIST_256(,)
+#define WC_PASS_512       WC_LIST_512(,)
+
+#define WC_VARS_128       __m128i WC_PASS_128
+#define WC_VARS_256       __m256i WC_PASS_256
+#define WC_VARS_512       __m512i WC_PASS_512
+
+#define WC_ARGS_128       WC_LIST_128(__m128i&,)
+#define WC_ARGS_256       WC_LIST_256(__m256i&,)
+#define WC_ARGS_512       WC_LIST_512(__m512i&,)
+
+#define WC_PASSx_128(S)   WC_LIST_128(, S)
+#define WC_PASSx_256(S)   WC_LIST_256(, S)
+#define WC_PASSx_512(S)   WC_LIST_512(, S)
+
+#define WC_VARSx_128(S)   __m128i WC_PASSx_128(S)
+#define WC_VARSx_256(S)   __m256i WC_PASSx_256(S)
+#define WC_VARSx_512(S)   __m512i WC_PASSx_512(S)
+
+#define WC_ARGSx_128(S)   WC_LIST_128(__m128i&, S)
+#define WC_ARGSx_256(S)   WC_LIST_256(__m256i&, S)
+#define WC_ARGSx_512(S)   WC_LIST_512(__m512i&, S)
+
+#define WC_COPY_128(D, ...) wc##D##0 = wc##__VA_ARGS__##0; wc##D##1 = wc##__VA_ARGS__##1; wc##D##2 = wc##__VA_ARGS__##2; wc##D##3 = wc##__VA_ARGS__##3; wc##D##4 = wc##__VA_ARGS__##4; wc##D##5 = wc##__VA_ARGS__##5; wc##D##6 = wc##__VA_ARGS__##6; wc##D##7 = wc##__VA_ARGS__##7;
+#define WC_COPY_256(D, ...) wc##D##0 = wc##__VA_ARGS__##0; wc##D##1 = wc##__VA_ARGS__##1; wc##D##2 = wc##__VA_ARGS__##2; wc##D##3 = wc##__VA_ARGS__##3;
+#define WC_COPY_512(D, ...) wc##D##0 = wc##__VA_ARGS__##0; wc##D##1 = wc##__VA_ARGS__##1;
+
+#define WC_XOR_PASS_128 WC_PASSx_128(_xor)
+#define WC_XOR_PASS_256 WC_PASSx_256(_xor)
+#define WC_XOR_PASS_512 WC_PASSx_512(_xor)
+
+#define WC_XOR_VARS_128 WC_VARSx_128(_xor)
+#define WC_XOR_VARS_256 WC_VARSx_256(_xor)
+#define WC_XOR_VARS_512 WC_VARSx_512(_xor)
+
+#define WC_COPY_XOR_128 WC_COPY_128(_xor)
+#define WC_COPY_XOR_256 WC_COPY_256(_xor)
+#define WC_COPY_XOR_512 WC_COPY_512(_xor)
 
 #define reverse_offset(x) (127 - (x))
 
@@ -38,26 +81,42 @@ public:
 	TM_base(RNG *rng);
 	virtual ~TM_base() = default;
 
-	virtual void run_bruteforce_boinc(uint32 key, uint32 start_data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size) {}
-	virtual void compute_challenge_flags(uint32 key, uint32 data, const key_schedule& schedule_entries, uint8& carnival_flags_out, uint8& other_flags_out) {}
+	//virtual void run_bruteforce_boinc(uint32 start_data, const key_schedule& schedule_entries, uint32 amount_to_run, void(*report_progress)(double), uint8* result_data, uint32 result_max_size, uint32* result_size) {}
+	//virtual void compute_challenge_flags(uint32 data, const key_schedule& schedule_entries, uint8& carnival_flags_out, uint8& other_flags_out) {}
 
-	uint8 check_machine_code(uint8* data, int world);
+	virtual void run_bruteforce_boinc(uint32_t start_data, uint32_t amount_to_run, void(*report_progress)(double), uint8_t* result_data, uint32_t result_max_size, uint32_t* result_size) = 0;
+
+	virtual void compute_challenge_flags(uint32_t data, uint8_t& carnival_flags_out, uint8_t& other_flags_out) = 0;
+
+	virtual void test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed) = 0;
+	virtual void test_algorithm_n(int algorithm_id, uint8_t* data, uint16_t* rng_seed, int iterations) = 0;
+	virtual void test_expansion(uint32_t data, uint8_t* result_out) = 0;
+	virtual void test_bruteforce_data(uint32_t data, uint8_t* result_out) = 0;
+	virtual bool test_bruteforce_checksum(uint32_t data, int world) = 0;
+
+	uint8_t check_machine_code(uint8_t* data, int world);
 
 	RNG * rng;
 	std::string obj_name;
 	uint32_t key;
 	std::optional<key_schedule> schedule_entries;
 
-	void shuffle_mem(uint8* src, uint8* dest, int bits, bool packing_16);
-	void unshuffle_mem(uint8* src, uint8* dest, int bits, bool packing_16);
+	void shuffle_mem(uint8_t* src, uint8_t* dest, int bits, bool packing_16);
+	void unshuffle_mem(uint8_t* src, uint8_t* dest, int bits, bool packing_16);
 
-	ALIGNED(64) static uint8 carnival_world_data[128];
-	ALIGNED(64) static uint8 carnival_world_checksum_mask[128];
+	ALIGNED(128) uint8_t working_code_data[128];
 
-	ALIGNED(64) static uint8 other_world_data[128];
-	ALIGNED(64) static uint8 other_world_checksum_mask[128];
+	ALIGNED(128) static uint8_t carnival_world_data[128];
+	ALIGNED(128) static uint8_t carnival_world_checksum_mask[128];
+	ALIGNED(128) static uint8_t other_world_data[128];
+	ALIGNED(128) static uint8_t other_world_checksum_mask[128];
 
-	static uint8 opcode_bytes_used[0x100];
-	static uint8 opcode_type[0x100];
+	static uint8_t opcode_bytes_used[0x100];
+	static uint8_t opcode_type[0x100];
+
+	ALIGNED(128) uint8_t carnival_world_checksum_mask_shuffled[128];
+	ALIGNED(128) uint8_t carnival_world_data_shuffled[128];
+	ALIGNED(128) uint8_t other_world_checksum_mask_shuffled[128];
+	ALIGNED(128) uint8_t other_world_data_shuffled[128];
 };
 #endif // TM_BASE_H

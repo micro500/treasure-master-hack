@@ -1,5 +1,7 @@
 #include "tm_base.h"
 #include "tm_avx_r128s_8.h"
+#include "tm_ssse3_r128s_8.h"
+#include "cpu/tm_ssse3_m128_8.h"
 #include "rng_obj.h"
 #include "key_schedule.h"
 

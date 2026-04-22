@@ -30,9 +30,9 @@ __forceinline void tm_sse2_m128s_8::initialize()
 		rng->generate_regular_rng_values_128_8_shuffled();
 
 		rng->generate_alg0_values_128_8_shuffled();
-		rng->generate_alg2_values_128_8();
+		rng->generate_alg2_values_8_8();
 		rng->generate_alg4_values_128_8_shuffled();
-		rng->generate_alg5_values_128_8();
+		rng->generate_alg5_values_8_8();
 		rng->generate_alg6_values_128_8_shuffled();
 
 		initialized = true;
@@ -219,7 +219,9 @@ __forceinline void tm_sse2_m128s_8::alg_2_sub(__m128i& working_a, __m128i& worki
 
 __forceinline void tm_sse2_m128s_8::alg_2(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint16* rng_seed, __m128i& mask_top_01, __m128i& mask_80, __m128i& mask_7F, __m128i& mask_FE, __m128i& mask_01)
 {
-	__m128i carry = _mm_loadu_si128((__m128i*)(rng->alg2_values_128_8 + (*rng_seed * 16)));
+	__m128i carry = _mm_and_si128(
+		_mm_set1_epi8(static_cast<int8_t>(rng->alg2_values_8_8[*rng_seed])),
+		mask_top_01);
 
 	alg_2_sub(working_code6, working_code7, carry, mask_top_01, mask_80, mask_7F, mask_FE, mask_01);
 	alg_2_sub(working_code4, working_code5, carry, mask_top_01, mask_80, mask_7F, mask_FE, mask_01);
@@ -273,7 +275,9 @@ __forceinline void tm_sse2_m128s_8::alg_5_sub(__m128i& working_a, __m128i& worki
 
 __forceinline void tm_sse2_m128s_8::alg_5(__m128i& working_code0, __m128i& working_code1, __m128i& working_code2, __m128i& working_code3, __m128i& working_code4, __m128i& working_code5, __m128i& working_code6, __m128i& working_code7, uint16* rng_seed, __m128i& mask_top_80, __m128i& mask_80, __m128i& mask_7F, __m128i& mask_FE, __m128i& mask_01)
 {
-	__m128i carry = _mm_loadu_si128((__m128i*)(rng->alg5_values_128_8 + (*rng_seed * 16)));
+	__m128i carry = _mm_and_si128(
+		_mm_set1_epi8(static_cast<int8_t>(rng->alg5_values_8_8[*rng_seed])),
+		mask_top_80);
 
 	alg_5_sub(working_code6, working_code7, carry, mask_top_80, mask_80, mask_7F, mask_FE, mask_01);
 	alg_5_sub(working_code4, working_code5, carry, mask_top_80, mask_80, mask_7F, mask_FE, mask_01);
