@@ -24,21 +24,28 @@ tm_avx_r256_16::tm_avx_r256_16(RNG *rng_obj) : TM_base(rng_obj)
 
 __forceinline void tm_avx_r256_16::initialize()
 {
-	if (!initialized)
+	if (!_initialized)
 	{
-		rng->generate_expansion_values_8();
+		auto _r0 = rng->generate_expansion_values_8();
+		auto _r1 = rng->generate_seed_forward_1();
+		auto _r2 = rng->generate_seed_forward_128();
+		auto _r3 = rng->generate_regular_rng_values_16();
+		auto _r4 = rng->generate_alg0_values_16();
+		auto _r5 = rng->generate_alg2_values_256_16();
+		auto _r6 = rng->generate_alg5_values_256_16();
+		auto _r7 = rng->generate_alg6_values_16();
 
-		rng->generate_seed_forward_1();
-		rng->generate_seed_forward_128();
+		_expansion_8 = static_cast<uint8_t*>(_r0.get());
+		_seed_fwd_1 = static_cast<uint16_t*>(_r1.get());
+		_seed_fwd_128 = static_cast<uint16_t*>(_r2.get());
+		_regular_16 = static_cast<uint16_t*>(_r3.get());
+		_alg0_16 = static_cast<uint16_t*>(_r4.get());
+		_alg2_256_16 = static_cast<uint8_t*>(_r5.get());
+		_alg5_256_16 = static_cast<uint8_t*>(_r6.get());
+		_alg6_16 = static_cast<uint16_t*>(_r7.get());
 
-		rng->generate_regular_rng_values_16();
-
-		rng->generate_alg0_values_16();
-		rng->generate_alg2_values_256_16();
-		rng->generate_alg5_values_256_16();
-		rng->generate_alg6_values_16();
-
-		initialized = true;
+		_table_refs = { _r0, _r1, _r2, _r3, _r4, _r5, _r6, _r7 };
+		_initialized = true;
 	}
 	obj_name = "tm_avx_r256_16";
 }
@@ -62,7 +69,7 @@ void tm_avx_r256_16::expand(uint32 key, uint32 data)
 	uint16 rng_seed = (key >> 16) & 0xFFFF;
 	for (int i = 0; i < 128; i++)
 	{
-		x[i] += rng->expansion_values_8[rng_seed * 128 + i];
+		x[i] += _expansion_8[rng_seed * 128 + i];
 		x[i] = x[i] & 0xFF;
 	}
 }
@@ -117,7 +124,7 @@ void tm_avx_r256_16::run_alg(int algorithm_id, uint16 * rng_seed, int iterations
 		for (int j = 0; j < iterations; j++)
 		{
 			alg_0(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, rng_seed, mask_FF);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
+			*rng_seed = _seed_fwd_128[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 1)
@@ -125,7 +132,7 @@ void tm_avx_r256_16::run_alg(int algorithm_id, uint16 * rng_seed, int iterations
 		for (int j = 0; j < iterations; j++)
 		{
 			alg_1(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, rng_seed, mask_FF);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
+			*rng_seed = _seed_fwd_128[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 2)
@@ -133,7 +140,7 @@ void tm_avx_r256_16::run_alg(int algorithm_id, uint16 * rng_seed, int iterations
 		for (int j = 0; j < iterations; j++)
 		{
 			alg_2(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, rng_seed, mask_top_01, mask_alg2, mask_007F, mask_FE00, mask_0080);
-			*rng_seed = rng->seed_forward_1[*rng_seed];
+			*rng_seed = _seed_fwd_1[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 3)
@@ -141,7 +148,7 @@ void tm_avx_r256_16::run_alg(int algorithm_id, uint16 * rng_seed, int iterations
 		for (int j = 0; j < iterations; j++)
 		{
 			alg_3(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, rng_seed);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
+			*rng_seed = _seed_fwd_128[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 4)
@@ -149,7 +156,7 @@ void tm_avx_r256_16::run_alg(int algorithm_id, uint16 * rng_seed, int iterations
 		for (int j = 0; j < iterations; j++)
 		{
 			alg_4(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, rng_seed, mask_FF);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
+			*rng_seed = _seed_fwd_128[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 5)
@@ -157,7 +164,7 @@ void tm_avx_r256_16::run_alg(int algorithm_id, uint16 * rng_seed, int iterations
 		for (int j = 0; j < iterations; j++)
 		{
 			alg_5(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, rng_seed, mask_top_80, mask_alg5, mask_7F00, mask_00FE, mask_0001);
-			*rng_seed = rng->seed_forward_1[*rng_seed];
+			*rng_seed = _seed_fwd_1[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 6)
@@ -165,7 +172,7 @@ void tm_avx_r256_16::run_alg(int algorithm_id, uint16 * rng_seed, int iterations
 		for (int j = 0; j < iterations; j++)
 		{
 			alg_6(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, rng_seed, mask_FF);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
+			*rng_seed = _seed_fwd_128[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 7)
@@ -189,7 +196,7 @@ void tm_avx_r256_16::run_alg(int algorithm_id, uint16 * rng_seed, int iterations
 
 __forceinline void tm_avx_r256_16::alg_0(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_FF)
 {
-	uint8 * rng_start = ((uint8*)rng->alg0_values_16) + ((*rng_seed) * 128 * 2);
+	uint8 * rng_start = ((uint8*)_alg0_16) + ((*rng_seed) * 128 * 2);
 
 	__m128i cur_val_lo = _mm256_castsi256_si128(working_code0);
 	cur_val_lo = _mm_slli_epi16(cur_val_lo, 1);
@@ -267,7 +274,7 @@ __forceinline void tm_avx_r256_16::alg_0(__m256i& working_code0, __m256i& workin
 
 __forceinline void tm_avx_r256_16::alg_1(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_FF)
 {
-	uint8 * rng_start = ((uint8*)rng->regular_rng_values_16) + ((*rng_seed) * 128 * 2);
+	uint8 * rng_start = ((uint8*)_regular_16) + ((*rng_seed) * 128 * 2);
 
 	__m256i rng_val = _mm256_load_si256((__m256i *)(rng_start));
 	__m128i sum_lo = _mm_add_epi16(_mm256_castsi256_si128(working_code0), _mm256_castsi256_si128(rng_val));
@@ -320,7 +327,7 @@ __forceinline void tm_avx_r256_16::alg_1(__m256i& working_code0, __m256i& workin
 
 __forceinline void tm_avx_r256_16::alg_2(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_top_01, __m256i& mask_alg2, __m256i& mask_007F, __m256i& mask_FE00, __m256i& mask_0080)
 {
-	__m256i carry = _mm256_load_si256((__m256i *)(rng->alg2_values_256_16 + ((*rng_seed) * 32)));
+	__m256i carry = _mm256_load_si256((__m256i *)(_alg2_256_16 + ((*rng_seed) * 32)));
 
 	__m128i cur_val_lo = _mm256_castsi256_si128(working_code7);
 	__m128i cur_val_hi = _mm256_extractf128_si256(working_code7, 1);
@@ -516,7 +523,7 @@ __forceinline void tm_avx_r256_16::alg_2(__m256i& working_code0, __m256i& workin
 
 __forceinline void tm_avx_r256_16::alg_3(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed)
 {
-	uint8 * rng_start = ((uint8*)rng->regular_rng_values_16) + ((*rng_seed) * 128 * 2);
+	uint8 * rng_start = ((uint8*)_regular_16) + ((*rng_seed) * 128 * 2);
 
 	__m256i rng_val = _mm256_load_si256((__m256i *)(rng_start));
 	working_code0 = _mm256_castpd_si256(_mm256_xor_pd(_mm256_castsi256_pd(working_code0), _mm256_castsi256_pd(rng_val)));
@@ -545,7 +552,7 @@ __forceinline void tm_avx_r256_16::alg_3(__m256i& working_code0, __m256i& workin
 
 __forceinline void tm_avx_r256_16::alg_4(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_FF)
 {
-	uint8 * rng_start = ((uint8*)rng->regular_rng_values_16) + ((*rng_seed) * 128 * 2);
+	uint8 * rng_start = ((uint8*)_regular_16) + ((*rng_seed) * 128 * 2);
 
 	__m256i rng_val = _mm256_load_si256((__m256i *)(rng_start));
 	__m128i sum_lo = _mm_sub_epi16(_mm256_castsi256_si128(working_code0), _mm256_castsi256_si128(rng_val));
@@ -598,7 +605,7 @@ __forceinline void tm_avx_r256_16::alg_4(__m256i& working_code0, __m256i& workin
 
 __forceinline void tm_avx_r256_16::alg_5(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_top_80, __m256i& mask_alg5, __m256i& mask_7F00, __m256i& mask_00FE, __m256i& mask_0001)
 {
-	__m256i carry = _mm256_load_si256((__m256i *)(rng->alg5_values_256_16 + ((*rng_seed) * 32)));
+	__m256i carry = _mm256_load_si256((__m256i *)(_alg5_256_16 + ((*rng_seed) * 32)));
 
 	__m128i cur_val_lo = _mm256_castsi256_si128(working_code7);
 	__m128i cur_val_hi = _mm256_extractf128_si256(working_code7, 1);
@@ -795,7 +802,7 @@ __forceinline void tm_avx_r256_16::alg_5(__m256i& working_code0, __m256i& workin
 
 __forceinline void tm_avx_r256_16::alg_6(__m256i& working_code0, __m256i& working_code1, __m256i& working_code2, __m256i& working_code3, __m256i& working_code4, __m256i& working_code5, __m256i& working_code6, __m256i& working_code7, uint16* rng_seed, __m256i& mask_FF)
 {
-	uint8 * rng_start = ((uint8*)rng->alg6_values_16) + ((*rng_seed) * 128 * 2);
+	uint8 * rng_start = ((uint8*)_alg6_16) + ((*rng_seed) * 128 * 2);
 
 	__m128i cur_val_lo = _mm256_castsi256_si128(working_code0);
 	cur_val_lo = _mm_srli_epi16(cur_val_lo, 1);
@@ -972,37 +979,37 @@ void tm_avx_r256_16::run_all_maps(const key_schedule& schedule_entries)
 			if (algorithm_id == 0)
 			{
 					alg_0(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, &rng_seed, mask_FF);
-					rng_seed = rng->seed_forward_128[rng_seed];
+					rng_seed = _seed_fwd_128[rng_seed];
 			}
 			else if (algorithm_id == 1)
 			{
 					alg_1(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, &rng_seed, mask_FF);
-					rng_seed = rng->seed_forward_128[rng_seed];
+					rng_seed = _seed_fwd_128[rng_seed];
 			}
 			else if (algorithm_id == 2)
 			{
 					alg_2(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, &rng_seed, mask_top_01, mask_alg2, mask_007F, mask_FE00, mask_0080);
-					rng_seed = rng->seed_forward_1[rng_seed];
+					rng_seed = _seed_fwd_1[rng_seed];
 			}
 			else if (algorithm_id == 3)
 			{
 					alg_3(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, &rng_seed);
-					rng_seed = rng->seed_forward_128[rng_seed];
+					rng_seed = _seed_fwd_128[rng_seed];
 			}
 			else if (algorithm_id == 4)
 			{
 					alg_4(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, &rng_seed, mask_FF);
-					rng_seed = rng->seed_forward_128[rng_seed];
+					rng_seed = _seed_fwd_128[rng_seed];
 			}
 			else if (algorithm_id == 5)
 			{
 					alg_5(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, &rng_seed, mask_top_80, mask_alg5, mask_7F00, mask_00FE, mask_0001);
-					rng_seed = rng->seed_forward_1[rng_seed];
+					rng_seed = _seed_fwd_1[rng_seed];
 			}
 			else if (algorithm_id == 6)
 			{
 					alg_6(working_code0, working_code1, working_code2, working_code3, working_code4, working_code5, working_code6, working_code7, &rng_seed, mask_FF);
-					rng_seed = rng->seed_forward_128[rng_seed];
+					rng_seed = _seed_fwd_128[rng_seed];
 			}
 			else if (algorithm_id == 7)
 			{
@@ -1023,4 +1030,3 @@ void tm_avx_r256_16::run_all_maps(const key_schedule& schedule_entries)
 	_mm256_store_si256((__m256i*)(working_code_data + 224), working_code7);
 }
 
-bool tm_avx_r256_16::initialized = false;

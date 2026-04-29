@@ -39,7 +39,16 @@ private:
 	void add_alg(uint16* rng_seed, uint8* rng_start);
 
 	ALIGNED(32) uint8 working_code_data[128];
-	static bool initialized;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
+
+	uint8_t* _expansion_8 = nullptr;
+	uint16_t* _seed_fwd_1 = nullptr;
+	uint16_t* _seed_fwd_128 = nullptr;
+	uint8_t* _regular_8 = nullptr;
+	uint8_t* _alg0_8 = nullptr;
+	uint8_t* _alg4_8 = nullptr;
+	uint8_t* _alg6_8 = nullptr;
 };
 #endif // TM_MMX_M64_8_H
 #endif

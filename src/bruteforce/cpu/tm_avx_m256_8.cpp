@@ -9,7 +9,14 @@ tm_avx_m256_8::tm_avx_m256_8(RNG* rng_obj) : tm_avx_m256_8(rng_obj, 0) {}
 
 tm_avx_m256_8::tm_avx_m256_8(RNG* rng_obj, const uint32_t key) : tm_avx_m256_8(rng_obj, key, key_schedule(key, key_schedule::ALL_MAPS)) {}
 
-tm_avx_m256_8::tm_avx_m256_8(RNG* rng_obj, const uint32_t key, const key_schedule& schedule_entries) : TM_base(rng_obj)
+tm_avx_m256_8::tm_avx_m256_8(RNG* rng_obj, const uint32_t key, const key_schedule& schedule_entries) : TM_base(rng_obj),
+	mask_FF(_mm256_set1_epi16(static_cast<int16_t>(0xFFFF))),
+	mask_FE(_mm256_set1_epi16(static_cast<int16_t>(0xFEFE))),
+	mask_7F(_mm256_set1_epi16(0x7F7F)),
+	mask_80(_mm256_set1_epi16(static_cast<int16_t>(0x8080))),
+	mask_01(_mm256_set1_epi16(0x0101)),
+	mask_top_01(_mm256_set_epi16(0x0100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+	mask_top_80(_mm256_set_epi16(static_cast<int16_t>(0x8000), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
 {
 	initialize();
 	this->key = key;
@@ -18,22 +25,30 @@ tm_avx_m256_8::tm_avx_m256_8(RNG* rng_obj, const uint32_t key, const key_schedul
 
 __forceinline void tm_avx_m256_8::initialize()
 {
-	if (!initialized)
+	if (!_initialized)
 	{
-		rng->generate_expansion_values_8();
+		auto _r0 = rng->generate_expansion_values_8();
+		auto _r1 = rng->generate_seed_forward_1();
+		auto _r2 = rng->generate_seed_forward_128();
+		auto _r3 = rng->generate_regular_rng_values_8();
+		auto _r4 = rng->generate_alg0_values_8();
+		auto _r5 = rng->generate_alg2_values_256_8();
+		auto _r6 = rng->generate_alg4_values_8();
+		auto _r7 = rng->generate_alg5_values_256_8();
+		auto _r8 = rng->generate_alg6_values_8();
 
-		rng->generate_seed_forward_1();
-		rng->generate_seed_forward_128();
+		_expansion_8  = static_cast<uint8_t*>(_r0.get());
+		_seed_fwd_1   = static_cast<uint16_t*>(_r1.get());
+		_seed_fwd_128 = static_cast<uint16_t*>(_r2.get());
+		_regular_8    = static_cast<uint8_t*>(_r3.get());
+		_alg0_8       = static_cast<uint8_t*>(_r4.get());
+		_alg2_256_8   = static_cast<uint8_t*>(_r5.get());
+		_alg4_8       = static_cast<uint8_t*>(_r6.get());
+		_alg5_256_8   = static_cast<uint8_t*>(_r7.get());
+		_alg6_8       = static_cast<uint8_t*>(_r8.get());
 
-		rng->generate_regular_rng_values_8();
-
-		rng->generate_alg0_values_8();
-		rng->generate_alg2_values_256_8();
-		rng->generate_alg4_values_8();
-		rng->generate_alg5_values_256_8();
-		rng->generate_alg6_values_8();
-
-		initialized = true;
+		_table_refs = { _r0, _r1, _r2, _r3, _r4, _r5, _r6, _r7, _r8 };
+		_initialized = true;
 	}
 	obj_name = "tm_avx_m256_8";
 }
@@ -65,7 +80,7 @@ __forceinline void tm_avx_m256_8::_expand_code(uint32_t data)
 		x[i+7] = data & 0xFF;
 	}
 	uint16_t rng_seed = static_cast<uint16_t>((key >> 16) & 0xFFFF);
-	add_alg(&rng_seed, rng->expansion_values_8);
+	add_alg(&rng_seed, _expansion_8);
 }
 
 __forceinline void tm_avx_m256_8::add_alg(uint16_t* rng_seed, uint8_t* rng_start)
@@ -94,7 +109,7 @@ __forceinline void tm_avx_m256_8::xor_alg(uint8_t* values)
 
 __forceinline void tm_avx_m256_8::alg_0(uint16_t* rng_seed)
 {
-	uint8_t* rng_start = rng->alg0_values_8 + (*rng_seed) * 128;
+	uint8_t* rng_start = _alg0_8 + (*rng_seed) * 128;
 	for (int i = 0; i < 4; i++)
 	{
 		__m256i cur_val = _mm256_load_si256((__m256i*)(working_code_data + i * 32));
@@ -151,7 +166,7 @@ __forceinline void tm_avx_m256_8::alg_2_sub(__m256i& cur_val, __m256i& carry)
 
 __forceinline void tm_avx_m256_8::alg_2(uint16_t* rng_seed)
 {
-	__m256i carry = _mm256_load_si256((__m256i*)(rng->alg2_values_256_8 + (*rng_seed) * 32));
+	__m256i carry = _mm256_load_si256((__m256i*)(_alg2_256_8 + (*rng_seed) * 32));
 	for (int i = 3; i >= 0; i--)
 	{
 		__m256i cur_val = _mm256_load_si256((__m256i*)(working_code_data + i * 32));
@@ -162,7 +177,7 @@ __forceinline void tm_avx_m256_8::alg_2(uint16_t* rng_seed)
 
 __forceinline void tm_avx_m256_8::alg_3(uint16_t* rng_seed)
 {
-	xor_alg(rng->regular_rng_values_8 + (*rng_seed) * 128);
+	xor_alg(_regular_8 + (*rng_seed) * 128);
 }
 
 __forceinline void tm_avx_m256_8::alg_5_sub(__m256i& cur_val, __m256i& carry)
@@ -208,7 +223,7 @@ __forceinline void tm_avx_m256_8::alg_5_sub(__m256i& cur_val, __m256i& carry)
 
 __forceinline void tm_avx_m256_8::alg_5(uint16_t* rng_seed)
 {
-	__m256i carry = _mm256_load_si256((__m256i*)(rng->alg5_values_256_8 + (*rng_seed) * 32));
+	__m256i carry = _mm256_load_si256((__m256i*)(_alg5_256_8 + (*rng_seed) * 32));
 	for (int i = 3; i >= 0; i--)
 	{
 		__m256i cur_val = _mm256_load_si256((__m256i*)(working_code_data + i * 32));
@@ -219,7 +234,7 @@ __forceinline void tm_avx_m256_8::alg_5(uint16_t* rng_seed)
 
 __forceinline void tm_avx_m256_8::alg_6(uint16_t* rng_seed)
 {
-	uint8_t* rng_start = rng->alg6_values_8 + (*rng_seed) * 128;
+	uint8_t* rng_start = _alg6_8 + (*rng_seed) * 128;
 	for (int i = 0; i < 4; i++)
 	{
 		__m256i cur_val = _mm256_load_si256((__m256i*)(working_code_data + i * 32));
@@ -250,33 +265,33 @@ __forceinline void tm_avx_m256_8::_run_alg(int algorithm_id, uint16_t* rng_seed)
 	if (algorithm_id == 0)
 	{
 		alg_0(rng_seed);
-		*rng_seed = rng->seed_forward_128[*rng_seed];
+		*rng_seed = _seed_fwd_128[*rng_seed];
 	}
 	else if (algorithm_id == 1 || algorithm_id == 4)
 	{
-		uint8_t* rng_start = (algorithm_id == 4) ? rng->alg4_values_8 : rng->regular_rng_values_8;
+		uint8_t* rng_start = (algorithm_id == 4) ? _alg4_8 : _regular_8;
 		add_alg(rng_seed, rng_start);
-		*rng_seed = rng->seed_forward_128[*rng_seed];
+		*rng_seed = _seed_fwd_128[*rng_seed];
 	}
 	else if (algorithm_id == 2)
 	{
 		alg_2(rng_seed);
-		*rng_seed = rng->seed_forward_1[*rng_seed];
+		*rng_seed = _seed_fwd_1[*rng_seed];
 	}
 	else if (algorithm_id == 3)
 	{
 		alg_3(rng_seed);
-		*rng_seed = rng->seed_forward_128[*rng_seed];
+		*rng_seed = _seed_fwd_128[*rng_seed];
 	}
 	else if (algorithm_id == 5)
 	{
 		alg_5(rng_seed);
-		*rng_seed = rng->seed_forward_1[*rng_seed];
+		*rng_seed = _seed_fwd_1[*rng_seed];
 	}
 	else if (algorithm_id == 6)
 	{
 		alg_6(rng_seed);
-		*rng_seed = rng->seed_forward_128[*rng_seed];
+		*rng_seed = _seed_fwd_128[*rng_seed];
 	}
 	else if (algorithm_id == 7)
 	{
@@ -519,12 +534,4 @@ bool tm_avx_m256_8::test_bruteforce_checksum(uint32_t data, int world)
 		return _decrypt_check<true, OTHER_WORLD>().has_value();
 }
 
-bool tm_avx_m256_8::initialized = false;
 
-alignas(32) const __m256i tm_avx_m256_8::mask_FF = _mm256_set1_epi16(static_cast<int16_t>(0xFFFF));
-alignas(32) const __m256i tm_avx_m256_8::mask_FE = _mm256_set1_epi16(static_cast<int16_t>(0xFEFE));
-alignas(32) const __m256i tm_avx_m256_8::mask_7F = _mm256_set1_epi16(0x7F7F);
-alignas(32) const __m256i tm_avx_m256_8::mask_80 = _mm256_set1_epi16(static_cast<int16_t>(0x8080));
-alignas(32) const __m256i tm_avx_m256_8::mask_01 = _mm256_set1_epi16(0x0101);
-alignas(32) const __m256i tm_avx_m256_8::mask_top_01 = _mm256_set_epi16(0x0100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-alignas(32) const __m256i tm_avx_m256_8::mask_top_80 = _mm256_set_epi16(static_cast<int16_t>(0x8000), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);

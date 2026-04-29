@@ -11,6 +11,8 @@
 #include <immintrin.h> //AVX
 //#include <zmmintrin.h> //AVX512
 
+#include <memory>
+#include <vector>
 #include "data_sizes.h"
 #include "alignment2.h"
 #include "rng_obj.h"
@@ -45,6 +47,16 @@ private:
 
 	ALIGNED(32) uint8 working_code_data[128 * 2];
 
-	static bool initialized;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
+
+	uint8_t* _expansion_8 = nullptr;
+	uint16_t* _seed_fwd_1 = nullptr;
+	uint16_t* _seed_fwd_128 = nullptr;
+	uint16_t* _regular_16 = nullptr;
+	uint16_t* _alg0_16 = nullptr;
+	uint8_t* _alg2_256_16 = nullptr;
+	uint8_t* _alg5_256_16 = nullptr;
+	uint16_t* _alg6_16 = nullptr;
 };
 #endif // TM_AVX_R256_16_H

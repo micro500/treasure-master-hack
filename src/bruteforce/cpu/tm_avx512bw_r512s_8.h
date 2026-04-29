@@ -76,6 +76,17 @@ private:
 	const alignas(64) __m512i mask_top_01;
 	const alignas(64) __m512i mask_top_80;
 
-	static bool initialized;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
+	uint8_t* _expansion_512s = nullptr;
+	uint16_t* _seed_fwd_1 = nullptr;
+	uint16_t* _seed_fwd_128 = nullptr;
+	uint8_t* _regular_8 = nullptr;
+	uint8_t* _regular_512s = nullptr;
+	uint8_t* _alg0_512s = nullptr;
+	uint8_t* _alg2_8_8 = nullptr;
+	uint8_t* _alg4_512s = nullptr;
+	uint8_t* _alg5_8_8 = nullptr;
+	uint8_t* _alg6_512s = nullptr;
 };
 #endif // TM_AVX512BW_R512S_8_H

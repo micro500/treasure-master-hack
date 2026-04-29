@@ -61,5 +61,6 @@ private:
 
 	static cl_program _program;
 	static cl_program _program_hash_reduction;
-	static bool initialized;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
 };

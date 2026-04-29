@@ -98,31 +98,32 @@ public:
 	uint16_t fetch_checksum_value(WC_ARGS_256, uint8_t code_length);
 	void xor_alg(WC_ARGS_256, uint8_t* values);
 
-	uint8_t* expansion_values_for_seed_128_8;
-	uint8_t* regular_rng_values_for_seeds_8;
-	uint8_t* alg0_values_for_seeds_8;
-	uint8_t* alg2_values_for_seeds_256_8;
-	uint8_t* alg5_values_for_seeds_256_8;
-	uint8_t* alg6_values_for_seeds_8;
+	AlignedPtr<uint8_t> expansion_values_for_seed_128_8;
+	AlignedPtr<uint8_t> regular_rng_values_for_seeds_8;
+	AlignedPtr<uint8_t> alg0_values_for_seeds_8;
+	AlignedPtr<uint8_t> alg2_values_for_seeds_256_8;
+	AlignedPtr<uint8_t> alg5_values_for_seeds_256_8;
+	AlignedPtr<uint8_t> alg6_values_for_seeds_8;
 
-	static const alignas(32) __m256i mask_FF;
-	static const alignas(32) __m256i mask_FE;
-	static const alignas(32) __m256i mask_7F;
-	static const alignas(32) __m256i mask_top_01;
-	static const alignas(32) __m256i mask_top_80;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
+
+	const alignas(32) __m256i mask_FF;
+	const alignas(32) __m256i mask_FE;
+	const alignas(32) __m256i mask_7F;
+	const alignas(32) __m256i mask_top_01;
+	const alignas(32) __m256i mask_top_80;
 	// alg_2_sub masks
-	static const alignas(32) __m256i mask_alg2;
-	static const alignas(32) __m256i mask_007F;
-	static const alignas(32) __m256i mask_FE00;
-	static const alignas(32) __m256i mask_0080;
+	const alignas(32) __m256i mask_alg2;
+	const alignas(32) __m256i mask_007F;
+	const alignas(32) __m256i mask_FE00;
+	const alignas(32) __m256i mask_0080;
 	// alg_5_sub masks
-	static const alignas(32) __m256i mask_alg5;
-	static const alignas(32) __m256i mask_7F00;
-	static const alignas(32) __m256i mask_00FE;
-	static const alignas(32) __m256i mask_0001;
+	const alignas(32) __m256i mask_alg5;
+	const alignas(32) __m256i mask_7F00;
+	const alignas(32) __m256i mask_00FE;
+	const alignas(32) __m256i mask_0001;
 
 	ALIGNED(32) uint8_t working_code_data[128];
-
-	static bool initialized;
 };
 #endif // TM_AVX_R256_MAP_8_H

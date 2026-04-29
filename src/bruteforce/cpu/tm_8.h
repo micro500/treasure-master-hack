@@ -61,7 +61,17 @@ private:
 	uint8_t working_code_data[128];
 	uint8_t decrypted_data[128];
 
-	static bool initialized;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
+	uint8_t* _expansion_8 = nullptr;
+	uint16_t* _seed_fwd_1 = nullptr;
+	uint16_t* _seed_fwd_128 = nullptr;
+	uint8_t* _regular_8 = nullptr;
+	uint8_t* _alg0_8 = nullptr;
+	uint8_t* _alg2_8_8 = nullptr;
+	uint8_t* _alg4_8 = nullptr;
+	uint8_t* _alg5_8_8 = nullptr;
+	uint8_t* _alg6_8 = nullptr;
 };
 
 #endif // TM_8_H

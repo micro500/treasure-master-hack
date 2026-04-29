@@ -86,11 +86,12 @@ private:
 	const alignas(16) __m128i sel_even;
 	const alignas(16) __m128i sel_odd;
 
-	uint8_t* expansion_values_for_seed_128_8_shuffled;
-	uint8_t* regular_rng_values_for_seeds_8;
-	uint8_t* alg0_values_for_seeds_8;
-	uint8_t* alg6_values_for_seeds_8;
+	AlignedPtr<uint8_t> expansion_values_for_seed_128_8_shuffled;
+	AlignedPtr<uint8_t> regular_rng_values_for_seeds_8;
+	AlignedPtr<uint8_t> alg0_values_for_seeds_8;
+	AlignedPtr<uint8_t> alg6_values_for_seeds_8;
 
-	static bool initialized;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
 };
 #endif // TM_SSSE3_M128S_MAP_8_H

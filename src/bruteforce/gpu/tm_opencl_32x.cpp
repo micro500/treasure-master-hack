@@ -8,35 +8,34 @@ static const uint8_t CHECKSUM_SENTINEL = 0x08;
 
 cl_program tm_opencl_32x::_program                = NULL;
 cl_program tm_opencl_32x::_program_hash_reduction = NULL;
-bool       tm_opencl_32x::initialized             = false;
 
 tm_opencl_32x::tm_opencl_32x(RNG* rng_obj, opencl* cl_init) : rng(rng_obj), _cl(cl_init)
 {
 	initialize();
 
 	_expansion_values_d = _cl->create_readonly_buffer(0x10000 * 128);
-	_cl->copy_mem_to_device(_expansion_values_d, rng->expansion_values_8, 0x10000 * 128);
+	_cl->copy_mem_to_device(_expansion_values_d, rng->expansion_values_8.ptr, 0x10000 * 128);
 
 	_rng_seed_forward_1_d = _cl->create_readonly_buffer(0x10000 * 2);
-	_cl->copy_mem_to_device(_rng_seed_forward_1_d, rng->seed_forward_1, 0x10000 * 2);
+	_cl->copy_mem_to_device(_rng_seed_forward_1_d, rng->seed_forward_1.ptr, 0x10000 * 2);
 
 	_rng_seed_forward_128_d = _cl->create_readonly_buffer(0x10000 * 2);
-	_cl->copy_mem_to_device(_rng_seed_forward_128_d, rng->seed_forward_128, 0x10000 * 2);
+	_cl->copy_mem_to_device(_rng_seed_forward_128_d, rng->seed_forward_128.ptr, 0x10000 * 2);
 
 	_regular_rng_values_d = _cl->create_readonly_buffer(0x10000 * 128);
-	_cl->copy_mem_to_device(_regular_rng_values_d, rng->regular_rng_values_8, 0x10000 * 128);
+	_cl->copy_mem_to_device(_regular_rng_values_d, rng->regular_rng_values_8.ptr, 0x10000 * 128);
 
 	_alg0_values_d = _cl->create_readonly_buffer(0x10000 * 128);
-	_cl->copy_mem_to_device(_alg0_values_d, rng->alg0_values_8, 0x10000 * 128);
+	_cl->copy_mem_to_device(_alg0_values_d, rng->alg0_values_8.ptr, 0x10000 * 128);
 
 	_alg2_values_d = _cl->create_readonly_buffer(0x10000 * 4);
-	_cl->copy_mem_to_device(_alg2_values_d, rng->alg2_values_32_8, 0x10000 * 4);
+	_cl->copy_mem_to_device(_alg2_values_d, rng->alg2_values_32_8.ptr, 0x10000 * 4);
 
 	_alg5_values_d = _cl->create_readonly_buffer(0x10000 * 4);
-	_cl->copy_mem_to_device(_alg5_values_d, rng->alg5_values_32_8, 0x10000 * 4);
+	_cl->copy_mem_to_device(_alg5_values_d, rng->alg5_values_32_8.ptr, 0x10000 * 4);
 
 	_alg6_values_d = _cl->create_readonly_buffer(0x10000 * 128);
-	_cl->copy_mem_to_device(_alg6_values_d, rng->alg6_values_8, 0x10000 * 128);
+	_cl->copy_mem_to_device(_alg6_values_d, rng->alg6_values_8.ptr, 0x10000 * 128);
 
 	_carnival_data_d = _cl->create_readonly_buffer(128);
 	_cl->copy_mem_to_device(_carnival_data_d, TM_base::carnival_world_data, 128);
@@ -62,25 +61,29 @@ tm_opencl_32x::tm_opencl_32x(RNG* rng_obj, opencl* cl_init) : rng(rng_obj), _cl(
 
 void tm_opencl_32x::initialize()
 {
-	if (!initialized)
+	if (!_initialized)
 	{
-		rng->generate_expansion_values_8();
-		rng->generate_seed_forward_1();
-		rng->generate_seed_forward_128();
-		rng->generate_regular_rng_values_8();
-		rng->generate_alg0_values_8();
-		rng->generate_alg2_values_32_8();
-		rng->generate_alg5_values_32_8();
-		rng->generate_alg6_values_8();
+		auto r0 = rng->generate_expansion_values_8();
+		auto r1 = rng->generate_seed_forward_1();
+		auto r2 = rng->generate_seed_forward_128();
+		auto r3 = rng->generate_regular_rng_values_8();
+		auto r4 = rng->generate_alg0_values_8();
+		auto r5 = rng->generate_alg2_values_32_8();
+		auto r6 = rng->generate_alg5_values_32_8();
+		auto r7 = rng->generate_alg6_values_8();
+		_table_refs = { r0, r1, r2, r3, r4, r5, r6, r7 };
 
-		_program = _cl->create_program("tm.cl");
-		_cl->build_program(_program);
-		output_kernel_asm_to_file(_program, "kernel.ptx");
+		if (_program == NULL)
+		{
+			_program = _cl->create_program("tm.cl");
+			_cl->build_program(_program);
+			output_kernel_asm_to_file(_program, "kernel.ptx");
 
-		_program_hash_reduction = _cl->create_program("tm.cl");
-		_cl->build_program(_program_hash_reduction, "-DHASH_REDUCTION=1");
+			_program_hash_reduction = _cl->create_program("tm.cl");
+			_cl->build_program(_program_hash_reduction, "-DHASH_REDUCTION=1");
+		}
 
-		initialized = true;
+		_initialized = true;
 	}
 
 	_kernel_expand_batch    = _cl->create_kernel(_program, "expand_test_batch");

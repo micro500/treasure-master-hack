@@ -18,11 +18,6 @@ tm_avx512bw_r512s_map_8::tm_avx512bw_r512s_map_8(RNG* rng_obj, const uint32_t ke
 	this->key = key;
 	this->schedule_entries = schedule_entries;
 
-	expansion_values_for_seed_128_8 = nullptr;
-	regular_rng_values_for_seeds_512_8_shuffled = nullptr;
-	alg0_values_for_seeds_512_8_shuffled = nullptr;
-	alg6_values_for_seeds_512_8_shuffled = nullptr;
-
 	generate_map_rng();
 
 	shuffle_mem(carnival_world_checksum_mask, carnival_world_checksum_mask_shuffled, 512, false);
@@ -37,19 +32,19 @@ tm_avx512bw_r512s_map_8::~tm_avx512bw_r512s_map_8()
 
 __forceinline void tm_avx512bw_r512s_map_8::initialize()
 {
-	if (!initialized)
+	if (!_initialized)
 	{
-		initialized = true;
+		_initialized = true;
 	}
 	obj_name = "tm_avx512bw_r512s_map_8";
 }
 
 void tm_avx512bw_r512s_map_8::generate_map_rng()
 {
-	rng->_generate_expansion_values_for_seed_8(&expansion_values_for_seed_128_8, (key >> 16) & 0xFFFF, true, 512);
-	rng->generate_regular_rng_values_for_seeds(&regular_rng_values_for_seeds_512_8_shuffled, const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count, false);
-	rng->generate_alg0_values_for_seeds(&alg0_values_for_seeds_512_8_shuffled, const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count, false);
-	rng->generate_alg6_values_for_seeds(&alg6_values_for_seeds_512_8_shuffled, const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count, false);
+	rng->_generate_expansion_values_for_seed_8(expansion_values_for_seed_128_8, (key >> 16) & 0xFFFF, true, 512);
+	regular_rng_values_for_seeds_512_8_shuffled = rng->generate_regular_rng_values_for_seeds(const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count, false);
+	alg0_values_for_seeds_512_8_shuffled = rng->generate_alg0_values_for_seeds(const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count, false);
+	alg6_values_for_seeds_512_8_shuffled = rng->generate_alg6_values_for_seeds(const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count, false);
 }
 
 __forceinline void tm_avx512bw_r512s_map_8::_load_from_mem(WC_ARGS_512)
@@ -94,7 +89,7 @@ __forceinline void tm_avx512bw_r512s_map_8::_expand_code(uint32_t data, WC_ARGS_
 	wc0 = lo;
 	wc1 = hi;
 
-	uint8_t* rng_start = expansion_values_for_seed_128_8;
+	uint8_t* rng_start = expansion_values_for_seed_128_8.get();
 
 	wc0 = _mm512_add_epi8(wc0, _mm512_loadu_si512(rng_start));
 	wc1 = _mm512_add_epi8(wc1, _mm512_loadu_si512(rng_start + 64));
@@ -287,9 +282,9 @@ __forceinline void tm_avx512bw_r512s_map_8::_run_alg(WC_ARGS_512, int algorithm_
 __forceinline void tm_avx512bw_r512s_map_8::_run_one_map(WC_ARGS_512, int map_idx)
 {
 	uint16_t nibble_selector = schedule_entries->entries[static_cast<size_t>(map_idx)].nibble_selector;
-	const uint8_t* reg_base = regular_rng_values_for_seeds_512_8_shuffled + map_idx * 2048;
-	const uint8_t* alg0_base = alg0_values_for_seeds_512_8_shuffled + map_idx * 2048;
-	const uint8_t* alg6_base = alg6_values_for_seeds_512_8_shuffled + map_idx * 2048;
+	const uint8_t* reg_base = regular_rng_values_for_seeds_512_8_shuffled.get() + map_idx * 2048;
+	const uint8_t* alg0_base = alg0_values_for_seeds_512_8_shuffled.get() + map_idx * 2048;
+	const uint8_t* alg6_base = alg6_values_for_seeds_512_8_shuffled.get() + map_idx * 2048;
 	uint16_t local_pos = 2047;
 
 	for (int i = 0; i < 16; i++)
@@ -506,15 +501,15 @@ void tm_avx512bw_r512s_map_8::test_algorithm_n(int algorithm_id, uint8_t* data, 
 
 	if (algorithm_id == 0)
 	{
-		rng->generate_alg0_values_for_seeds(&alg0_values_for_seeds_512_8_shuffled, rng_seed, 1, false);
+		alg0_values_for_seeds_512_8_shuffled = rng->generate_alg0_values_for_seeds(rng_seed, 1, false);
 	}
 	else if (algorithm_id == 1 || algorithm_id == 2 || algorithm_id == 3 || algorithm_id == 4 || algorithm_id == 5)
 	{
-		rng->generate_regular_rng_values_for_seeds(&regular_rng_values_for_seeds_512_8_shuffled, rng_seed, 1, false);
+		regular_rng_values_for_seeds_512_8_shuffled = rng->generate_regular_rng_values_for_seeds(rng_seed, 1, false);
 	}
 	else if (algorithm_id == 6)
 	{
-		rng->generate_alg6_values_for_seeds(&alg6_values_for_seeds_512_8_shuffled, rng_seed, 1, false);
+		alg6_values_for_seeds_512_8_shuffled = rng->generate_alg6_values_for_seeds(rng_seed, 1, false);
 	}
 
 	uint16_t local_pos = 2047;
@@ -523,8 +518,8 @@ void tm_avx512bw_r512s_map_8::test_algorithm_n(int algorithm_id, uint8_t* data, 
 		if (local_pos < 128)
 			local_pos = 2047;
 		_run_alg(WC_PASS_512, algorithm_id, &local_pos,
-			regular_rng_values_for_seeds_512_8_shuffled, alg0_values_for_seeds_512_8_shuffled,
-			alg6_values_for_seeds_512_8_shuffled);
+			regular_rng_values_for_seeds_512_8_shuffled.get(), alg0_values_for_seeds_512_8_shuffled.get(),
+			alg6_values_for_seeds_512_8_shuffled.get());
 	}
 
 	_store_to_mem(WC_PASS_512);
@@ -560,4 +555,3 @@ bool tm_avx512bw_r512s_map_8::test_bruteforce_checksum(uint32_t data, int world)
 		return _decrypt_check<true, OTHER_WORLD>(WC_PASS_512).has_value();
 }
 
-bool tm_avx512bw_r512s_map_8::initialized = false;

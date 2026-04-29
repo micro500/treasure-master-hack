@@ -1,5 +1,7 @@
 #ifndef TM_32_16_H
 #define TM_32_16_H
+#include <memory>
+#include <vector>
 #include "data_sizes.h"
 #include "rng_obj.h"
 #include "tm_base.h"
@@ -34,7 +36,18 @@ private:
 
 	uint32 working_code_data[64];
 
-	static bool initialized;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
+
+	uint8_t* _expansion_8 = nullptr;
+	uint16_t* _seed_fwd_1 = nullptr;
+	uint16_t* _seed_fwd_128 = nullptr;
+	uint16_t* _regular_16 = nullptr;
+	uint16_t* _alg0_16 = nullptr;
+	uint32_t* _alg2_32_16 = nullptr;
+	uint16_t* _alg4_16 = nullptr;
+	uint32_t* _alg5_32_16 = nullptr;
+	uint16_t* _alg6_16 = nullptr;
 };
 
 #endif // TM_32_16_H

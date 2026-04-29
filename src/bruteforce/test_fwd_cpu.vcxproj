@@ -79,6 +79,8 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../common/;cpu/</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -94,6 +96,8 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../common/;cpu/</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -109,6 +113,8 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../common/;cpu/</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -124,6 +130,8 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../common/;cpu/</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,7 +147,6 @@
     <ClCompile Include="cpu\tm_64_8.cpp" />
     <ClCompile Include="cpu\tm_8.cpp" />
     <ClCompile Include="cpu\tm_avx2_r256s_8.cpp" />
-    <ClCompile Include="cpu\tm_avx512_r512s_8.cpp" />
     <ClCompile Include="cpu\tm_avx_m256_16.cpp" />
     <ClCompile Include="cpu\tm_avx_m256_8.cpp" />
     <ClCompile Include="cpu\tm_avx_r128s_8.cpp" />
@@ -156,7 +163,6 @@
     <ClCompile Include="..\common\key_schedule.cpp" />
     <ClCompile Include="..\common\rng_obj.cpp" />
     <ClCompile Include="..\common\tm_base.cpp" />
-    <ClCompile Include="..\common\tm_tester.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cpu\tm_32_16.h" />
@@ -180,9 +186,7 @@
     <ClInclude Include="..\common\data_sizes.h" />
     <ClInclude Include="..\common\key_schedule.h" />
     <ClInclude Include="..\common\rng_obj.h" />
-    <ClInclude Include="..\common\tester2.h" />
     <ClInclude Include="..\common\tm_base.h" />
-    <ClInclude Include="..\common\tm_tester.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

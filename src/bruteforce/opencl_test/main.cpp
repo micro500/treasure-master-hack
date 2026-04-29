@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstdint>
@@ -29,7 +30,7 @@ void test(opencl &_cl)
 	uint32_t data = 0x0009BE9F;
 
 	RNG rng;
-	rng.generate_expansion_values_8();
+	auto _ref_exp = rng.generate_expansion_values_8();
 
 
 
@@ -38,7 +39,7 @@ void test(opencl &_cl)
 	set_kernel_arg<uint32_t>(kernel, 1, &data);
 
 	cl_mem expansion_values_d = _cl.create_readonly_buffer(0x100000 * 128);
-	_cl.copy_mem_to_device(expansion_values_d, rng.expansion_values_8, 0x10000 * 128);
+	_cl.copy_mem_to_device(expansion_values_d, rng.expansion_values_8.ptr, 0x10000 * 128);
 	set_kernel_arg<cl_mem>(kernel, 2, &expansion_values_d);
 
 	cl_mem result_values_d = _cl.create_readwrite_buffer(128);
@@ -146,11 +147,10 @@ void run_alg_validity_tests(tm_opencl_32x& tm)
 		}
 		*/
 
-		tm.load_data(test_data);
-
-		tm.run_alg(test_case[0], &rng_seed, 1);
-
-		tm.fetch_data(result_data);
+		uint8 alg_id = test_case[0];
+		uint16 seed_in = rng_seed, seed_out = 0;
+		tm.test_alg_batch(&alg_id, &seed_in, test_data, result_data, &seed_out, 1);
+		rng_seed = seed_out;
 
 		int matching = 1;
 		for (int i = 0; i < 128; i++)
@@ -184,14 +184,22 @@ void run_alg_validity_tests(tm_opencl_32x& tm)
 
 void run_map_tests(tm_opencl_32x& tm)
 {
-	uint8_t result_data[128];
-
 	uint32 key = 0x2CA5B42D;
+	uint32 data = 0;
 	key_schedule schedule_data(key, key_schedule::ALL_MAPS);
 
-	tm.run_all_maps(key, 0, schedule_data);
+	int sched_count = (int)schedule_data.entries.size();
+	std::vector<uint8_t> sched_flat(sched_count * 4, 0);
+	for (int i = 0; i < sched_count; i++)
+	{
+		sched_flat[i*4+0] = schedule_data.entries[i].rng1;
+		sched_flat[i*4+1] = schedule_data.entries[i].rng2;
+		sched_flat[i*4+2] = (schedule_data.entries[i].nibble_selector >> 8) & 0xFF;
+		sched_flat[i*4+3] =  schedule_data.entries[i].nibble_selector       & 0xFF;
+	}
 
-	tm.fetch_data(result_data);
+	uint8_t result_data[128];
+	tm.test_run_all_maps_batch((uint8*)&key, (uint8*)&data, sched_flat.data(), sched_count, result_data, 1);
 }
 
 

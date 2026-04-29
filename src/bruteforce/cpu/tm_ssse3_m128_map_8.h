@@ -83,11 +83,12 @@ private:
 	const alignas(16) __m128i mask_FE00;
 	const alignas(16) __m128i mask_7F00;
 
-	uint8_t* expansion_values_for_seed_128_8;
-	uint8_t* regular_rng_values_for_seeds_8;
-	uint8_t* alg0_values_for_seeds_8;
-	uint8_t* alg6_values_for_seeds_8;
+	AlignedPtr<uint8_t> expansion_values_for_seed_128_8;
+	AlignedPtr<uint8_t> regular_rng_values_for_seeds_8;
+	AlignedPtr<uint8_t> alg0_values_for_seeds_8;
+	AlignedPtr<uint8_t> alg6_values_for_seeds_8;
 
-	static bool initialized;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
 };
 #endif // TM_SSSE3_M128_MAP_8_H

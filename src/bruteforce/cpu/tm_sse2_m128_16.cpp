@@ -16,22 +16,30 @@ tm_sse2_m128_16::tm_sse2_m128_16(RNG *rng_obj) : TM_base(rng_obj)
 
 __forceinline void tm_sse2_m128_16::initialize()
 {
-	if (!initialized)
+	if (!_initialized)
 	{
-		rng->generate_expansion_values_8();
+		auto _r0 = rng->generate_expansion_values_8();
+		auto _r1 = rng->generate_seed_forward_1();
+		auto _r2 = rng->generate_seed_forward_128();
+		auto _r3 = rng->generate_regular_rng_values_16();
+		auto _r4 = rng->generate_alg0_values_16();
+		auto _r5 = rng->generate_alg2_values_128_16();
+		auto _r6 = rng->generate_alg4_values_16();
+		auto _r7 = rng->generate_alg5_values_128_16();
+		auto _r8 = rng->generate_alg6_values_16();
 
-		rng->generate_seed_forward_1();
-		rng->generate_seed_forward_128();
+		_expansion_8 = static_cast<uint8_t*>(_r0.get());
+		_seed_fwd_1 = static_cast<uint16_t*>(_r1.get());
+		_seed_fwd_128 = static_cast<uint16_t*>(_r2.get());
+		_regular_16 = static_cast<uint16_t*>(_r3.get());
+		_alg0_16 = static_cast<uint16_t*>(_r4.get());
+		_alg2_128_16 = static_cast<uint8_t*>(_r5.get());
+		_alg4_16 = static_cast<uint16_t*>(_r6.get());
+		_alg5_128_16 = static_cast<uint8_t*>(_r7.get());
+		_alg6_16 = static_cast<uint16_t*>(_r8.get());
 
-		rng->generate_regular_rng_values_16();
-
-		rng->generate_alg0_values_16();
-		rng->generate_alg2_values_128_16();
-		rng->generate_alg4_values_16();
-		rng->generate_alg5_values_128_16();
-		rng->generate_alg6_values_16();
-
-		initialized = true;
+		_table_refs = { _r0, _r1, _r2, _r3, _r4, _r5, _r6, _r7, _r8 };
+		_initialized = true;
 	}
 	obj_name = "tm_sse2_m128_16";
 }
@@ -55,7 +63,7 @@ void tm_sse2_m128_16::expand(uint32 key, uint32 data)
 	uint16 rng_seed = (key >> 16) & 0xFFFF;
 	for (int i = 0; i < 128; i++)
 	{
-		x[i] += rng->expansion_values_8[rng_seed * 128 + i];
+		x[i] += _expansion_8[rng_seed * 128 + i];
 		x[i] = x[i] & 0xFF;
 	}
 }
@@ -83,7 +91,7 @@ void tm_sse2_m128_16::run_alg(int algorithm_id, uint16 * rng_seed, int iteration
 		for (int i = 0; i < iterations; i++)
 		{
 			alg_0(*rng_seed);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
+			*rng_seed = _seed_fwd_128[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 1)
@@ -91,7 +99,7 @@ void tm_sse2_m128_16::run_alg(int algorithm_id, uint16 * rng_seed, int iteration
 		for (int i = 0; i < iterations; i++)
 		{
 			alg_1(*rng_seed);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
+			*rng_seed = _seed_fwd_128[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 2)
@@ -99,7 +107,7 @@ void tm_sse2_m128_16::run_alg(int algorithm_id, uint16 * rng_seed, int iteration
 		for (int i = 0; i < iterations; i++)
 		{
 			alg_2(*rng_seed);
-			*rng_seed = rng->seed_forward_1[*rng_seed];
+			*rng_seed = _seed_fwd_1[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 3)
@@ -107,7 +115,7 @@ void tm_sse2_m128_16::run_alg(int algorithm_id, uint16 * rng_seed, int iteration
 		for (int i = 0; i < iterations; i++)
 		{
 			alg_3(*rng_seed);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
+			*rng_seed = _seed_fwd_128[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 4)
@@ -115,7 +123,7 @@ void tm_sse2_m128_16::run_alg(int algorithm_id, uint16 * rng_seed, int iteration
 		for (int i = 0; i < iterations; i++)
 		{
 			alg_4(*rng_seed);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
+			*rng_seed = _seed_fwd_128[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 5)
@@ -123,7 +131,7 @@ void tm_sse2_m128_16::run_alg(int algorithm_id, uint16 * rng_seed, int iteration
 		for (int i = 0; i < iterations; i++)
 		{
 			alg_5(*rng_seed);
-			*rng_seed = rng->seed_forward_1[*rng_seed];
+			*rng_seed = _seed_fwd_1[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 6)
@@ -131,7 +139,7 @@ void tm_sse2_m128_16::run_alg(int algorithm_id, uint16 * rng_seed, int iteration
 		for (int i = 0; i < iterations; i++)
 		{
 			alg_6(*rng_seed);
-			*rng_seed = rng->seed_forward_128[*rng_seed];
+			*rng_seed = _seed_fwd_128[*rng_seed];
 		}
 	}
 	else if (algorithm_id == 7)
@@ -149,7 +157,7 @@ void tm_sse2_m128_16::alg_0(const uint16 rng_seed)
 	for (int i = 0; i < 16; i++)
 	{
 		__m128i cur_val = _mm_loadu_si128((__m128i *)(working_code_data + i * 16));
-		__m128i rng_val = _mm_loadu_si128((__m128i *)(((uint8*)rng->alg0_values_16) + (rng_seed * 128 * 2) + (i * 16)));
+		__m128i rng_val = _mm_loadu_si128((__m128i *)(((uint8*)_alg0_16) + (rng_seed * 128 * 2) + (i * 16)));
 		cur_val = _mm_slli_epi16(cur_val, 1);
 		cur_val = _mm_or_si128(cur_val, rng_val);
 
@@ -162,12 +170,12 @@ void tm_sse2_m128_16::alg_0(const uint16 rng_seed)
 
 void tm_sse2_m128_16::alg_1(const uint16 rng_seed)
 {
-	add_alg(((uint8*)rng->regular_rng_values_16), rng_seed);
+	add_alg(((uint8*)_regular_16), rng_seed);
 }
 
 void tm_sse2_m128_16::alg_2(const uint16 rng_seed)
 {
-	__m128i carry = _mm_loadu_si128((__m128i *)(((uint8*)rng->alg2_values_128_16) + (rng_seed * 16)));
+	__m128i carry = _mm_loadu_si128((__m128i *)(_alg2_128_16 + (rng_seed * 16)));
 	for (int i = 15; i >= 0; i--)
 	{
 		__m128i cur_val = _mm_loadu_si128((__m128i *)(working_code_data + i * 16));
@@ -202,7 +210,7 @@ void tm_sse2_m128_16::alg_3(const uint16 rng_seed)
 	for (int i = 0; i < 16; i++)
 	{
 		__m128i cur_val = _mm_loadu_si128((__m128i *)(working_code_data + i * 16));
-		__m128i rng_val = _mm_loadu_si128((__m128i *)(((uint8*)rng->regular_rng_values_16) + (rng_seed * 128 * 2) + (i * 16)));
+		__m128i rng_val = _mm_loadu_si128((__m128i *)(((uint8*)_regular_16) + (rng_seed * 128 * 2) + (i * 16)));
 		cur_val = _mm_xor_si128(cur_val, rng_val);
 
 		_mm_store_si128((__m128i *)(working_code_data + i * 16), cur_val);
@@ -211,12 +219,12 @@ void tm_sse2_m128_16::alg_3(const uint16 rng_seed)
 
 void tm_sse2_m128_16::alg_4(const uint16 rng_seed)
 {
-	add_alg(((uint8*)rng->alg4_values_16), rng_seed);
+	add_alg(((uint8*)_alg4_16), rng_seed);
 }
 
 void tm_sse2_m128_16::alg_5(const uint16 rng_seed)
 {
-	__m128i carry = _mm_loadu_si128((__m128i *)(((uint8*)rng->alg5_values_128_16) + (rng_seed * 16)));
+	__m128i carry = _mm_loadu_si128((__m128i *)(_alg5_128_16 + (rng_seed * 16)));
 	for (int i = 15; i >= 0; i--)
 	{
 		__m128i cur_val = _mm_loadu_si128((__m128i *)(working_code_data + i * 16));
@@ -250,7 +258,7 @@ void tm_sse2_m128_16::alg_6(const uint16 rng_seed)
 	for (int i = 0; i < 16; i++)
 	{
 		__m128i cur_val = _mm_loadu_si128((__m128i *)(working_code_data + i * 16));
-		__m128i rng_val = _mm_loadu_si128((__m128i *)(((uint8*)rng->alg6_values_16) + (rng_seed * 128 * 2) + (i * 16)));
+		__m128i rng_val = _mm_loadu_si128((__m128i *)(((uint8*)_alg6_16) + (rng_seed * 128 * 2) + (i * 16)));
 		cur_val = _mm_srli_epi16(cur_val, 1);
 		cur_val = _mm_or_si128(cur_val, rng_val);
 
@@ -326,4 +334,3 @@ void tm_sse2_m128_16::run_all_maps(const key_schedule& schedule_entries)
 }
 
 
-bool tm_sse2_m128_16::initialized = false;

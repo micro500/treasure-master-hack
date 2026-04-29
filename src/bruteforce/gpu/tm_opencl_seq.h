@@ -47,5 +47,6 @@ private:
 	RNG* rng;
 
 	static cl_program _program;
-	static bool initialized;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
 };

@@ -14,26 +14,38 @@ tm_64_8::tm_64_8(RNG* rng_obj, const uint32_t key, const key_schedule& schedule)
 
 __forceinline void tm_64_8::initialize()
 {
-	if (!initialized)
+	if (!_initialized)
 	{
-		rng->generate_expansion_values_8();
+		auto _r0 = rng->generate_expansion_values_8();
+		auto _r1 = rng->generate_seed_forward_1();
+		auto _r2 = rng->generate_seed_forward_128();
+		auto _r3 = rng->generate_regular_rng_values_8();
+		auto _r4 = rng->generate_regular_rng_values_8_lo();
+		auto _r5 = rng->generate_regular_rng_values_8_hi();
+		auto _r6 = rng->generate_alg0_values_8();
+		auto _r7 = rng->generate_alg2_values_64_8();
+		auto _r8 = rng->generate_alg4_values_8();
+		auto _r9 = rng->generate_alg4_values_8_lo();
+		auto _r10 = rng->generate_alg4_values_8_hi();
+		auto _r11 = rng->generate_alg5_values_64_8();
+		auto _r12 = rng->generate_alg6_values_8();
 
-		rng->generate_seed_forward_1();
-		rng->generate_seed_forward_128();
+		_expansion_8 = static_cast<uint8_t*>(_r0.get());
+		_seed_fwd_1 = static_cast<uint16_t*>(_r1.get());
+		_seed_fwd_128 = static_cast<uint16_t*>(_r2.get());
+		_regular_8 = static_cast<uint8_t*>(_r3.get());
+		_regular_8_lo = static_cast<uint8_t*>(_r4.get());
+		_regular_8_hi = static_cast<uint8_t*>(_r5.get());
+		_alg0_8 = static_cast<uint8_t*>(_r6.get());
+		_alg2_64_8 = static_cast<uint64_t*>(_r7.get());
+		_alg4_8 = static_cast<uint8_t*>(_r8.get());
+		_alg4_8_lo = static_cast<uint8_t*>(_r9.get());
+		_alg4_8_hi = static_cast<uint8_t*>(_r10.get());
+		_alg5_64_8 = static_cast<uint64_t*>(_r11.get());
+		_alg6_8 = static_cast<uint8_t*>(_r12.get());
 
-		rng->generate_regular_rng_values_8();
-		rng->generate_regular_rng_values_8_lo();
-		rng->generate_regular_rng_values_8_hi();
-
-		rng->generate_alg0_values_8();
-		rng->generate_alg2_values_64_8();
-		rng->generate_alg4_values_8();
-		rng->generate_alg4_values_8_lo();
-		rng->generate_alg4_values_8_hi();
-		rng->generate_alg5_values_64_8();
-		rng->generate_alg6_values_8();
-
-		initialized = true;
+		_table_refs = { _r0, _r1, _r2, _r3, _r4, _r5, _r6, _r7, _r8, _r9, _r10, _r11, _r12 };
+		_initialized = true;
 	}
 	obj_name = "tm_64_8";
 }
@@ -57,7 +69,7 @@ __forceinline void tm_64_8::_expand_code(uint32_t data)
 	uint16_t rng_seed = (key >> 16) & 0xFFFF;
 	for (int i = 0; i < 128; i++)
 	{
-		x[i] += rng->expansion_values_8[rng_seed * 128 + i];
+		x[i] += _expansion_8[rng_seed * 128 + i];
 	}
 }
 
@@ -82,37 +94,37 @@ __forceinline void tm_64_8::_run_alg(int algorithm_id, uint16_t* rng_seed)
 	if (algorithm_id == 0)
 	{
 		alg_0(*rng_seed);
-		*rng_seed = rng->seed_forward_128[*rng_seed];
+		*rng_seed = _seed_fwd_128[*rng_seed];
 	}
 	else if (algorithm_id == 1)
 	{
-		add_alg((uint64_t*)rng->regular_rng_values_8_hi, (uint64_t*)rng->regular_rng_values_8_lo, *rng_seed);
-		*rng_seed = rng->seed_forward_128[*rng_seed];
+		add_alg((uint64_t*)_regular_8_hi, (uint64_t*)_regular_8_lo, *rng_seed);
+		*rng_seed = _seed_fwd_128[*rng_seed];
 	}
 	else if (algorithm_id == 2)
 	{
 		alg_2(*rng_seed);
-		*rng_seed = rng->seed_forward_1[*rng_seed];
+		*rng_seed = _seed_fwd_1[*rng_seed];
 	}
 	else if (algorithm_id == 3)
 	{
 		alg_3(*rng_seed);
-		*rng_seed = rng->seed_forward_128[*rng_seed];
+		*rng_seed = _seed_fwd_128[*rng_seed];
 	}
 	else if (algorithm_id == 4)
 	{
-		add_alg((uint64_t*)rng->alg4_values_8_hi, (uint64_t*)rng->alg4_values_8_lo, *rng_seed);
-		*rng_seed = rng->seed_forward_128[*rng_seed];
+		add_alg((uint64_t*)_alg4_8_hi, (uint64_t*)_alg4_8_lo, *rng_seed);
+		*rng_seed = _seed_fwd_128[*rng_seed];
 	}
 	else if (algorithm_id == 5)
 	{
 		alg_5(*rng_seed);
-		*rng_seed = rng->seed_forward_1[*rng_seed];
+		*rng_seed = _seed_fwd_1[*rng_seed];
 	}
 	else if (algorithm_id == 6)
 	{
 		alg_6(*rng_seed);
-		*rng_seed = rng->seed_forward_128[*rng_seed];
+		*rng_seed = _seed_fwd_128[*rng_seed];
 	}
 	else if (algorithm_id == 7)
 	{
@@ -124,13 +136,13 @@ __forceinline void tm_64_8::alg_0(const uint16_t rng_seed)
 {
 	for (int i = 0; i < 16; i++)
 	{
-		working_code_data[i] = ((working_code_data[i] << 1) & 0xFEFEFEFEFEFEFEFEull) | ((uint64_t*)rng->alg0_values_8)[(rng_seed * 128) / 8 + i];
+		working_code_data[i] = ((working_code_data[i] << 1) & 0xFEFEFEFEFEFEFEFEull) | ((uint64_t*)_alg0_8)[(rng_seed * 128) / 8 + i];
 	}
 }
 
 __forceinline void tm_64_8::alg_2(const uint16_t rng_seed)
 {
-	uint64_t carry = rng->alg2_values_64_8[rng_seed];
+	uint64_t carry = _alg2_64_8[rng_seed];
 	for (int i = 15; i >= 0; i--)
 	{
 		uint64_t next_carry = (working_code_data[i] & 0x0000000000000001ull) << 56;
@@ -151,12 +163,12 @@ __forceinline void tm_64_8::xor_alg(uint64_t* working_data, const uint8_t* value
 
 __forceinline void tm_64_8::alg_3(const uint16_t rng_seed)
 {
-	xor_alg(working_code_data, &rng->regular_rng_values_8[rng_seed * 128]);
+	xor_alg(working_code_data, &_regular_8[rng_seed * 128]);
 }
 
 __forceinline void tm_64_8::alg_5(const uint16_t rng_seed)
 {
-	uint64_t carry = rng->alg5_values_64_8[rng_seed];
+	uint64_t carry = _alg5_64_8[rng_seed];
 	for (int i = 15; i >= 0; i--)
 	{
 		uint64_t next_carry = (working_code_data[i] & 0x0000000000000080ull) << 56;
@@ -171,7 +183,7 @@ __forceinline void tm_64_8::alg_6(const uint16_t rng_seed)
 {
 	for (int i = 0; i < 16; i++)
 	{
-		working_code_data[i] = ((working_code_data[i] >> 1) & 0x7F7F7F7F7F7F7F7Full) | ((uint64_t*)rng->alg6_values_8)[(rng_seed * 128) / 8 + i];
+		working_code_data[i] = ((working_code_data[i] >> 1) & 0x7F7F7F7F7F7F7F7Full) | ((uint64_t*)_alg6_8)[(rng_seed * 128) / 8 + i];
 	}
 }
 
@@ -414,4 +426,3 @@ bool tm_64_8::test_bruteforce_checksum(uint32_t data, int world)
 	}
 }
 
-bool tm_64_8::initialized = false;

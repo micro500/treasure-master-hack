@@ -108,16 +108,28 @@ struct ImplementationNames {
 template<typename T>
 class TmTest : public ::testing::Test {
 protected:
-    std::unique_ptr<T> impl;
+    static std::unique_ptr<T> impl;
 
-    void init() {
+    static void SetUpTestSuite() {
         impl = std::make_unique<T>(&g_rng);
     }
 
+    static void TearDownTestSuite() {
+        impl.reset();
+    }
+
+    void init() {}
+
     void init(uint32_t key) {
+        // Keep old impl alive during construction so its _table_refs hold the
+        // tables alive; the new impl's initialize() sees them via lock() and
+        // captures its own refs before old is destroyed.
+        auto old = std::move(impl);
         impl = std::make_unique<T>(&g_rng, key);
     }
 };
+template<typename T>
+std::unique_ptr<T> TmTest<T>::impl;
 TYPED_TEST_SUITE(TmTest, Implementations, ImplementationNames);
 
 

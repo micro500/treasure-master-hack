@@ -20,15 +20,12 @@ extern "C" {
 }
 
 #include "rng_obj.h"
-#include "key_schedule.h"
-#include "tm_avx_r128s_map_8.h"
-#include "tm_avx_r128_map_8.h"
-//#include "tm_avx_r256_map_8.h"
+#include "bench_select.h"
 
 // -------------------------------------------------------------------
 // Constants
 // -------------------------------------------------------------------
-static const uint32_t CHECK_INTERVAL      = 1u << 16;  // checkpoint/progress every 65536 inputs
+static const uint32_t CHECK_INTERVAL      = 1u << 18;
 static const int      CHALLENGE_COUNT     = 100;
 static const int      RESULT_ENTRY_SIZE   = 5;          // 4B LSB + 1B flags
 static const int      CHALLENGE_ENTRY_SIZE = 6;         // 4B LSB + 1B carnival + 1B other
@@ -50,6 +47,7 @@ struct Args {
 	uint32_t    range_start   = 0;
 	uint32_t    workunit_size = 1u << 24;  // default: 2^24 (desktop BOINC)
 	std::string seed;
+	std::string impl_name;  // empty = auto-benchmark; short name without "tm_"
 };
 
 static Args parse_args(int argc, char** argv)
@@ -64,6 +62,8 @@ static Args parse_args(int argc, char** argv)
 			args.workunit_size = (uint32_t)strtoul(argv[++i], nullptr, 10);
 		else if (strcmp(argv[i], "--seed") == 0 && i + 1 < argc)
 			args.seed = argv[++i];
+		else if (strcmp(argv[i], "--impl") == 0 && i + 1 < argc)
+			args.impl_name = argv[++i];
 	}
 	return args;
 }
@@ -141,12 +141,29 @@ static int run(const Args& args)
 	strncpy(checkpoint_path, "checkpoint.bin", sizeof(checkpoint_path));
 #endif
 
-	// Build the key schedule for this key (constant for the whole workunit)
+	// Select and construct the impl
 	RNG rng;
-	//key_schedule schedule(args.key_id, key_schedule::ALL_MAPS);
-	tm_avx_r128s_map_8 tm(&rng, args.key_id);
-	//tm_avx_r128_map_8 tm(&rng, args.key_id);
-	//tm_avx_r256_map_8 tm(&rng, args.key_id);
+	std::unique_ptr<TM_base> tm;
+	if (!args.impl_name.empty()) {
+		auto type = tm_cpu_factory::find_by_name(args.impl_name);
+		if (!type) {
+			fprintf(stderr, "[TM_IMPL] ERROR: unknown impl '%s'\n", args.impl_name.c_str());
+			return 1;
+		}
+		tm.reset(tm_cpu_factory::create(*type, &rng, args.key_id));
+		fprintf(stderr, "[TM_IMPL] %s forced\n", tm->obj_name.c_str());
+	} else {
+		ISA isa = detect_isa();
+		auto results = benchmark_boinc_impls(&rng, args.key_id, isa);
+		if (results.empty()) {
+			fprintf(stderr, "[TM_IMPL] ERROR: no valid impl found\n");
+			return 1;
+		}
+		for (auto& r : results)
+			fprintf(stderr, "[TM_BENCH] %-40s %.1f ns/input\n", r.name.c_str(), r.median_ns);
+		tm.reset(tm_cpu_factory::create(results[0].impl_type, &rng, args.key_id));
+		fprintf(stderr, "[TM_IMPL] %s bench\n", tm->obj_name.c_str());
+	}
 
 	// Restore from checkpoint if present
 	uint32_t start_pos = 0;
@@ -169,7 +186,7 @@ static int run(const Args& args)
 			key_size = args.workunit_size - pos;
 
 		uint32_t result_bytes = 0;
-		tm.run_bruteforce_boinc(
+		tm->run_bruteforce_boinc(
 			args.range_start + pos,
 			key_size,
 			noop_progress,
@@ -261,7 +278,7 @@ static int run(const Args& args)
 		uint32_t challenge_lsb    = args.range_start + challenge_offset;
 
 		challenges[i].lsb = challenge_lsb;
-		tm.compute_challenge_flags(
+		tm->compute_challenge_flags(
 			challenge_lsb,
 			challenges[i].carnival_flags,
 			challenges[i].other_flags
@@ -297,8 +314,6 @@ static int run(const Args& args)
 	}
 
 	delete[] entry_bytes;
-
-	RNG::cleanup();
 
 	return 0;
 }

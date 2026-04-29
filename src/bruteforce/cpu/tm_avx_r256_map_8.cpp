@@ -25,18 +25,24 @@ tm_avx_r256_map_8::tm_avx_r256_map_8(RNG* rng_obj) : tm_avx_r256_map_8(rng_obj, 
 
 tm_avx_r256_map_8::tm_avx_r256_map_8(RNG* rng_obj, const uint32_t key) : tm_avx_r256_map_8(rng_obj, key, key_schedule(key, key_schedule::ALL_MAPS)) {}
 
-tm_avx_r256_map_8::tm_avx_r256_map_8(RNG* rng_obj, const uint32_t key, const key_schedule& schedule_entries) : TM_base(rng_obj)
+tm_avx_r256_map_8::tm_avx_r256_map_8(RNG* rng_obj, const uint32_t key, const key_schedule& schedule_entries) : TM_base(rng_obj),
+	mask_FF(_mm256_set1_epi8(static_cast<int8_t>(0xFF))),
+	mask_FE(_mm256_set1_epi8(static_cast<int8_t>(0xFE))),
+	mask_7F(_mm256_set1_epi8(static_cast<int8_t>(0x7F))),
+	mask_top_01(_mm256_set_epi16(0x0100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+	mask_top_80(_mm256_set_epi16(static_cast<int16_t>(0x8000), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+	mask_alg2(_mm256_set_epi16(0, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100)),
+	mask_007F(_mm256_set1_epi16(0x007F)),
+	mask_FE00(_mm256_set1_epi16(static_cast<int16_t>(0xFE00))),
+	mask_0080(_mm256_set1_epi16(0x0080)),
+	mask_alg5(_mm256_set_epi16(0, static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000))),
+	mask_7F00(_mm256_set1_epi16(static_cast<int16_t>(0x7F00))),
+	mask_00FE(_mm256_set1_epi16(0x00FE)),
+	mask_0001(_mm256_set1_epi16(0x0001))
 {
 	initialize();
 	this->key = key;
 	this->schedule_entries = schedule_entries;
-
-	expansion_values_for_seed_128_8 = nullptr;
-	regular_rng_values_for_seeds_8 = nullptr;
-	alg0_values_for_seeds_8 = nullptr;
-	alg2_values_for_seeds_256_8 = nullptr;
-	alg5_values_for_seeds_256_8 = nullptr;
-	alg6_values_for_seeds_8 = nullptr;
 
 	generate_map_rng();
 }
@@ -51,9 +57,9 @@ tm_avx_r256_map_8::~tm_avx_r256_map_8()
 
 void tm_avx_r256_map_8::initialize()
 {
-	if (!initialized)
+	if (!_initialized)
 	{
-		initialized = true;
+		_initialized = true;
 	}
 	obj_name = "tm_avx_r256_map_8";
 }
@@ -64,12 +70,12 @@ void tm_avx_r256_map_8::initialize()
 
 void tm_avx_r256_map_8::generate_map_rng()
 {
-	rng->_generate_expansion_values_for_seed_8(&expansion_values_for_seed_128_8, (key >> 16) & 0xFFFF, false, 128);
-	rng->generate_regular_rng_values_for_seeds_8(&regular_rng_values_for_seeds_8, const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count);
-	rng->generate_alg0_values_for_seeds_8(&alg0_values_for_seeds_8, const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count);
-	rng->generate_alg2_values_for_seeds(&alg2_values_for_seeds_256_8, const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count, 256, false);
-	rng->generate_alg5_values_for_seeds(&alg5_values_for_seeds_256_8, const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count, 256, false);
-	rng->generate_alg6_values_for_seeds_8(&alg6_values_for_seeds_8, const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count);
+	rng->_generate_expansion_values_for_seed_8(expansion_values_for_seed_128_8, (key >> 16) & 0xFFFF, false, 128);
+	regular_rng_values_for_seeds_8 = rng->generate_regular_rng_values_for_seeds_8(const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count);
+	alg0_values_for_seeds_8 = rng->generate_alg0_values_for_seeds_8(const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count);
+	alg2_values_for_seeds_256_8 = rng->generate_alg2_values_for_seeds(const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count, 256, false);
+	alg5_values_for_seeds_256_8 = rng->generate_alg5_values_for_seeds(const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count, 256, false);
+	alg6_values_for_seeds_8 = rng->generate_alg6_values_for_seeds_8(const_cast<uint16_t*>(schedule_entries->seeds), schedule_entries->entry_count);
 }
 
 // ---------------------------------------------------------------------------
@@ -112,15 +118,14 @@ __forceinline void tm_avx_r256_map_8::_expand_code(uint32_t data, WC_ARGS_256)
 {
 	// Build natural 16-byte pattern [K0,K1,K2,K3,D0,D1,D2,D3] × 2, then
 	// broadcast to both 128-bit halves of each __m256i register.
-	uint64_t x = ((uint64_t)key << 32) | data;
-	__m128i a = _mm_cvtsi64_si128(static_cast<int64_t>(x));
+	__m128i a = _mm_insert_epi32(_mm_cvtsi32_si128(static_cast<int32_t>(data)), static_cast<int32_t>(key), 1);
 	__m128i nat_mask = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7);
 	__m128i pattern = _mm_shuffle_epi8(a, nat_mask);
 	__m256i pat256 = _mm256_set_m128i(pattern, pattern);
 
 	wc0 = pat256; wc1 = pat256; wc2 = pat256; wc3 = pat256;
 
-	uint8_t* rng_start = expansion_values_for_seed_128_8;
+	uint8_t* rng_start = expansion_values_for_seed_128_8.get();
 
 	__m128i lo, hi;
 
@@ -511,11 +516,11 @@ __forceinline void tm_avx_r256_map_8::_run_alg(WC_ARGS_256, int algorithm_id, ui
 __forceinline void tm_avx_r256_map_8::_run_one_map(WC_ARGS_256, int map_idx)
 {
 	uint16_t nibble_selector = schedule_entries->entries[static_cast<size_t>(map_idx)].nibble_selector;
-	const uint8_t* reg_base = regular_rng_values_for_seeds_8 + map_idx * 2048;
-	const uint8_t* alg0_base = alg0_values_for_seeds_8 + map_idx * 2048;
-	const uint8_t* alg2_base = alg2_values_for_seeds_256_8 + map_idx * 2048 * 32;
-	const uint8_t* alg5_base = alg5_values_for_seeds_256_8 + map_idx * 2048 * 32;
-	const uint8_t* alg6_base = alg6_values_for_seeds_8 + map_idx * 2048;
+	const uint8_t* reg_base = regular_rng_values_for_seeds_8.get() + map_idx * 2048;
+	const uint8_t* alg0_base = alg0_values_for_seeds_8.get() + map_idx * 2048;
+	const uint8_t* alg2_base = alg2_values_for_seeds_256_8.get() + map_idx * 2048 * 32;
+	const uint8_t* alg5_base = alg5_values_for_seeds_256_8.get() + map_idx * 2048 * 32;
+	const uint8_t* alg6_base = alg6_values_for_seeds_8.get() + map_idx * 2048;
 	uint16_t local_pos = 2047;
 
 	for (int i = 0; i < 16; i++)
@@ -760,23 +765,23 @@ void tm_avx_r256_map_8::test_algorithm_n(int algorithm_id, uint8_t* data, uint16
 
 	if (algorithm_id == 0)
 	{
-		rng->generate_alg0_values_for_seeds_8(&alg0_values_for_seeds_8, rng_seed, 1);
+		alg0_values_for_seeds_8 = rng->generate_alg0_values_for_seeds_8(rng_seed, 1);
 	}
 	else if (algorithm_id == 1 || algorithm_id == 3 || algorithm_id == 4)
 	{
-		rng->generate_regular_rng_values_for_seeds_8(&regular_rng_values_for_seeds_8, rng_seed, 1);
+		regular_rng_values_for_seeds_8 = rng->generate_regular_rng_values_for_seeds_8(rng_seed, 1);
 	}
 	else if (algorithm_id == 2)
 	{
-		rng->generate_alg2_values_for_seeds(&alg2_values_for_seeds_256_8, rng_seed, 1, 256, false);
+		alg2_values_for_seeds_256_8 = rng->generate_alg2_values_for_seeds(rng_seed, 1, 256, false);
 	}
 	else if (algorithm_id == 5)
 	{
-		rng->generate_alg5_values_for_seeds(&alg5_values_for_seeds_256_8, rng_seed, 1, 256, false);
+		alg5_values_for_seeds_256_8 = rng->generate_alg5_values_for_seeds(rng_seed, 1, 256, false);
 	}
 	else if (algorithm_id == 6)
 	{
-		rng->generate_alg6_values_for_seeds_8(&alg6_values_for_seeds_8, rng_seed, 1);
+		alg6_values_for_seeds_8 = rng->generate_alg6_values_for_seeds_8(rng_seed, 1);
 	}
 
 	uint16_t local_pos = 2047;
@@ -787,9 +792,9 @@ void tm_avx_r256_map_8::test_algorithm_n(int algorithm_id, uint8_t* data, uint16
 			local_pos = 2047;
 		}
 		_run_alg(WC_PASS_256, algorithm_id, &local_pos,
-			regular_rng_values_for_seeds_8, alg0_values_for_seeds_8,
-			alg2_values_for_seeds_256_8, alg5_values_for_seeds_256_8,
-			alg6_values_for_seeds_8);
+			regular_rng_values_for_seeds_8.get(), alg0_values_for_seeds_8.get(),
+			alg2_values_for_seeds_256_8.get(), alg5_values_for_seeds_256_8.get(),
+			alg6_values_for_seeds_8.get());
 	}
 
 	_store_to_mem(WC_PASS_256);
@@ -829,24 +834,3 @@ bool tm_avx_r256_map_8::test_bruteforce_checksum(uint32_t data, int world)
 	}
 }
 
-// ---------------------------------------------------------------------------
-// Static data
-// ---------------------------------------------------------------------------
-
-bool tm_avx_r256_map_8::initialized = false;
-
-alignas(32) const __m256i tm_avx_r256_map_8::mask_FF     = _mm256_set1_epi8(static_cast<int8_t>(0xFF));
-alignas(32) const __m256i tm_avx_r256_map_8::mask_FE     = _mm256_set1_epi8(static_cast<int8_t>(0xFE));
-alignas(32) const __m256i tm_avx_r256_map_8::mask_7F     = _mm256_set1_epi8(static_cast<int8_t>(0x7F));
-alignas(32) const __m256i tm_avx_r256_map_8::mask_top_01 = _mm256_set_epi16(0x0100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-alignas(32) const __m256i tm_avx_r256_map_8::mask_top_80 = _mm256_set_epi16(static_cast<int16_t>(0x8000), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-// alg_2_sub masks
-alignas(32) const __m256i tm_avx_r256_map_8::mask_alg2   = _mm256_set_epi16(0, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100);
-alignas(32) const __m256i tm_avx_r256_map_8::mask_007F   = _mm256_set1_epi16(0x007F);
-alignas(32) const __m256i tm_avx_r256_map_8::mask_FE00   = _mm256_set1_epi16(static_cast<int16_t>(0xFE00));
-alignas(32) const __m256i tm_avx_r256_map_8::mask_0080   = _mm256_set1_epi16(0x0080);
-// alg_5_sub masks
-alignas(32) const __m256i tm_avx_r256_map_8::mask_alg5   = _mm256_set_epi16(0, static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000), static_cast<int16_t>(0x8000));
-alignas(32) const __m256i tm_avx_r256_map_8::mask_7F00   = _mm256_set1_epi16(static_cast<int16_t>(0x7F00));
-alignas(32) const __m256i tm_avx_r256_map_8::mask_00FE   = _mm256_set1_epi16(0x00FE);
-alignas(32) const __m256i tm_avx_r256_map_8::mask_0001   = _mm256_set1_epi16(0x0001);

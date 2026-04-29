@@ -77,11 +77,12 @@ private:
 	const alignas(32) __m256i mask_top_80;
 	const alignas(32) __m256i mask_00FF;
 
-	uint8_t* expansion_values_for_seed_256_8_shuffled;
-	uint8_t* regular_rng_values_for_seeds_8;
-	uint8_t* alg0_values_for_seeds_8;
-	uint8_t* alg6_values_for_seeds_8;
+	AlignedPtr<uint8_t> expansion_values_for_seed_256_8_shuffled;
+	AlignedPtr<uint8_t> regular_rng_values_for_seeds_8;
+	AlignedPtr<uint8_t> alg0_values_for_seeds_8;
+	AlignedPtr<uint8_t> alg6_values_for_seeds_8;
 
-	static bool initialized;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
 };
 #endif // TM_AVX2_M256S_MAP_8_H

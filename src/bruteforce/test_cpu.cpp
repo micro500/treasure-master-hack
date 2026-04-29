@@ -23,8 +23,6 @@
 #include "tm_avx512bw_r512_8.h"
 #include "tm_avx512bw_r512s_8.h"
 #include "rng_obj.h"
-#include "tester2.h"
-#include "tm_tester.h"
 #include "key_schedule.h"
 #include <iostream>
 #include <iomanip>
@@ -126,14 +124,15 @@ static void dump_test_vectors(RNG& rng)
 
 	// --- Pipeline vectors (expand + ALL_MAPS), computed from tm_8 ---
 	{
-		tm_8 ref8(&rng);
 		key_schedule sched(0x2CA5B42D, key_schedule::ALL_MAPS);
+		tm_8 ref8(&rng, 0x2CA5B42D, sched);
 		uint32 pp_keys[2]  = { 0x2CA5B42D, 0x2CA5B42D };
 		uint32 pp_data[2]  = { 0x0009BE9F, 0x0735B1D2 };
 		uint8 result[128];
 		for (int v = 0; v < 2; v++)
 		{
-			ref8.test_expand_and_map(pp_keys[v], pp_data[v], sched, result);
+			(void)pp_keys[v];
+			ref8.test_bruteforce_data(pp_data[v], result);
 			char oname[32]; sprintf(oname, "pipeline_v%d_out", v);
 			print_hex_array(oname, result, 128);
 			printf("static const uint32 pipeline_v%d_key   = 0x%08X;\n", v, pp_keys[v]);
@@ -168,7 +167,9 @@ static void dump_test_vectors(RNG& rng)
 				uint32 key  = ((uint32)row[0] << 24) | ((uint32)row[1] << 16) | ((uint32)row[2] << 8) | row[3];
 				uint32 data = ((uint32)row[4] << 24) | ((uint32)row[5] << 16) | ((uint32)row[6] << 8) | row[7];
 				key_schedule sched(key, key_schedule::ALL_MAPS);
-				if (ref8.test_pipeline_validate(key, data, sched, OTHER_WORLD))
+				ref8.key = key;
+				ref8.schedule_entries = sched;
+				if (ref8.test_bruteforce_checksum(data, OTHER_WORLD))
 				{
 					printf("// Other-world valid pair found:\n");
 					printf("static const uint32 validate_other_key   = 0x%08X;\n", key);
@@ -221,92 +222,5 @@ int main()
 
 	// Uncomment to generate test vectors for classes_test.cpp, then re-comment:
 	dump_test_vectors(rng);
-	return 0;
-
-	std::vector<TM_base*> tms;
-	
-	tm_8 _tm_8(&rng);
-	tms.push_back(&_tm_8);
-	/*
-	tm_32_8 _tm_32_8(&rng);
-	tms.push_back(&_tm_32_8);
-	tm_32_16 _tm_32_16(&rng);
-	tms.push_back(&_tm_32_16);
-	
-	tm_64_8 _tm_64_8(&rng);
-	tms.push_back(&_tm_64_8);
-	tm_64_16 _tm_64_16(&rng);
-	tms.push_back(&_tm_64_16);
-
-	tm_sse2_m128_8 _tm_sse2_m128_8(&rng);
-	tms.push_back(&_tm_sse2_m128_8);
-	tm_sse2_m128_16 _tm_sse2_m128_16(&rng);
-	tms.push_back(&_tm_sse2_m128_16);
-	tm_sse2_m128s_8 _tm_sse2_m128s_8(&rng);
-	tms.push_back(&_tm_sse2_m128s_8);
-	
-	tm_avx_m256_8 _tm_avx_m256_8(&rng);
-	tms.push_back(&_tm_avx_m256_8);
-	
-	tm_avx_r256_8 _tm_avx_r256_8(&rng);
-	tms.push_back(&_tm_avx_r256_8);
-	*/
-	tm_avx_r256s_8 _tm_avx_r256s_8(&rng);
-	//tms.push_back(&_tm_avx_r256s_8);
-
-	tm_avx_r128s_8 _tm_avx_r128s_8(&rng);
-	tms.push_back(&_tm_avx_r128s_8);
-
-	tm_avx_r128s_map_8 _tm_avx_r128s_map_8(&rng);
-	//tms.push_back(&_tm_avx_r128s_map_8);
-	/*
-	
-	tm_avx_r256_16 _tm_avx_r256_16(&rng);
-	tms.push_back(&_tm_avx_r256_16);
-	
-	
-	tm_avx_m256_16 _tm_avx_m256_16(&rng);
-	tms.push_back(&_tm_avx_m256_16);
-	
-	tm_avx2_r256s_8 _tm_avx2_r256s_8(&rng);
-	tms.push_back(&_tm_avx2_r256s_8);
-	
-	tm_avx512bw_r512_8 _tm_avx512bw_r512_8(&rng);
-	tms.push_back(&_tm_avx512bw_r512_8);
-
-	tm_avx512bw_r512s_8 _tm_avx512bw_r512s_8(&rng);
-	tms.push_back(&_tm_avx512bw_r512s_8);
-	*/
-	
-	for (std::vector<TM_base*>::iterator it = tms.begin(); it != tms.end(); ++it)
-	{
-		std::cout << (*it)->obj_name << std::endl;
-		tm_tester tester2(*it);
-		
-		//run_load_fetch_tests(tester2);
-		//run_alg_validity_tests(tester2);
-		//run_expansion_validity_tests(tester2);
-		//run_full_validity_tests(tester2);
-		
-		//run_speed_tests2(tester2, 10000000);
-		//run_full_speed_test(tester2, 0x10000000);
-		//run_full_speed_test(tester2, 20000000);
-		//run_result_speed_test(tester2, 0x00100000);
-		//run_checksum_tests(tester2);
-		
-		//run_result_tests(tester2);
-	}
-	
-	
-	
-	
-	uint8 result_data[400000];
-	uint32 result_size;
-	//_tm_avx_8_in_cpu_shuffled.run_bruteforce_data(0x2CA5B42D, 0x01E190D8, schedule_entries, 0x04000000, &report_progress, result_data, 400000, &result_size);
-	_tm_8.run_bruteforce_data(key, data, schedule_data, 0x04000000, &report_progress, result_data, 400000, &result_size);
-	
-	printf("%i", result_size);
-	
-	
 	return 0;
 }

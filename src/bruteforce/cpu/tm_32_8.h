@@ -1,6 +1,8 @@
 #ifndef TM_32_8_H
 #define TM_32_8_H
 #include <optional>
+#include <memory>
+#include <vector>
 #include "rng_obj.h"
 #include "tm_base.h"
 
@@ -58,7 +60,22 @@ private:
 	uint32_t working_code_data[32];
 	uint8_t decrypted_data[128];
 
-	static bool initialized;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
+
+	uint8_t* _expansion_8 = nullptr;
+	uint16_t* _seed_fwd_1 = nullptr;
+	uint16_t* _seed_fwd_128 = nullptr;
+	uint8_t* _regular_8 = nullptr;
+	uint8_t* _regular_8_lo = nullptr;
+	uint8_t* _regular_8_hi = nullptr;
+	uint8_t* _alg0_8 = nullptr;
+	uint32_t* _alg2_32_8 = nullptr;
+	uint8_t* _alg4_8 = nullptr;
+	uint8_t* _alg4_8_lo = nullptr;
+	uint8_t* _alg4_8_hi = nullptr;
+	uint32_t* _alg5_32_8 = nullptr;
+	uint8_t* _alg6_8 = nullptr;
 };
 
 #endif // TM_32_8_H

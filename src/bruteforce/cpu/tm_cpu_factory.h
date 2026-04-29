@@ -22,6 +22,7 @@
 #include "tm_avx2_m256s_8.h"
 #include "tm_avx2_m256_map_8.h"
 #include "tm_avx2_m256s_map_8.h"
+#ifndef _M_IX86
 #include "tm_avx512bw_r512_8.h"
 #include "tm_avx512bw_r512s_8.h"
 #include "tm_avx512bw_r512_map_8.h"
@@ -38,6 +39,7 @@
 #include "tm_avx512bwvl_r512s_8.h"
 #include "tm_avx512bwvl_r512_map_8.h"
 #include "tm_avx512bwvl_r512s_map_8.h"
+#endif // !_M_IX86
 #include "tm_avx_m256_8.h"
 #include "tm_ssse3_r128_8.h"
 #include "tm_ssse3_r128_map_8.h"

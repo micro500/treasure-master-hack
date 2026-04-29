@@ -78,6 +78,17 @@ private:
 	const alignas(16) __m128i mask_top_01;
 	const alignas(16) __m128i mask_top_80;
 
-	static bool initialized;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
+	uint8_t* _expansion_128s = nullptr;
+	uint16_t* _seed_fwd_1 = nullptr;
+	uint16_t* _seed_fwd_128 = nullptr;
+	uint8_t* _regular_8 = nullptr;
+	uint8_t* _regular_128s = nullptr;
+	uint8_t* _alg0_128s = nullptr;
+	uint8_t* _alg2_8_8 = nullptr;
+	uint8_t* _alg4_128s = nullptr;
+	uint8_t* _alg5_8_8 = nullptr;
+	uint8_t* _alg6_128s = nullptr;
 };
 #endif // TM_SSSE3_M128S_8_H

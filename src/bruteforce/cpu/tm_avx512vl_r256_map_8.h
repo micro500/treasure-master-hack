@@ -73,10 +73,13 @@ private:
 	uint16_t fetch_checksum_value(WC_ARGS_256, uint8_t code_length);
 	void xor_alg(WC_ARGS_256, uint8_t* values);
 
-	uint8_t* expansion_values_for_seed_128_8;
-	uint8_t* regular_rng_values_for_seeds_8;
-	uint8_t* alg0_values_for_seeds_8;
-	uint8_t* alg6_values_for_seeds_8;
+	AlignedPtr<uint8_t> expansion_values_for_seed_128_8;
+	AlignedPtr<uint8_t> regular_rng_values_for_seeds_8;
+	AlignedPtr<uint8_t> alg0_values_for_seeds_8;
+	AlignedPtr<uint8_t> alg6_values_for_seeds_8;
+
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
 
 	const alignas(32) __m256i mask_FF;
 	const alignas(32) __m256i mask_FE;
@@ -86,6 +89,5 @@ private:
 	const alignas(32) __m256i mask_top_01;
 	const alignas(32) __m256i mask_top_80;
 
-	static bool initialized;
 };
 #endif // TM_AVX512VL_R256_MAP_8_H

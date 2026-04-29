@@ -6,8 +6,7 @@
 
 static const uint8_t CHECKSUM_SENTINEL = 0x08;
 
-cl_program tm_opencl_seq::_program   = NULL;
-bool       tm_opencl_seq::initialized = false;
+cl_program tm_opencl_seq::_program = NULL;
 
 tm_opencl_seq::tm_opencl_seq(RNG* rng_obj, opencl* cl_init) : rng(rng_obj), _cl(cl_init)
 {
@@ -21,15 +20,18 @@ tm_opencl_seq::tm_opencl_seq(RNG* rng_obj, opencl* cl_init) : rng(rng_obj), _cl(
 
 void tm_opencl_seq::initialize()
 {
-	if (!initialized)
+	if (!_initialized)
 	{
-		rng->generate_rng_seq_tables();
+		auto _r0 = rng->generate_rng_table();
+		auto _r1 = rng->generate_rng_seq_tables();
+
+		_table_refs = { _r0, _r1 };
 
 		_program = _cl->create_program("tm_seq.cl");
 		_cl->build_program(_program);
 		output_kernel_asm_to_file(_program, "tm_seq.ptx");
 
-		initialized = true;
+		_initialized = true;
 	}
 
 	_kernel_bruteforce    = _cl->create_kernel(_program, "tm_bruteforce_seq");
@@ -60,7 +62,7 @@ void tm_opencl_seq::run_bruteforce_batch(
 		              |  (uint16_t)schedule_entries.entries[m].rng2;
 		for (int i = 0; i < 2048; i++)
 		{
-			uint16_t next = rng->rng_table[seed];
+			uint16_t next = rng->rng_table.ptr[seed];
 			map_rng_h[m * 2048 + i] = (uint8_t)(((next >> 8) ^ next) & 0xFF);
 			seed = next;
 		}
@@ -76,7 +78,7 @@ void tm_opencl_seq::run_bruteforce_batch(
 	// Precompute expansion values on CPU — purely key-dependent, static for this run.
 	uint32_t expansion_h[32] = {};
 	{
-		uint32_t pos_base = rng->rng_pos_table[(key >> 16) & 0xFFFF];
+		uint32_t pos_base = rng->rng_pos_table.ptr[(key >> 16) & 0xFFFF];
 		for (int lane = 0; lane < 32; lane++)
 		{
 			uint32_t expansion_val = 0;
@@ -88,7 +90,7 @@ void tm_opencl_seq::run_bruteforce_batch(
 				uint32_t accum = 0;
 				for (uint32_t i = 0; i < j; i++)
 				{
-					uint16_t sv = rng->rng_seq_table[pos_base + k + i * 8];
+					uint16_t sv = rng->rng_seq_table.ptr[pos_base + k + i * 8];
 					accum += ((sv >> 8) ^ sv) & 0xFF;
 				}
 				expansion_val |= (accum & 0xFF) << (byte_idx * 8);
@@ -301,7 +303,7 @@ void tm_opencl_seq::run_bruteforce_hash_reduction(
 // ---------------------------------------------------------------------------
 static void build_expansion(RNG* rng, uint32_t key, uint32_t expansion_h[32])
 {
-	uint32_t pos_base = rng->rng_pos_table[(key >> 16) & 0xFFFF];
+	uint32_t pos_base = rng->rng_pos_table.ptr[(key >> 16) & 0xFFFF];
 	for (int lane = 0; lane < 32; lane++)
 	{
 		uint32_t expansion_val = 0;
@@ -313,7 +315,7 @@ static void build_expansion(RNG* rng, uint32_t key, uint32_t expansion_h[32])
 			uint32_t accum = 0;
 			for (uint32_t i = 0; i < j; i++)
 			{
-				uint16_t sv = rng->rng_seq_table[pos_base + k + i * 8];
+				uint16_t sv = rng->rng_seq_table.ptr[pos_base + k + i * 8];
 				accum += ((sv >> 8) ^ sv) & 0xFF;
 			}
 			expansion_val |= (accum & 0xFF) << (byte_idx * 8);
@@ -384,7 +386,7 @@ void tm_opencl_seq::test_alg_batch(const uint8* alg_ids, const uint16* rng_seeds
 		uint8_t map_rng_h[2048];
 		for (int s = 0; s < 2048; s++)
 		{
-			uint16_t next = rng->rng_table[seed];
+			uint16_t next = rng->rng_table.ptr[seed];
 			map_rng_h[s] = (uint8_t)(((next >> 8) ^ next) & 0xFF);
 			seed = next;
 		}
@@ -436,7 +438,7 @@ void tm_opencl_seq::test_run_all_maps_batch(const uint8* keys, const uint8* data
 		uint16_t seed = ((uint16_t)rng1 << 8) | (uint16_t)rng2;
 		for (int s = 0; s < 2048; s++)
 		{
-			uint16_t next = rng->rng_table[seed];
+			uint16_t next = rng->rng_table.ptr[seed];
 			map_rng_h[m * 2048 + s] = (uint8_t)(((next >> 8) ^ next) & 0xFF);
 			seed = next;
 		}

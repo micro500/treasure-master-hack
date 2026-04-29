@@ -16,3 +16,7 @@ src/common/cnf_out/
 
 # GPU compiled output
 *.ptx
+
+# Local build output overrides
+Directory.Build.targets
+Directory.Build.props

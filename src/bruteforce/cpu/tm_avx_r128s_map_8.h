@@ -92,10 +92,13 @@ private:
 	void xor_alg(WC_ARGS_128, uint8_t* values);
 	void add_alg_shuffled(WC_ARGS_128, uint16_t* rng_seed, uint8_t* rng_start);
 
-	uint8_t* expansion_values_for_seed_128_8_shuffled;
-	uint8_t* regular_rng_values_for_seeds_8;
-	uint8_t* alg0_values_for_seeds_8;
-	uint8_t* alg6_values_for_seeds_8;
+	AlignedPtr<uint8_t> expansion_values_for_seed_128_8_shuffled;
+	AlignedPtr<uint8_t> regular_rng_values_for_seeds_8;
+	AlignedPtr<uint8_t> alg0_values_for_seeds_8;
+	AlignedPtr<uint8_t> alg6_values_for_seeds_8;
+
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
 
 	const alignas(16) __m128i mask_FF;
 	const alignas(16) __m128i mask_FE;
@@ -108,7 +111,5 @@ private:
 	const alignas(16) __m128i sel_odd;
 
 	ALIGNED(32) uint8_t working_code_data[128];
-
-	static bool initialized;
 };
 #endif // TM_AVX_R128S_MAP_8_H

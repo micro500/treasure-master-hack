@@ -41,6 +41,19 @@ private:
 
 	ALIGNED(32) uint8 working_code_data[128];
 
-	static bool initialized;
+	bool _initialized = false;
+	std::vector<std::shared_ptr<void>> _table_refs;
+	uint8_t* _expansion_8 = nullptr;
+	uint16_t* _seed_fwd_1 = nullptr;
+	uint16_t* _seed_fwd_128 = nullptr;
+	uint8_t* _regular_8 = nullptr;
+	uint8_t* _regular_8_lo = nullptr;
+	uint8_t* _regular_8_hi = nullptr;
+	uint8_t* _regular_128s = nullptr;
+	uint8_t* _alg0_128s = nullptr;
+	uint8_t* _alg2_8_8 = nullptr;
+	uint8_t* _alg4_128s = nullptr;
+	uint8_t* _alg5_8_8 = nullptr;
+	uint8_t* _alg6_128s = nullptr;
 };
 #endif // TM_SSE2_M128S_8_H

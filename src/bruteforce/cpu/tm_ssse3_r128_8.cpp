@@ -20,22 +20,30 @@ tm_ssse3_r128_8::tm_ssse3_r128_8(RNG* rng_obj, const uint32_t key, const key_sch
 
 __forceinline void tm_ssse3_r128_8::initialize()
 {
-	if (!initialized)
+	if (!_initialized)
 	{
-		rng->generate_expansion_values_8();
+		auto _r0 = rng->generate_expansion_values_8();
+		auto _r1 = rng->generate_seed_forward_1();
+		auto _r2 = rng->generate_seed_forward_128();
+		auto _r3 = rng->generate_regular_rng_values_8();
+		auto _r4 = rng->generate_alg0_values_8();
+		auto _r5 = rng->generate_alg2_values_8_8();
+		auto _r6 = rng->generate_alg4_values_8();
+		auto _r7 = rng->generate_alg5_values_8_8();
+		auto _r8 = rng->generate_alg6_values_8();
 
-		rng->generate_seed_forward_1();
-		rng->generate_seed_forward_128();
+		_expansion_8  = static_cast<uint8_t*>(_r0.get());
+		_seed_fwd_1   = static_cast<uint16_t*>(_r1.get());
+		_seed_fwd_128 = static_cast<uint16_t*>(_r2.get());
+		_regular_8    = static_cast<uint8_t*>(_r3.get());
+		_alg0_8       = static_cast<uint8_t*>(_r4.get());
+		_alg2_8_8     = static_cast<uint8_t*>(_r5.get());
+		_alg4_8       = static_cast<uint8_t*>(_r6.get());
+		_alg5_8_8     = static_cast<uint8_t*>(_r7.get());
+		_alg6_8       = static_cast<uint8_t*>(_r8.get());
 
-		rng->generate_regular_rng_values_8();
-
-		rng->generate_alg0_values_8();
-		rng->generate_alg2_values_8_8();
-		rng->generate_alg4_values_8();
-		rng->generate_alg5_values_8_8();
-		rng->generate_alg6_values_8();
-
-		initialized = true;
+		_table_refs = { _r0, _r1, _r2, _r3, _r4, _r5, _r6, _r7, _r8 };
+		_initialized = true;
 	}
 	obj_name = "tm_ssse3_r128_8";
 }
@@ -66,8 +74,7 @@ __forceinline void tm_ssse3_r128_8::_store_to_mem(WC_ARGS_128)
 
 __forceinline void tm_ssse3_r128_8::_expand_code(uint32_t data, WC_ARGS_128)
 {
-	uint64_t x = ((uint64_t)key << 32) | data;
-	__m128i a = _mm_cvtsi64_si128(static_cast<int64_t>(x));
+	__m128i a = _mm_unpacklo_epi32(_mm_cvtsi32_si128(static_cast<int32_t>(data)), _mm_cvtsi32_si128(static_cast<int32_t>(key)));
 	__m128i nat_mask = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7);
 	__m128i pattern = _mm_shuffle_epi8(a, nat_mask);
 
@@ -80,7 +87,7 @@ __forceinline void tm_ssse3_r128_8::_expand_code(uint32_t data, WC_ARGS_128)
 	wc6 = pattern;
 	wc7 = pattern;
 
-	uint8_t* rng_start = rng->expansion_values_8;
+	uint8_t* rng_start = _expansion_8;
 	uint16_t rng_seed = (key >> 16) & 0xFFFF;
 
 	add_alg(WC_PASS_128, &rng_seed, rng_start);
@@ -107,39 +114,39 @@ __forceinline void tm_ssse3_r128_8::_run_alg(WC_ARGS_128, int algorithm_id, uint
 	if (algorithm_id == 0)
 	{
 		alg_0(WC_PASS_128, rng_seed);
-		*rng_seed = rng->seed_forward_128[*rng_seed];
+		*rng_seed = _seed_fwd_128[*rng_seed];
 	}
 	else if (algorithm_id == 1 || algorithm_id == 4)
 	{
-		uint8_t* rng_start = rng->regular_rng_values_8;
+		uint8_t* rng_start = _regular_8;
 
 		if (algorithm_id == 4)
 		{
-			rng_start = rng->alg4_values_8;
+			rng_start = _alg4_8;
 		}
 
 		add_alg(WC_PASS_128, rng_seed, rng_start);
-		*rng_seed = rng->seed_forward_128[*rng_seed];
+		*rng_seed = _seed_fwd_128[*rng_seed];
 	}
 	else if (algorithm_id == 2)
 	{
 		alg_2(WC_PASS_128, rng_seed);
-		*rng_seed = rng->seed_forward_1[*rng_seed];
+		*rng_seed = _seed_fwd_1[*rng_seed];
 	}
 	else if (algorithm_id == 3)
 	{
 		alg_3(WC_PASS_128, rng_seed);
-		*rng_seed = rng->seed_forward_128[*rng_seed];
+		*rng_seed = _seed_fwd_128[*rng_seed];
 	}
 	else if (algorithm_id == 5)
 	{
 		alg_5(WC_PASS_128, rng_seed);
-		*rng_seed = rng->seed_forward_1[*rng_seed];
+		*rng_seed = _seed_fwd_1[*rng_seed];
 	}
 	else if (algorithm_id == 6)
 	{
 		alg_6(WC_PASS_128, rng_seed);
-		*rng_seed = rng->seed_forward_128[*rng_seed];
+		*rng_seed = _seed_fwd_128[*rng_seed];
 	}
 	else if (algorithm_id == 7)
 	{
@@ -149,7 +156,7 @@ __forceinline void tm_ssse3_r128_8::_run_alg(WC_ARGS_128, int algorithm_id, uint
 
 __forceinline void tm_ssse3_r128_8::alg_0(WC_ARGS_128, uint16_t* rng_seed)
 {
-	uint8_t* rng_start = rng->alg0_values_8 + (*rng_seed) * 128;
+	uint8_t* rng_start = _alg0_8 + (*rng_seed) * 128;
 
 	wc0 = _mm_slli_epi16(wc0, 1);
 	wc0 = _mm_and_si128(wc0, mask_FE);
@@ -211,7 +218,7 @@ __forceinline void tm_ssse3_r128_8::alg_2_sub(__m128i& wc, __m128i& carry)
 __forceinline void tm_ssse3_r128_8::alg_2(WC_ARGS_128, uint16_t* rng_seed)
 {
 	__m128i carry = _mm_and_si128(
-		_mm_set1_epi8(static_cast<int8_t>(rng->alg2_values_8_8[*rng_seed])),
+		_mm_set1_epi8(static_cast<int8_t>(_alg2_8_8[*rng_seed])),
 		mask_top_01);
 
 	alg_2_sub(wc7, carry);
@@ -226,7 +233,7 @@ __forceinline void tm_ssse3_r128_8::alg_2(WC_ARGS_128, uint16_t* rng_seed)
 
 __forceinline void tm_ssse3_r128_8::alg_3(WC_ARGS_128, uint16_t* rng_seed)
 {
-	uint8_t* rng_start = rng->regular_rng_values_8 + (*rng_seed) * 128;
+	uint8_t* rng_start = _regular_8 + (*rng_seed) * 128;
 	xor_alg(WC_PASS_128, rng_start);
 }
 
@@ -257,7 +264,7 @@ __forceinline void tm_ssse3_r128_8::alg_5_sub(__m128i& wc, __m128i& carry)
 __forceinline void tm_ssse3_r128_8::alg_5(WC_ARGS_128, uint16_t* rng_seed)
 {
 	__m128i carry = _mm_and_si128(
-		_mm_set1_epi8(static_cast<int8_t>(rng->alg5_values_8_8[*rng_seed])),
+		_mm_set1_epi8(static_cast<int8_t>(_alg5_8_8[*rng_seed])),
 		mask_top_80);
 
 	alg_5_sub(wc7, carry);
@@ -272,7 +279,7 @@ __forceinline void tm_ssse3_r128_8::alg_5(WC_ARGS_128, uint16_t* rng_seed)
 
 __forceinline void tm_ssse3_r128_8::alg_6(WC_ARGS_128, uint16_t* rng_seed)
 {
-	uint8_t* rng_start = rng->alg6_values_8 + (*rng_seed) * 128;
+	uint8_t* rng_start = _alg6_8 + (*rng_seed) * 128;
 
 	wc0 = _mm_srli_epi16(wc0, 1);
 	wc0 = _mm_and_si128(wc0, mask_7F);
@@ -642,4 +649,3 @@ bool tm_ssse3_r128_8::test_bruteforce_checksum(uint32_t data, int world)
 	}
 }
 
-bool tm_ssse3_r128_8::initialized = false;
