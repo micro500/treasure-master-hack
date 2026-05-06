@@ -572,12 +572,16 @@ void tm_ssse3_m128s_8::compute_challenge_flags(uint32_t data, uint8_t& carnival_
 	other_flags_out = result_data[1];
 }
 
-void tm_ssse3_m128s_8::test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed)
+void tm_ssse3_m128s_8::test_algorithm_chain(const uint8_t* algorithm_ids, int chain_length,
+                                            uint8_t* data, uint16_t* rng_seed)
 {
 	WC_VARS_128;
 	load_data(data);
 	_load_from_mem(WC_PASS_128);
-	_run_alg(WC_PASS_128, algorithm_id, rng_seed);
+	for (int i = 0; i < chain_length; ++i)
+	{
+		_run_alg(WC_PASS_128, algorithm_ids[i], rng_seed);
+	}
 	_store_to_mem(WC_PASS_128);
 	fetch_data(data);
 }

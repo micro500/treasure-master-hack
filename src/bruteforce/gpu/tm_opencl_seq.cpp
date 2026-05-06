@@ -35,9 +35,10 @@ void tm_opencl_seq::initialize()
 	}
 
 	_kernel_bruteforce    = _cl->create_kernel(_program, "tm_bruteforce_seq");
-	_kernel_test_expand   = _cl->create_kernel(_program, "tm_test_expand");
-	_kernel_test_alg      = _cl->create_kernel(_program, "tm_test_alg");
-	_kernel_test_pipeline = _cl->create_kernel(_program, "tm_test_pipeline");
+	_kernel_test_expand        = _cl->create_kernel(_program, "tm_test_expand");
+	_kernel_test_alg           = _cl->create_kernel(_program, "tm_test_alg");
+	_kernel_test_wc_alg_multi  = _cl->create_kernel(_program, "tm_test_wc_alg_multi");
+	_kernel_test_pipeline      = _cl->create_kernel(_program, "tm_test_pipeline");
 	obj_name = "tm_opencl_seq";
 }
 
@@ -415,6 +416,63 @@ void tm_opencl_seq::test_alg_batch(const uint8* alg_ids, const uint16* rng_seeds
 	clReleaseMemObject(map_rng_d);
 	clReleaseMemObject(in_d);
 	clReleaseMemObject(out_d);
+}
+
+// ---------------------------------------------------------------------------
+// test_wc_alg_multi_batch: run tm_test_wc_alg_multi for each record. The
+// alg_ids list is uniform across the batch; the per-record map_rng window
+// is built host-side from rng_seeds_in[i] and uploaded per dispatch.
+// ---------------------------------------------------------------------------
+void tm_opencl_seq::test_wc_alg_multi_batch(const uint8* alg_ids, int alg_count,
+                                             const uint16* rng_seeds_in,
+                                             const uint8* inputs, uint8* outputs,
+                                             uint16* rng_seeds_out, uint32 count)
+{
+	cl_mem map_rng_d = _cl->create_readwrite_buffer(2048);
+	cl_mem in_d      = _cl->create_readonly_buffer(128);
+	cl_mem out_d     = _cl->create_readwrite_buffer(128);
+	cl_mem alg_ids_d = _cl->create_readonly_buffer(alg_count * sizeof(uint32_t));
+
+	std::vector<uint32_t> alg_ids_u(alg_count);
+	for (int i = 0; i < alg_count; i++) alg_ids_u[i] = (uint32_t)alg_ids[i];
+	_cl->copy_mem_to_device(alg_ids_d, alg_ids_u.data(), alg_count * sizeof(uint32_t));
+
+	for (uint32 i = 0; i < count; i++)
+	{
+		uint16_t seed = rng_seeds_in[i];
+		uint8_t map_rng_h[2048];
+		for (int s = 0; s < 2048; s++)
+		{
+			uint16_t next = rng->rng_table.ptr[seed];
+			map_rng_h[s] = (uint8_t)(((next >> 8) ^ next) & 0xFF);
+			seed = next;
+		}
+		if (rng_seeds_out)
+			rng_seeds_out[i] = seed;
+
+		_cl->copy_mem_to_device(map_rng_d, map_rng_h, 2048);
+		_cl->copy_mem_to_device(in_d, const_cast<uint8*>(inputs + i * 128), 128);
+
+		cl_kernel k = _kernel_test_wc_alg_multi;
+		set_kernel_arg<cl_mem>(k, 0, &in_d);
+		set_kernel_arg<cl_mem>(k, 1, &alg_ids_d);
+		set_kernel_arg<int>   (k, 2, &alg_count);
+		set_kernel_arg<cl_mem>(k, 3, &map_rng_d);
+		set_kernel_arg<cl_mem>(k, 4, &out_d);
+
+		size_t gs[3] = { 32, 1, 1 };
+		size_t ls[3] = { 32, 1, 1 };
+		cl_event ev = _cl->run_kernel(k, 3, NULL, gs, ls);
+		clWaitForEvents(1, &ev);
+		clReleaseEvent(ev);
+
+		_cl->copy_mem_from_device(out_d, outputs + i * 128, 128);
+	}
+
+	clReleaseMemObject(map_rng_d);
+	clReleaseMemObject(in_d);
+	clReleaseMemObject(out_d);
+	clReleaseMemObject(alg_ids_d);
 }
 
 // ---------------------------------------------------------------------------

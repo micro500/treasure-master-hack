@@ -18,7 +18,8 @@ public:
 	tm_avx2_r256_8(RNG* rng, uint32_t key);
 	tm_avx2_r256_8(RNG* rng, const uint32_t key, const key_schedule& schedule_entries);
 
-	void test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed) override;
+	void test_algorithm_chain(const uint8_t* algorithm_ids, int chain_length,
+	                          uint8_t* data, uint16_t* rng_seed) override;
 	void test_algorithm_n(int algorithm_id, uint8_t* data, uint16_t* rng_seed, int iterations) override;
 	void test_expansion(uint32_t data, uint8_t* result_out) override;
 	void test_bruteforce_data(uint32_t data, uint8_t* result_out) override;

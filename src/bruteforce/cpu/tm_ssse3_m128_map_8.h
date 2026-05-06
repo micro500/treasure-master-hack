@@ -15,8 +15,11 @@ public:
 
 	~tm_ssse3_m128_map_8();
 
-	void test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed) override;
+	void test_algorithm_chain(const uint8_t* algorithm_ids, int chain_length,
+	                          uint8_t* data, uint16_t* rng_seed) override;
 	void test_algorithm_n(int algorithm_id, uint8_t* data, uint16_t* rng_seed, int iterations) override;
+	bool tracks_rng_state() const override { return false; }
+	void set_key(uint32_t new_key) override;
 	void test_expansion(uint32_t data, uint8_t* result_out) override;
 	void test_bruteforce_data(uint32_t data, uint8_t* result_out) override;
 	bool test_bruteforce_checksum(uint32_t data, int world) override;
@@ -67,21 +70,21 @@ private:
 	void mid_sum(__m128i& sum, __m128i& working_code, __m128i& sum_mask);
 
 	ALIGNED(32) uint8_t working_code_data[128];
-	const alignas(16) __m128i mask_FF;
-	const alignas(16) __m128i mask_FE;
-	const alignas(16) __m128i mask_7F;
-	const alignas(16) __m128i mask_80;
-	const alignas(16) __m128i mask_01;
-	const alignas(16) __m128i mask_top_01;
-	const alignas(16) __m128i mask_top_80;
-	const alignas(16) __m128i mask_0001;
-	const alignas(16) __m128i mask_0080;
-	const alignas(16) __m128i mask_007F;
-	const alignas(16) __m128i mask_00FE;
-	const alignas(16) __m128i mask_00FF;
-	const alignas(16) __m128i mask_FF00;
-	const alignas(16) __m128i mask_FE00;
-	const alignas(16) __m128i mask_7F00;
+	alignas(16) const __m128i mask_FF;
+	alignas(16) const __m128i mask_FE;
+	alignas(16) const __m128i mask_7F;
+	alignas(16) const __m128i mask_80;
+	alignas(16) const __m128i mask_01;
+	alignas(16) const __m128i mask_top_01;
+	alignas(16) const __m128i mask_top_80;
+	alignas(16) const __m128i mask_0001;
+	alignas(16) const __m128i mask_0080;
+	alignas(16) const __m128i mask_007F;
+	alignas(16) const __m128i mask_00FE;
+	alignas(16) const __m128i mask_00FF;
+	alignas(16) const __m128i mask_FF00;
+	alignas(16) const __m128i mask_FE00;
+	alignas(16) const __m128i mask_7F00;
 
 	AlignedPtr<uint8_t> expansion_values_for_seed_128_8;
 	AlignedPtr<uint8_t> regular_rng_values_for_seeds_8;

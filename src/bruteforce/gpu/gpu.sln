@@ -1,0 +1,37 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37111.16
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_gpu", "test_gpu\test_gpu.vcxproj", "{E1F2A3B4-C5D6-7890-ABCD-EF1234567890}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_opencl", "test_opencl.vcxproj", "{A3A512F3-DDCE-4770-9548-2E2010D37BA0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_cuda", "test_cuda\test_cuda.vcxproj", "{2CE4FAB3-FD3E-4D64-846F-D556DE829CD5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E1F2A3B4-C5D6-7890-ABCD-EF1234567890}.Debug|x64.ActiveCfg = Debug|x64
+		{E1F2A3B4-C5D6-7890-ABCD-EF1234567890}.Debug|x64.Build.0 = Debug|x64
+		{E1F2A3B4-C5D6-7890-ABCD-EF1234567890}.Release|x64.ActiveCfg = Release|x64
+		{E1F2A3B4-C5D6-7890-ABCD-EF1234567890}.Release|x64.Build.0 = Release|x64
+		{A3A512F3-DDCE-4770-9548-2E2010D37BA0}.Debug|x64.ActiveCfg = Debug|x64
+		{A3A512F3-DDCE-4770-9548-2E2010D37BA0}.Debug|x64.Build.0 = Debug|x64
+		{A3A512F3-DDCE-4770-9548-2E2010D37BA0}.Release|x64.ActiveCfg = Release|x64
+		{A3A512F3-DDCE-4770-9548-2E2010D37BA0}.Release|x64.Build.0 = Release|x64
+		{2CE4FAB3-FD3E-4D64-846F-D556DE829CD5}.Debug|x64.ActiveCfg = Debug|x64
+		{2CE4FAB3-FD3E-4D64-846F-D556DE829CD5}.Debug|x64.Build.0 = Debug|x64
+		{2CE4FAB3-FD3E-4D64-846F-D556DE829CD5}.Release|x64.ActiveCfg = Release|x64
+		{2CE4FAB3-FD3E-4D64-846F-D556DE829CD5}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7D9A2B4C-5E6F-4012-A345-6B7C8D9E0F12}
+	EndGlobalSection
+EndGlobal

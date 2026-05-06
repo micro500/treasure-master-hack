@@ -379,10 +379,14 @@ void tm_32_8::compute_challenge_flags(uint32_t data, uint8_t& carnival_flags_out
 	other_flags_out = result_data[1];
 }
 
-void tm_32_8::test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed)
+void tm_32_8::test_algorithm_chain(const uint8_t* algorithm_ids, int chain_length,
+                                   uint8_t* data, uint16_t* rng_seed)
 {
 	load_data(data);
-	_run_alg(algorithm_id, rng_seed);
+	for (int i = 0; i < chain_length; ++i)
+	{
+		_run_alg(algorithm_ids[i], rng_seed);
+	}
 	fetch_data(data);
 }
 

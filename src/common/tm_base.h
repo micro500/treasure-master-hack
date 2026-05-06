@@ -88,11 +88,43 @@ public:
 
 	virtual void compute_challenge_flags(uint32_t data, uint8_t& carnival_flags_out, uint8_t& other_flags_out) = 0;
 
-	virtual void test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed) = 0;
+	// Run a chain of algorithms with shared RNG state from a single initial seed.
+	// algorithm_ids points to chain_length bytes, each in [0, 7]. data is the
+	// 128-byte buffer (in-place). *rng_seed is updated to the post-chain RNG
+	// state, but is only meaningful when tracks_rng_state() == true. The impl
+	// is responsible for sizing/generating any internal RNG window.
+	virtual void test_algorithm_chain(const uint8_t* algorithm_ids, int chain_length,
+	                                  uint8_t* data, uint16_t* rng_seed) = 0;
+
+	// Convenience wrapper: chain of length 1.
+	void test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed) {
+		uint8_t id = static_cast<uint8_t>(algorithm_id);
+		test_algorithm_chain(&id, 1, data, rng_seed);
+	}
+
+	// Tight loop used by the bench harness. Map variants intentionally do not
+	// thread RNG state across iterations (they cycle a small cached window for
+	// cache-friendly throughput measurement), so the post-call *rng_seed is
+	// not meaningful even when tracks_rng_state() == true. Use
+	// test_algorithm_chain when correctness across calls matters.
 	virtual void test_algorithm_n(int algorithm_id, uint8_t* data, uint16_t* rng_seed, int iterations) = 0;
+
+	// True if test_algorithm / test_algorithm_chain advance *rng_seed to the
+	// post-call RNG state. Map variants pre-generate a fixed-length RNG window
+	// per call and do not thread state across calls, so the returned seed is
+	// meaningless for them.
+	virtual bool tracks_rng_state() const { return true; }
 	virtual void test_expansion(uint32_t data, uint8_t* result_out) = 0;
 	virtual void test_bruteforce_data(uint32_t data, uint8_t* result_out) = 0;
 	virtual bool test_bruteforce_checksum(uint32_t data, int world) = 0;
+
+	// Update the key + schedule and refresh any cached per-key state. Default
+	// only updates the public key/schedule fields; map variants override to
+	// also regenerate their cached RNG tables.
+	virtual void set_key(uint32_t new_key) {
+		key = new_key;
+		schedule_entries = key_schedule(new_key, key_schedule::ALL_MAPS);
+	}
 
 	uint8_t check_machine_code(uint8_t* data, int world);
 

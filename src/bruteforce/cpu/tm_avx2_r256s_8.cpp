@@ -365,12 +365,16 @@ __forceinline void tm_avx2_r256s_8::_run_all_maps(WC_ARGS_256)
 	}
 }
 
-void tm_avx2_r256s_8::test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed)
+void tm_avx2_r256s_8::test_algorithm_chain(const uint8_t* algorithm_ids, int chain_length,
+                                           uint8_t* data, uint16_t* rng_seed)
 {
 	WC_VARS_256;
 	load_data(data);
 	_load_from_mem(WC_PASS_256);
-	_run_alg(WC_PASS_256, algorithm_id, rng_seed);
+	for (int i = 0; i < chain_length; ++i)
+	{
+		_run_alg(WC_PASS_256, algorithm_ids[i], rng_seed);
+	}
 	_store_to_mem(WC_PASS_256);
 	fetch_data(data);
 }

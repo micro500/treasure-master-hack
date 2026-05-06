@@ -13,7 +13,8 @@ public:
 	tm_ssse3_r128s_8(RNG* rng, uint32_t key);
 	tm_ssse3_r128s_8(RNG* rng, const uint32_t key, const key_schedule& schedule_entries);
 
-	void test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed) override;
+	void test_algorithm_chain(const uint8_t* algorithm_ids, int chain_length,
+	                          uint8_t* data, uint16_t* rng_seed) override;
 	void test_algorithm_n(int algorithm_id, uint8_t* data, uint16_t* rng_seed, int iterations) override;
 	void test_expansion(uint32_t data, uint8_t* result_out) override;
 	void test_bruteforce_data(uint32_t data, uint8_t* result_out) override;
@@ -69,13 +70,13 @@ private:
 	void mid_sum(__m128i& sum, __m128i& working_code, __m128i& sum_mask, __m128i& lo_mask);
 	uint16_t fetch_checksum_value(WC_ARGS_128, uint8_t code_length);
 
-	const alignas(16) __m128i mask_FF;
-	const alignas(16) __m128i mask_FE;
-	const alignas(16) __m128i mask_7F;
-	const alignas(16) __m128i mask_80;
-	const alignas(16) __m128i mask_01;
-	const alignas(16) __m128i mask_top_01;
-	const alignas(16) __m128i mask_top_80;
+	alignas(16) const __m128i mask_FF;
+	alignas(16) const __m128i mask_FE;
+	alignas(16) const __m128i mask_7F;
+	alignas(16) const __m128i mask_80;
+	alignas(16) const __m128i mask_01;
+	alignas(16) const __m128i mask_top_01;
+	alignas(16) const __m128i mask_top_80;
 
 	ALIGNED(32) uint8_t working_code_data[128];
 

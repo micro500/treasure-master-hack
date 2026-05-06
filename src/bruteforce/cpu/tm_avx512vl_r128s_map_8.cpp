@@ -574,9 +574,27 @@ void tm_avx512vl_r128s_map_8::compute_challenge_flags(uint32_t data, uint8_t& ca
 	other_flags_out = result_data[1];
 }
 
-void tm_avx512vl_r128s_map_8::test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed)
+void tm_avx512vl_r128s_map_8::test_algorithm_chain(const uint8_t* algorithm_ids, int chain_length,
+                                                   uint8_t* data, uint16_t* rng_seed)
 {
-	test_algorithm_n(algorithm_id, data, rng_seed, 1);
+	WC_VARS_128;
+	load_data(data);
+	_load_from_mem(WC_PASS_128);
+
+	alg0_values_for_seeds_8 = rng->generate_alg0_values_for_seeds_8(rng_seed, 1);
+	regular_rng_values_for_seeds_8 = rng->generate_regular_rng_values_for_seeds_8(rng_seed, 1);
+	alg6_values_for_seeds_8 = rng->generate_alg6_values_for_seeds_8(rng_seed, 1);
+
+	uint16_t local_pos = 2047;
+	for (int i = 0; i < chain_length; ++i)
+	{
+		_run_alg(WC_PASS_128, algorithm_ids[i], &local_pos,
+			regular_rng_values_for_seeds_8.get(), alg0_values_for_seeds_8.get(),
+			alg6_values_for_seeds_8.get());
+	}
+
+	_store_to_mem(WC_PASS_128);
+	fetch_data(data);
 }
 
 void tm_avx512vl_r128s_map_8::test_algorithm_n(int algorithm_id, uint8_t* data, uint16_t* rng_seed, int iterations)
@@ -647,3 +665,9 @@ bool tm_avx512vl_r128s_map_8::test_bruteforce_checksum(uint32_t data, int world)
 	}
 }
 
+
+void tm_avx512vl_r128s_map_8::set_key(uint32_t new_key)
+{
+	TM_base::set_key(new_key);
+	generate_map_rng();
+}

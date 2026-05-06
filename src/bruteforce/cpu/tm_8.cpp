@@ -387,10 +387,14 @@ void tm_8::compute_challenge_flags(uint32_t data, uint8_t& carnival_flags_out, u
 	other_flags_out = result_data[1];
 }
 
-void tm_8::test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed)
+void tm_8::test_algorithm_chain(const uint8_t* algorithm_ids, int chain_length,
+                                uint8_t* data, uint16_t* rng_seed)
 {
 	load_data(data);
-	_run_alg(algorithm_id, rng_seed);
+	for (int i = 0; i < chain_length; ++i)
+	{
+		_run_alg(algorithm_ids[i], rng_seed);
+	}
 	fetch_data(data);
 }
 
@@ -415,6 +419,29 @@ void tm_8::test_bruteforce_data(uint32_t data, uint8_t* result_out)
 	_expand_code(data);
 	_run_all_maps();
 	fetch_data(result_out);
+}
+
+void tm_8::test_trace_per_map(uint32_t data, uint8_t* result_out_per_map, uint8_t* algs_out_per_map)
+{
+	_expand_code(data);
+	int idx = 0;
+	for (auto it = schedule_entries->entries.begin(); it != schedule_entries->entries.end(); ++it, ++idx)
+	{
+		const auto& entry = *it;
+		uint16_t rng_seed = static_cast<uint16_t>((entry.rng1 << 8) | entry.rng2);
+		uint16_t nibble_selector = entry.nibble_selector;
+		for (int i = 0; i < 16; i++)
+		{
+			uint8_t nibble = static_cast<uint8_t>((nibble_selector >> 15) & 0x01);
+			nibble_selector = static_cast<uint16_t>(nibble_selector << 1);
+			uint8_t current_byte = working_code_data[i];
+			if (nibble == 1) current_byte = static_cast<uint8_t>(current_byte >> 4);
+			uint8_t alg_id = static_cast<uint8_t>((current_byte >> 1) & 0x07);
+			algs_out_per_map[idx * 16 + i] = alg_id;
+			_run_alg(alg_id, &rng_seed);
+		}
+		fetch_data(result_out_per_map + idx * 128);
+	}
 }
 
 bool tm_8::test_bruteforce_checksum(uint32_t data, int world)

@@ -29,6 +29,15 @@ public:
 	    const uint8* inputs, uint8* outputs,
 	    uint16* rng_seeds_out, uint32 count) = 0;
 
+	// Run a sequence of N algorithm steps on each of `count` 128-byte blocks.
+	// alg_ids: flat [alg_count] (uniform per-batch); alg_count in [1..16].
+	// rng_seeds_in/out are flat [count] arrays.
+	virtual void test_wc_alg_multi_batch(
+	    const uint8* alg_ids, int alg_count,
+	    const uint16* rng_seeds_in,
+	    const uint8* inputs, uint8* outputs,
+	    uint16* rng_seeds_out, uint32 count) = 0;
+
 	// Expand + run all maps for `count` (key,data) pairs.
 	// schedule_data_flat: pre-encoded, count * schedule_count * 4 bytes;
 	//   4 bytes per entry: rng1, rng2, nibble_hi, nibble_lo.

@@ -20,3 +20,11 @@ src/common/cnf_out/
 # Local build output overrides
 Directory.Build.targets
 Directory.Build.props
+
+# WASM build output
+src/bruteforce/wasm/*.js
+src/bruteforce/wasm/*.wasm
+
+# Emulator-generated TMTV reference data (locally generated, large)
+src/emulator/test_inputs/
+src/emulator/test_outputs/

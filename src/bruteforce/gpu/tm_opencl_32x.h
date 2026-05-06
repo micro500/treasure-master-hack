@@ -12,6 +12,7 @@ public:
 	// Batch test interface
 	void test_expand_batch(const uint8* keys, const uint8* datas, uint8* outputs, uint32 count) override;
 	void test_alg_batch(const uint8* alg_ids, const uint16* rng_seeds_in, const uint8* inputs, uint8* outputs, uint16* rng_seeds_out, uint32 count) override;
+	void test_wc_alg_multi_batch(const uint8* alg_ids, int alg_count, const uint16* rng_seeds_in, const uint8* inputs, uint8* outputs, uint16* rng_seeds_out, uint32 count) override {}
 	void test_run_all_maps_batch(const uint8* keys, const uint8* datas, const uint8* schedule_data_flat, int schedule_count, uint8* outputs, uint32 count) override;
 
 	// Production interface

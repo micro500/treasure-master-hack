@@ -39,11 +39,14 @@ public:
 
 	~tm_avx_r256_map_8();
 
-	void test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed);
+	void test_algorithm_chain(const uint8_t* algorithm_ids, int chain_length,
+	                          uint8_t* data, uint16_t* rng_seed) override;
 	void test_expansion(uint32_t data, uint8_t* result_out);
 	void test_bruteforce_data(uint32_t data, uint8_t* result_out);
 	bool test_bruteforce_checksum(uint32_t data, int world);
 	void test_algorithm_n(int algorithm_id, uint8_t* data, uint16_t* rng_seed, int iterations);
+	bool tracks_rng_state() const override { return false; }
+	void set_key(uint32_t new_key) override;
 	void run_bruteforce_boinc(uint32_t start_data, uint32_t amount_to_run, void(*report_progress)(double), uint8_t* result_data, uint32_t result_max_size, uint32_t* result_size);
 	void compute_challenge_flags(uint32_t data, uint8_t& carnival_flags_out, uint8_t& other_flags_out);
 

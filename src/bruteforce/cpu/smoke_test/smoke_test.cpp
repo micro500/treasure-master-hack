@@ -1,0 +1,293 @@
+#include <gtest/gtest.h>
+#include "test_vectors.h"
+#include "rng_obj.h"
+#include "key_schedule.h"
+#include "tm_8.h"
+#include "tm_32_8.h"
+#include "tm_64_8.h"
+#include "tm_avx_r128_8.h"
+#include "tm_avx_r128s_8.h"
+#include "tm_avx_r128s_map_8.h"
+#include "tm_avx_r128_map_8.h"
+#include "tm_avx_r256_map_8.h"
+#include "tm_avx2_r256_map_8.h"
+#include "tm_avx2_r256s_map_8.h"
+#include "tm_avx2_r256s_8.h"
+#include "tm_avx2_r256_8.h"
+#include "tm_avx2_m256_8.h"
+#include "tm_avx2_m256s_8.h"
+#include "tm_avx2_m256_map_8.h"
+#include "tm_avx2_m256s_map_8.h"
+#include "tm_avx512bw_r512_8.h"
+#include "tm_avx512bw_r512s_8.h"
+#include "tm_avx512bw_r512_map_8.h"
+#include "tm_avx512bw_r512s_map_8.h"
+#include "tm_avx512vl_r128_8.h"
+#include "tm_avx512vl_r128s_8.h"
+#include "tm_avx512vl_r128_map_8.h"
+#include "tm_avx512vl_r128s_map_8.h"
+#include "tm_avx512vl_r256_8.h"
+#include "tm_avx512vl_r256s_8.h"
+#include "tm_avx512vl_r256_map_8.h"
+#include "tm_avx512vl_r256s_map_8.h"
+#include "tm_avx512bwvl_r512_8.h"
+#include "tm_avx512bwvl_r512s_8.h"
+#include "tm_avx512bwvl_r512_map_8.h"
+#include "tm_avx512bwvl_r512s_map_8.h"
+#include "tm_avx_m256_8.h"
+#include "tm_ssse3_r128_8.h"
+#include "tm_ssse3_r128s_8.h"
+#include "tm_ssse3_r128_map_8.h"
+#include "tm_ssse3_r128s_map_8.h"
+#include "tm_ssse3_m128_8.h"
+#include "tm_ssse3_m128s_8.h"
+#include "tm_ssse3_m128_map_8.h"
+#include "tm_ssse3_m128s_map_8.h"
+
+// Shared RNG — all implementations use the same tables; each class
+// guards its own initialization with a static bool.
+static RNG g_rng;
+
+// =========================================================
+// Test fixture
+// =========================================================
+
+using Implementations = ::testing::Types<tm_8, tm_32_8, tm_64_8, tm_avx_r128_8, tm_avx_r128s_8, tm_avx_r128s_map_8, tm_avx_r128_map_8, tm_avx_r256_map_8, tm_avx2_r256_map_8, tm_avx2_r256s_map_8, tm_avx2_r256s_8, tm_avx2_r256_8, tm_avx2_m256_8, tm_avx2_m256s_8, tm_avx2_m256_map_8, tm_avx2_m256s_map_8, tm_avx_m256_8, tm_ssse3_r128_8, tm_ssse3_r128s_8, tm_ssse3_r128_map_8, tm_ssse3_r128s_map_8, tm_ssse3_m128_8, tm_ssse3_m128s_8, tm_ssse3_m128_map_8, tm_ssse3_m128s_map_8, tm_avx512bw_r512_8, tm_avx512bw_r512s_8, tm_avx512bw_r512_map_8, tm_avx512bw_r512s_map_8, tm_avx512vl_r128_8, tm_avx512vl_r128s_8, tm_avx512vl_r128_map_8, tm_avx512vl_r128s_map_8, tm_avx512vl_r256_8, tm_avx512vl_r256s_8, tm_avx512vl_r256_map_8, tm_avx512vl_r256s_map_8, tm_avx512bwvl_r512_8, tm_avx512bwvl_r512s_8, tm_avx512bwvl_r512_map_8, tm_avx512bwvl_r512s_map_8>;
+
+struct ImplementationNames {
+    template <typename T>
+    static std::string GetName(int i) {
+        if (std::is_same<T, tm_8>()) return "tm_8";
+        if (std::is_same<T, tm_32_8>()) return "tm_32_8";
+        if (std::is_same<T, tm_64_8>()) return "tm_64_8";
+        if (std::is_same<T, tm_avx_r128_8>()) return "tm_avx_r128_8";
+        if (std::is_same<T, tm_avx_r128s_8>()) return "tm_avx_r128s_8";
+        if (std::is_same<T, tm_avx_r128s_map_8>()) return "tm_avx_r128s_map_8";
+        if (std::is_same<T, tm_avx_r128_map_8>()) return "tm_avx_r128_map_8";
+        if (std::is_same<T, tm_avx_r256_map_8>()) return "tm_avx_r256_map_8";
+        if (std::is_same<T, tm_avx2_r256_map_8>()) return "tm_avx2_r256_map_8";
+        if (std::is_same<T, tm_avx2_r256s_map_8>()) return "tm_avx2_r256s_map_8";
+        if (std::is_same<T, tm_avx2_r256s_8>()) return "tm_avx2_r256s_8";
+        if (std::is_same<T, tm_avx2_r256_8>()) return "tm_avx2_r256_8";
+        if (std::is_same<T, tm_avx2_m256_8>()) return "tm_avx2_m256_8";
+        if (std::is_same<T, tm_avx2_m256s_8>()) return "tm_avx2_m256s_8";
+        if (std::is_same<T, tm_avx2_m256_map_8>()) return "tm_avx2_m256_map_8";
+        if (std::is_same<T, tm_avx2_m256s_map_8>()) return "tm_avx2_m256s_map_8";
+        if (std::is_same<T, tm_avx512bw_r512_8>()) return "tm_avx512bw_r512_8";
+        if (std::is_same<T, tm_avx512bw_r512s_8>()) return "tm_avx512bw_r512s_8";
+        if (std::is_same<T, tm_avx512bw_r512_map_8>()) return "tm_avx512bw_r512_map_8";
+        if (std::is_same<T, tm_avx512bw_r512s_map_8>()) return "tm_avx512bw_r512s_map_8";
+        if (std::is_same<T, tm_avx_m256_8>()) return "tm_avx_m256_8";
+        if (std::is_same<T, tm_ssse3_r128_8>()) return "tm_ssse3_r128_8";
+        if (std::is_same<T, tm_ssse3_r128s_8>()) return "tm_ssse3_r128s_8";
+        if (std::is_same<T, tm_ssse3_r128_map_8>()) return "tm_ssse3_r128_map_8";
+        if (std::is_same<T, tm_ssse3_r128s_map_8>()) return "tm_ssse3_r128s_map_8";
+        if (std::is_same<T, tm_ssse3_m128_8>()) return "tm_ssse3_m128_8";
+        if (std::is_same<T, tm_ssse3_m128s_8>()) return "tm_ssse3_m128s_8";
+        if (std::is_same<T, tm_ssse3_m128_map_8>()) return "tm_ssse3_m128_map_8";
+        if (std::is_same<T, tm_ssse3_m128s_map_8>()) return "tm_ssse3_m128s_map_8";
+        if (std::is_same<T, tm_avx512vl_r128_8>()) return "tm_avx512vl_r128_8";
+        if (std::is_same<T, tm_avx512vl_r128s_8>()) return "tm_avx512vl_r128s_8";
+        if (std::is_same<T, tm_avx512vl_r128_map_8>()) return "tm_avx512vl_r128_map_8";
+        if (std::is_same<T, tm_avx512vl_r128s_map_8>()) return "tm_avx512vl_r128s_map_8";
+        if (std::is_same<T, tm_avx512vl_r256_8>()) return "tm_avx512vl_r256_8";
+        if (std::is_same<T, tm_avx512vl_r256s_8>()) return "tm_avx512vl_r256s_8";
+        if (std::is_same<T, tm_avx512vl_r256_map_8>()) return "tm_avx512vl_r256_map_8";
+        if (std::is_same<T, tm_avx512vl_r256s_map_8>()) return "tm_avx512vl_r256s_map_8";
+        if (std::is_same<T, tm_avx512bwvl_r512_8>()) return "tm_avx512bwvl_r512_8";
+        if (std::is_same<T, tm_avx512bwvl_r512s_8>()) return "tm_avx512bwvl_r512s_8";
+        if (std::is_same<T, tm_avx512bwvl_r512_map_8>()) return "tm_avx512bwvl_r512_map_8";
+        if (std::is_same<T, tm_avx512bwvl_r512s_map_8>()) return "tm_avx512bwvl_r512s_map_8";
+
+        return std::to_string(i);
+    }
+};
+
+template<typename T>
+class TmTest : public ::testing::Test {
+protected:
+    static std::unique_ptr<T> impl;
+
+    static void SetUpTestSuite() {
+        impl = std::make_unique<T>(&g_rng);
+    }
+
+    static void TearDownTestSuite() {
+        impl.reset();
+    }
+
+    void init() {}
+
+    void init(uint32_t key) {
+        // Keep old impl alive during construction so its _table_refs hold the
+        // tables alive; the new impl's initialize() sees them via lock() and
+        // captures its own refs before old is destroyed.
+        auto old = std::move(impl);
+        impl = std::make_unique<T>(&g_rng, key);
+    }
+};
+template<typename T>
+std::unique_ptr<T> TmTest<T>::impl;
+TYPED_TEST_SUITE(TmTest, Implementations, ImplementationNames);
+
+
+// =========================================================
+// Helper
+// =========================================================
+template<typename T>
+static void run_alg_test(T& impl, int alg_id,
+    const uint8_t* input, uint16_t seed_in,
+    const uint8_t* expected, uint16_t expected_seed_out)
+{
+    uint8_t output[128];
+    for (int i = 0; i < 128; i++)
+        output[i] = input[i];
+    uint16_t seed = seed_in;
+    impl.test_algorithm(alg_id, output, &seed);
+    for (int i = 0; i < 128; i++)
+        EXPECT_EQ(output[i], expected[i]) << "byte " << i;
+    //EXPECT_EQ(seed, expected_seed_out) << "rng seed after alg";
+}
+
+
+// =========================================================
+// Algorithm tests
+// =========================================================
+TYPED_TEST(TmTest, Alg0_V0) {
+    this->init();
+    run_alg_test(*this->impl, 0, alg0_v0_in, alg0_v0_seed_in, alg0_v0_out, alg0_v0_seed_out);
+}
+TYPED_TEST(TmTest, Alg0_V1) {
+    this->init();
+    run_alg_test(*this->impl, 0, alg0_v1_in, alg0_v1_seed_in, alg0_v1_out, alg0_v1_seed_out);
+}
+
+TYPED_TEST(TmTest, Alg1_V0) {
+    this->init();
+    run_alg_test(*this->impl, 1, alg1_v0_in, alg1_v0_seed_in, alg1_v0_out, alg1_v0_seed_out);
+}
+TYPED_TEST(TmTest, Alg1_V1) {
+    this->init();
+    run_alg_test(*this->impl, 1, alg1_v1_in, alg1_v1_seed_in, alg1_v1_out, alg1_v1_seed_out);
+}
+
+TYPED_TEST(TmTest, Alg2_V0) {
+    this->init();
+    run_alg_test(*this->impl, 2, alg2_v0_in, alg2_v0_seed_in, alg2_v0_out, alg2_v0_seed_out);
+}
+TYPED_TEST(TmTest, Alg2_V1) {
+    this->init();
+    run_alg_test(*this->impl, 2, alg2_v1_in, alg2_v1_seed_in, alg2_v1_out, alg2_v1_seed_out);
+}
+
+TYPED_TEST(TmTest, Alg3_V0) {
+    this->init();
+    run_alg_test(*this->impl, 3, alg3_v0_in, alg3_v0_seed_in, alg3_v0_out, alg3_v0_seed_out);
+}
+TYPED_TEST(TmTest, Alg3_V1) {
+    this->init();
+    run_alg_test(*this->impl, 3, alg3_v1_in, alg3_v1_seed_in, alg3_v1_out, alg3_v1_seed_out);
+}
+
+TYPED_TEST(TmTest, Alg4_V0) {
+    this->init();
+    run_alg_test(*this->impl, 4, alg4_v0_in, alg4_v0_seed_in, alg4_v0_out, alg4_v0_seed_out);
+}
+TYPED_TEST(TmTest, Alg4_V1) {
+    this->init();
+    run_alg_test(*this->impl, 4, alg4_v1_in, alg4_v1_seed_in, alg4_v1_out, alg4_v1_seed_out);
+}
+
+TYPED_TEST(TmTest, Alg5_V0) {
+    this->init();
+    run_alg_test(*this->impl, 5, alg5_v0_in, alg5_v0_seed_in, alg5_v0_out, alg5_v0_seed_out);
+}
+TYPED_TEST(TmTest, Alg5_V1) {
+    this->init();
+    run_alg_test(*this->impl, 5, alg5_v1_in, alg5_v1_seed_in, alg5_v1_out, alg5_v1_seed_out);
+}
+
+TYPED_TEST(TmTest, Alg6_V0) {
+    this->init();
+    run_alg_test(*this->impl, 6, alg6_v0_in, alg6_v0_seed_in, alg6_v0_out, alg6_v0_seed_out);
+}
+TYPED_TEST(TmTest, Alg6_V1) {
+    this->init();
+    run_alg_test(*this->impl, 6, alg6_v1_in, alg6_v1_seed_in, alg6_v1_out, alg6_v1_seed_out);
+}
+
+TYPED_TEST(TmTest, Alg7_V0) {
+    this->init();
+    run_alg_test(*this->impl, 7, alg7_v0_in, alg7_v0_seed_in, alg7_v0_out, alg7_v0_seed_out);
+}
+TYPED_TEST(TmTest, Alg7_V1) {
+    this->init();
+    run_alg_test(*this->impl, 7, alg7_v1_in, alg7_v1_seed_in, alg7_v1_out, alg7_v1_seed_out);
+}
+
+
+// =========================================================
+// Expansion tests
+// =========================================================
+TYPED_TEST(TmTest, Expansion_V0) {
+    this->init(expansion_v0_key);
+    uint8_t out[128];
+    this->impl->test_expansion(expansion_v0_data, out);
+    for (int i = 0; i < 128; i++)
+        EXPECT_EQ(out[i], expansion_v0_out[i]) << "byte " << i;
+}
+
+TYPED_TEST(TmTest, Expansion_V1) {
+    this->init(expansion_v1_key);
+    uint8_t out[128];
+    this->impl->test_expansion(expansion_v1_data, out);
+    for (int i = 0; i < 128; i++)
+        EXPECT_EQ(out[i], expansion_v1_out[i]) << "byte " << i;
+}
+
+
+// =========================================================
+// Pipeline tests (expand + all maps)
+// =========================================================
+TYPED_TEST(TmTest, Pipeline_V0) {
+    this->init(pipeline_v0_key);
+    uint8_t out[128];
+    this->impl->test_bruteforce_data(pipeline_v0_data, out);
+    for (int i = 0; i < 128; i++)
+        EXPECT_EQ(out[i], pipeline_v0_out[i]) << "byte " << i;
+}
+
+TYPED_TEST(TmTest, Pipeline_V1) {
+    this->init(pipeline_v1_key);
+    uint8_t out[128];
+    this->impl->test_bruteforce_data(pipeline_v1_data, out);
+    for (int i = 0; i < 128; i++)
+        EXPECT_EQ(out[i], pipeline_v1_out[i]) << "byte " << i;
+}
+
+
+// =========================================================
+// Checksum validation tests
+// =========================================================
+TYPED_TEST(TmTest, Validate_CarnivalValid_V0) {
+    this->init(validate_carnival_key);
+    EXPECT_TRUE(this->impl->test_bruteforce_checksum(validate_carnival_data, CARNIVAL_WORLD));
+}
+
+TYPED_TEST(TmTest, Validate_OtherValid_V0) {
+    this->init(validate_other_key);
+    EXPECT_TRUE(this->impl->test_bruteforce_checksum(validate_other_data, OTHER_WORLD));
+}
+
+TYPED_TEST(TmTest, Validate_Invalid_V0) {
+    this->init(validate_invalid_key);
+    EXPECT_FALSE(this->impl->test_bruteforce_checksum(validate_invalid_data, CARNIVAL_WORLD));
+    EXPECT_FALSE(this->impl->test_bruteforce_checksum(validate_invalid_data, OTHER_WORLD));
+}
+
+#ifndef __linux__
+int main(int argc, char** argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+#endif

@@ -30,8 +30,11 @@ public:
 
 	~tm_avx2_r256_map_8();
 
-	void test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed) override;
+	void test_algorithm_chain(const uint8_t* algorithm_ids, int chain_length,
+	                          uint8_t* data, uint16_t* rng_seed) override;
 	void test_algorithm_n(int algorithm_id, uint8_t* data, uint16_t* rng_seed, int iterations) override;
+	bool tracks_rng_state() const override { return false; }
+	void set_key(uint32_t new_key) override;
 	void test_expansion(uint32_t data, uint8_t* result_out) override;
 	void test_bruteforce_data(uint32_t data, uint8_t* result_out) override;
 	bool test_bruteforce_checksum(uint32_t data, int world) override;

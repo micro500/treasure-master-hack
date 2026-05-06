@@ -483,9 +483,25 @@ void tm_avx2_m256_map_8::compute_challenge_flags(uint32_t data, uint8_t& carniva
 	other_flags_out = result_data[1];
 }
 
-void tm_avx2_m256_map_8::test_algorithm(int algorithm_id, uint8_t* data, uint16_t* rng_seed)
+void tm_avx2_m256_map_8::test_algorithm_chain(const uint8_t* algorithm_ids, int chain_length,
+                                              uint8_t* data, uint16_t* rng_seed)
 {
-	test_algorithm_n(algorithm_id, data, rng_seed, 1);
+	load_data(data);
+
+	alg0_values_for_seeds_8 = rng->generate_alg0_values_for_seeds_8(rng_seed, 1);
+	regular_rng_values_for_seeds_8 = rng->generate_regular_rng_values_for_seeds_8(rng_seed, 1);
+	alg6_values_for_seeds_8 = rng->generate_alg6_values_for_seeds_8(rng_seed, 1);
+
+	const uint8_t* reg_base = regular_rng_values_for_seeds_8.get();
+	const uint8_t* alg0_base = alg0_values_for_seeds_8.get();
+	const uint8_t* alg6_base = alg6_values_for_seeds_8.get();
+	uint16_t local_pos = 2047;
+	for (int i = 0; i < chain_length; ++i)
+	{
+		_run_alg(algorithm_ids[i], &local_pos, reg_base, alg0_base, alg6_base);
+	}
+
+	fetch_data(data);
 }
 
 void tm_avx2_m256_map_8::test_algorithm_n(int algorithm_id, uint8_t* data, uint16_t* rng_seed, int iterations)
@@ -542,3 +558,9 @@ bool tm_avx2_m256_map_8::test_bruteforce_checksum(uint32_t data, int world)
 		return _decrypt_check<true, OTHER_WORLD>().has_value();
 }
 
+
+void tm_avx2_m256_map_8::set_key(uint32_t new_key)
+{
+	TM_base::set_key(new_key);
+	generate_map_rng();
+}
